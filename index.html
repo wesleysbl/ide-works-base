@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050506" />
+    <title>IDE Works</title>
+
+    <!-- A CONFIGURAÇÃO PÚBLICA SAI JUNTO COM A ENTRADA — perf-front, 08/10/2026.
+         `main.tsx` espera `/api/config` antes da primeira tela (F17.22). Pedi-lo
+         só depois de baixar e executar a entrada punha uma ida e volta INTEIRA
+         no caminho crítico: medido a frio, 237 ms (começo do pedido) → 310 ms
+         (resposta) com 40 ms de rede, e o React só desenhava depois disso. Aqui
+         o pedido nasce no primeiro byte do HTML e anda em paralelo com o
+         download da entrada; `main.tsx` pega a MESMA resposta em
+         `window.__ideConfig` (uma vez) e, se ela não estiver aí, pede como
+         sempre. A página do cliente (`/aprovar/…`) não pergunta nada — ver
+         `main.tsx`. Falha de rede aqui vira promessa rejeitada, que `main.tsx`
+         trata como "sem lista" (o comportamento de sempre). -->
+    <script>
+      if (location.pathname.indexOf('/aprovar/') !== 0) {
+        try {
+          window.__ideConfig = fetch('/api/config', { credentials: 'same-origin' });
+          window.__ideConfig.catch(function () {});
+        } catch (e) {
+          window.__ideConfig = undefined;
+        }
+        /* A MARCA TAMBÉM. É uma máscara de CSS (`.iw-marca`, em
+           `layout-foco.css`): o navegador só descobre o arquivo depois de
+           montar a barra lateral — medido a frio, 452 ms contra 90 ms se o
+           pedido sai daqui — e até lá o canto da tela fica vazio. Está na
+           barra de toda tela e na moldura de entrada. A página do cliente
+           (`/aprovar/…`) tem a marca própria e fica de fora. */
+        var marca = document.createElement('link');
+        marca.rel = 'preload';
+        marca.as = 'image';
+        /* `crossorigin`: o `mask-image` do CSS busca em modo CORS; sem o
+           atributo o navegador não reaproveita o pedido e baixa duas vezes
+           (conferido: 2 x 16 kB). */
+        marca.crossOrigin = 'anonymous';
+        marca.href = '/ideworks-marca.png';
+        document.head.appendChild(marca);
+      }
+    </script>
+
+    <!-- O ÍCONE DA ABA — F17.66.
+         Até 2026-09-04 não havia `<link rel="icon">` nenhum, e o navegador
+         desenhava o globo cinza de "não achei nada" — foi assim que o usuário o
+         viu, entre as outras abas. O desenho e o porquê de cada escolha estão
+         comentados dentro de `public/favicon.svg`.
+         ⚠️ Navegador antigo sem suporte a favicon SVG (Safari < 16) volta ao
+         globo, como hoje: sem `.ico`, isto piora para ninguém. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- O ÍCONE NA TELA INICIAL DO CELULAR — F29.
+         Em 23/09/2026 o Wesley pediu que o IdeWorks salvo na tela inicial do
+         celular mostrasse o logo IdeWorks. Sem nada disto, o Android desenha
+         uma letra num círculo e o iPhone tira uma foto da página: ninguém
+         reconhece o app entre os outros.
+         - Android lê o `manifest.webmanifest`: nome, ícones 192/512 e
+           `display: standalone`, que abre sem a barra do navegador. O 512
+           também vale como `maskable` porque o nome ocupa ~70% da largura,
+           dentro do círculo de 80% que o Android preserva ao recortar.
+         - iPhone ignora os ícones do manifesto: quer o `apple-touch-icon`
+           (180, sem transparência — com ela o iOS pinta o fundo de preto) e
+           as metas `apple-mobile-web-app-*` para abrir em tela cheia.
+         - `background_color` do manifesto é BRANCO, e não o `#050506` daqui:
+           é a cor da tela de abertura do Android, que mostra o ícone no meio
+           — branco casa com o fundo do logo. A barra de status continua
+           escura (`theme_color` e `black`, abaixo), como a do navegador.
+         - `black` e não `black-translucent`: o translúcido põe a página
+           por baixo do relógio, e nenhuma tela reserva `safe-area-inset`.
+         Sem service worker de propósito: o pedido é o ícone e a tela cheia,
+         não funcionar desligado da rede. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="IdeWorks" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <!-- NENHUMA FONTE BAIXADA — F17.20.
+         Aqui havia Quicksand e JetBrains Mono, do Google Fonts: dois
+         `preconnect`, uma folha que bloqueia a primeira pintura e dois arquivos
+         de fonte antes de qualquer pixel. O sistema passa a usar a fonte do
+         aparelho, que é o que o iOS faz — e o que sobra é a página abrindo sem
+         esperar por servidor nenhum. Ver `src/ui/acabamento.css`. -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

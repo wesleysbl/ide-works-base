@@ -1,0 +1,1075 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   O QUADRO — as peças que só ele usa. Etapa F17.9a.
+
+   POR QUE UM ARQUIVO SEPARADO DE `obsidian.css`
+     Duas razões, e as duas práticas.
+
+     1. `obsidian.css` é o DICIONÁRIO do sistema: a escada de superfícies, a
+        platina, as luzes, as primitivas que toda tela reusa. Coluna de quadro e
+        cartão arrastável não são vocabulário do sistema — são vocabulário de
+        UMA tela. Empurrá-los para lá engordaria o dicionário com palavras que
+        só um lugar pronuncia.
+
+     2. Há outra sessão trabalhando em `obsidian.css` agora. Arquivo novo custa
+        nada e não disputa linha com ninguém.
+
+   A REGRA DA D10 CONTINUA VALENDO AQUI, INTEIRA
+     Nenhuma cor literal. Tudo que é ESTILO sai de `var(--…)` do OBSIDIAN.
+
+     O que NÃO é estilo — a cor do status e a da etiqueta, que vêm do ClickUp e
+     mudam de lista para lista — entra por variável posta no próprio elemento
+     (`--cor-status`, `--cor-etiqueta-fundo`, `--cor-etiqueta-tinta`). É dado
+     viajando como dado. Escrevê-lo como classe seria inventar uma classe por
+     hexadecimal do ClickUp, que é exatamente o que a D10 existe para impedir.
+
+     Toda variável de dado tem token do sistema como reserva: lista sem cor
+     definida na origem não desenha um buraco.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* --- a tela: barra lateral + quadro ---------------------------------------- */
+
+.q-tela {
+  display: grid;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .q-tela {
+    /* A barra é fixa e o quadro fica com o resto. `minmax(0, 1fr)` e não `1fr`:
+       sem o mínimo zero, a faixa de colunas empurra a grade e a rolagem
+       horizontal do quadro vaza para a página inteira. */
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+  }
+}
+
+/* A barra acompanha a rolagem: navegar entre listas não deveria exigir voltar
+   ao topo de um quadro de trezentos cartões. */
+.q-barra {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .q-barra {
+    position: sticky;
+    top: 0.75rem;
+  }
+}
+
+/* --- a faixa de colunas ---------------------------------------------------- */
+
+/* Rola de lado DENTRO da caixa, nunca a página. Mesma decisão da tabela larga
+   em `obsidian.css`: onze colunas não se resolvem espremendo, se resolvem
+   rolando. */
+.q-colunas {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  align-items: flex-start;
+}
+
+.q-coluna {
+  flex: 0 0 17.5rem;
+  width: 17.5rem;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-md);
+  border: 1px solid var(--hair);
+  background: var(--ink-1);
+  /* A reserva do sistema entra quando o status vem sem cor da origem. */
+  --cor-status: var(--hair-3);
+}
+
+/* A COR DA ESTEIRA APARECE AQUI, E É O ÚNICO LUGAR ONDE ELA MANDA NO DESENHO.
+   Um fio no topo, não um bloco: `#d3d3d3` como fundo de coluna apagaria o
+   cartão que vive dentro dela, e a cor do ClickUp foi escolhida para um tema
+   claro. Como fio ela identifica a coluna sem disputar leitura com o conteúdo. */
+.q-coluna::before {
+  content: '';
+  display: block;
+  flex: 0 0 auto;
+  height: 3px;
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: var(--cor-status);
+}
+
+.q-coluna-topo {
+  display: flex;
+  /* Esticada (F17.27), a coluna vira um flex com altura fixa — e num flex com
+     altura fixa tudo encolhe por padrão. O cabeçalho e o fio de cima têm o
+     tamanho que têm. */
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--hair);
+}
+
+/* O NOME DA COLUNA — F17.20.
+   Ele era `uppercase tracking-wide` escrito em utilitário do Tailwind, nas duas
+   telas de quadro, e saía `A FAZER` · `CONCLUÍDA`. Versalete espaçado é a marca
+   de "gerado"; a referência escreve em caixa de frase.
+
+   E o nome vem do DADO: no banco ele é `a fazer`, minúsculo. `::first-letter`
+   dá a maiúscula de frase sem tocar no valor — `capitalize` daria `A Fazer`,
+   que não é português. */
+.q-coluna-nome {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--plat);
+}
+.q-coluna-nome::first-letter { text-transform: uppercase; }
+
+/* Coluna vazia: uma linha curta e discreta, sem caixa e sem explicação. O nome
+   da coluna e o zero ao lado já dizem o que há. */
+.q-coluna-vazia {
+  padding: 0.5rem 0.25rem;
+  color: var(--plat-dim);
+  font-size: var(--iw-t-meta);
+}
+
+/* VAZIA PELO FILTRO — F06B. Não é a etapa que está vazia, é a busca que não
+   achou: a frase diz, e a moldura tracejada separa as duas de relance. */
+.q-coluna-vazia[data-motivo='filtro'] {
+  padding: 0.5rem 0.625rem;
+  border: 1px dashed var(--hair-2);
+  border-radius: var(--r-sm);
+}
+
+/* ─────────────────────── o corte da coluna — F17.50 ─────────────────────── */
+
+/* A LINHA QUE DIZ QUE FALTA GENTE NA COLUNA.
+   Aparece só quando a coluna foi cortada: `12 de 1.049` e um `Mostrar mais`.
+   Ver `CARTOES_POR_COLUNA` em `@/board/board` para o porquê do corte. */
+.q-coluna-corte {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0.5rem;
+  padding: 0.4rem 0.15rem 0.1rem;
+  border-top: 1px solid var(--hair);
+  /* ⚠️ 0,75rem = 12px, e a F17.37 pede 7:1 abaixo de 14px. `--plat-dim` é o
+     tom que passa; `--mute` reprova nesse tamanho. */
+  font-size: 0.75rem;
+  color: var(--plat-dim);
+}
+
+.q-coluna-mais {
+  margin-left: auto;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.q-coluna-mais:hover:not(:disabled) {
+  color: var(--luz-texto);
+  border-color: var(--luz);
+}
+
+.q-coluna-mais:disabled {
+  cursor: default;
+  /* Sem opacidade: apagar texto de 12px derruba o contraste abaixo de 7:1, que
+     é o defeito que a F17.37 veio desfazer. Quem diz "está ocupado" é a
+     palavra, não o desbotamento. */
+  border-color: var(--hair);
+}
+
+/* O ponto repete a cor do fio de perto do nome — quem lê o título da coluna não
+   precisa subir os olhos até a borda para saber de qual esteira ela é. */
+.q-ponto {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--cor-status);
+}
+
+.q-coluna-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  min-height: 5.5rem;
+  max-height: calc(100vh - 16rem);
+  overflow-y: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O QUADRO INTEIRO OCUPA O QUE SOBRA DA JANELA — F17.27.
+
+   O DEFEITO, MEDIDO ANTES (Chrome 1440×1000, lista `anúncios`, 0 tarefas)
+     `.q-colunas` tinha `overflow-x: auto` e NENHUMA altura; `.q-tela` era
+     `align-items: start` e `.q-coluna` não esticava. A faixa que rola ficava
+     com a altura da coluna mais alta — 190px —, e a barra de rolagem
+     horizontal nascia a **544px do fim da tela**, com dois terços da janela
+     pretos e mortos embaixo dela.
+
+     E o prejuízo era maior que o desalinho: os dois gestos da F17.25 (a roda e
+     o arrasto do fundo) valem na FAIXA. Um ponto 400px abaixo do topo das
+     colunas caía FORA dela — medido, `elementsFromPoint` não devolvia
+     `.q-colunas` —, então todo aquele preto, que para qualquer pessoa É o
+     quadro, não respondia a nada.
+
+   COMO SE RESOLVE, E POR QUE NÃO POR SUBTRAÇÃO
+     `.q-coluna-corpo` tinha `max-height: calc(100vh - 16rem)`. Trocar 16rem
+     por outro número seria repetir o erro num valor diferente: o `16rem` é a
+     soma chutada do cabeçalho, da trilha e do resumo, e ela muda quando
+     qualquer um dos três muda de tamanho.
+
+     Aqui a altura DESCE POR HERANÇA, degrau a degrau, e cada degrau que a
+     repassa precisa de `min-height: 0` — sem ele o conteúdo volta a mandar e a
+     cadeia se rompe. `PaginaLarga altura="tela"` abre a cadeia; estes
+     seletores a terminam.
+
+   ⚠️ E AGORA VALE EM QUALQUER LARGURA — F17.75, e a razão antiga morreu.
+
+     A F17.27 escreveu "só acima de 1024px, porque abaixo a grade empilha a
+     barra em cima do quadro e a sobra seria pouca demais para as duas coisas".
+     A razão estava certa e o número a confirma — Chrome, pasta `TIME HELENA`,
+     820×900:
+
+       .q-tela começa em ................  y=112
+       .q-conteudo (o quadro) começa em .. y=1.627
+       a barra empilhada no meio .........   1.515px
+       o quadro pedia ....................     942px
+       a página inteira ..................   2.593px numa janela de 900
+
+     A F17.72 tentou matar o `16rem` aqui e MEDIU o estrago — a página ia a
+     7.422px e a barra que rola de lado descia 7.398px. Estava certa em recusar:
+     naquela forma era um defeito trocado por outro.
+
+     O que nenhuma das duas fez foi tirar a BARRA do caminho. Desde a F17.75 ela
+     é uma gaveta abaixo de 1024px (`.bl-barra[data-gaveta]`, `ui/clickup.css`),
+     fora do fluxo — e com ela fora, "a sobra é pouca demais para as duas
+     coisas" deixa de ser verdade: não há mais duas coisas. É o mesmo padrão da
+     F17.72, em que o `min-` de `min-h-screen` tinha sobrevivido à razão dele.
+
+   O `16rem` FICA COMO PISO, E ISSO É DE PROPÓSITO
+     A regra-base de `.q-coluna-corpo` continua com `max-height:
+     calc(100vh - 16rem)`; quem a desliga é o seletor de `data-altura='tela'`
+     abaixo. Se a cadeia se romper uma quinta vez, a coluna volta a rolar dentro
+     de si em vez de crescer 6.000px — o defeito reaparece de leve em vez de
+     reaparecer inteiro.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.q-tela[data-altura='tela'] {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+  /* ⚠️ DUAS LINHAS ABAIXO DE 1024px, E A PRIMEIRA É O BOTÃO DA GAVETA.
+     A barra sai do fluxo (`position: fixed`), então os itens de grade em fluxo
+     são só o `.bl-abrir` e o `.q-conteudo`. `auto` para o botão — ele tem o
+     tamanho que tem —, e `minmax(0, 1fr)` para o quadro, com o ZERO pelo mesmo
+     motivo de sempre: sem o mínimo zero a linha é inflada por quem está dentro
+     dela. Acima de 1024px o botão é `display: none`, não ocupa célula, e a
+     regra da media query devolve a linha única. */
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.q-tela[data-altura='tela'] > .q-conteudo {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* A trilha, o resumo e os avisos têm o tamanho que pedem. O que sobra é do
+   quadro, e é só dele. */
+.q-tela[data-altura='tela'] > .q-conteudo > * {
+  flex: 0 0 auto;
+}
+
+/* ⚠️ `flex: 1 1 0`, e o ZERO É O PONTO — foi medido.
+   Com `flex-basis: auto` a faixa continua contribuindo com a ALTURA DO CONTEÚDO
+   para o tamanho do pai, e uma coluna de quinze cartões volta a empurrar a
+   página: medido em 845px de faixa numa janela de 905, com a barra de rolagem
+   112px ABAIXO da borda de baixo. Com base zero a faixa não pede altura nenhuma
+   — recebe a que sobrou, e o que não couber rola dentro da coluna. */
+.q-tela[data-altura='tela'] .q-colunas {
+  flex: 1 1 0;
+  min-height: 0;
+  /* AS COLUNAS SE ESTICAM ATÉ O FIM DA ÁREA, como no ClickUp: o vazio abaixo do
+     último cartão continua sendo DAQUELA coluna — e não de um fundo sem dono,
+     que era o que havia embaixo da faixa curta. */
+  align-items: stretch;
+  /* O respiro sai daqui: quem separa a barra de rolagem da borda da janela é o
+     `pb` da página, e dois respiros somados afastariam a barra do fim de novo. */
+  padding-bottom: 0;
+}
+
+/* ⚠️ O CORPO NÃO ESTICA — `0 1 auto`, e cada número é uma decisão medida.
+
+   `flex-grow: 0` porque o `+ Adicionar tarefa` fica LOGO ABAIXO DO ÚLTIMO
+   CARTÃO, como na referência, e não colado no pé da coluna. Com `grow: 1` ele
+   descia até o rodapé, longe do cartão que ele completa. (Até 2026-09-11 o
+   rodapé tinha também o botão fixo de tema, que cobria o botão da coluna; ele
+   saiu para a aba `Temas` do `Personalizar`.) O vazio que sobra continua sendo da coluna: é o box dela que o
+   desenha, é ela que recebe a soltura do cartão, e é dela que o arrasto de
+   rolagem parte.
+
+   `flex-shrink: 1` com `min-height: 0` é o que substitui o teto mágico: numa
+   coluna com mais cartões do que cabe, o corpo encolhe até a altura disponível e
+   o excedente rola aqui dentro — que é o que `overflow-y: auto` sempre esperou
+   poder fazer. */
+.q-tela[data-altura='tela'] .q-coluna-corpo {
+  /* O NÚMERO MÁGICO MORRE AQUI. Ver o cabeçalho deste bloco. */
+  max-height: none;
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+/* ⚠️ ACIMA DE 1024px MUDA SÓ O QUE TEM DE MUDAR: a grade volta a ser DUAS
+   COLUNAS e UMA LINHA, porque lá a barra é um item dela e não uma gaveta. */
+@media (min-width: 1024px) {
+  .q-tela[data-altura='tela'] {
+    /* ⚠️ `minmax(0, 1fr)` NA LINHA, e o ZERO é o ponto — F17.72.
+
+       Uma linha `auto` (o padrão) tem como tamanho-base o MAIOR conteúdo dos
+       itens dela. A barra lateral pedia 1056px numa janela de 1080 e a linha
+       obedecia: `.q-tela` virava 1056, `<main>` 1176, e o documento passava
+       96px da janela — medido. Com o mínimo zero a linha não pode ser
+       inflada por quem está dentro dela: ela recebe a altura da grade, e
+       quem não couber rola dentro de si. */
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  /* ⚠️ A BARRA SE MEDE PELA LINHA DA GRADE, NÃO PELA JANELA — F17.72.
+
+     `.bl-barra` tem `max-height: calc(100vh - 1.5rem)` (F17.50), e ali o teto
+     estava certo: naquela etapa a barra era a peça mais alta de uma página que
+     crescia. Nesta cadeia ele mente, porque `100vh` é medido a partir do topo
+     da JANELA e a barra começa 112px abaixo dele — o título e o voltar vêm
+     antes. Sobravam 968px e ela pedia 1056.
+
+     `100%` é a mesma intenção sem o chute: o teto passa a ser a linha da grade,
+     que já é a sobra de verdade. E o `min-height: 0` é o de sempre — item de
+     grade tem mínimo automático, e sem zerá-lo o conteúdo volta a mandar.
+
+     ⚠️ Abaixo de 1024px esta regra NÃO se aplica, e é de propósito: lá a barra
+     é `position: fixed` e não é item de grade nenhum. */
+  .q-tela[data-altura='tela'] > .bl-barra {
+    max-height: 100%;
+    min-height: 0;
+  }
+}
+
+/* O ALVO DO ARRASTO SE ANUNCIA. Sem isto, arrastar é adivinhação: o cartão sai
+   do lugar e nada na tela diz onde ele vai cair. */
+.q-coluna[data-alvo='true'] {
+  border-color: var(--luz);
+  box-shadow: 0 0 0 1px var(--luz), var(--glow-luz);
+}
+
+.q-coluna[data-alvo='true'] .q-coluna-corpo {
+  background: var(--luz-soft);
+}
+
+/* ─────────────── etapas vazias recolhidas — F06C (revisão de 28/09, R04) ───────────────
+
+   A etapa sem tarefa vira uma FAIXA ESTREITA, no mesmo lugar do fluxo: o fio
+   da cor da esteira em cima, o zero e o nome em pé. A `<section>` é a mesma
+   da coluna aberta, então soltar um cartão aqui continua movendo para esta
+   etapa, e o destaque do alvo (`data-alvo`) vale igual. Clicar abre a etapa. */
+.q-coluna[data-recolhida='true'] {
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  min-height: 10rem;
+  background: transparent;
+}
+.q-coluna[data-recolhida='true'][data-alvo='true'] { background: var(--luz-soft); }
+/* A coluna recebe foco pela navegação (`tabIndex=-1`): o anel aparece só
+   quando o foco veio do teclado. */
+.q-coluna:focus { outline: none; }
+.q-coluna:focus-visible { outline: var(--iw-foco-largura, 2px) solid var(--iw-foco); outline-offset: 2px; }
+
+.q-dobra {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.7rem 0 0.75rem;
+  border: 0;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  background: transparent;
+  color: var(--iw-texto-2);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.q-dobra:hover { background: var(--iw-hover); color: var(--plat); }
+.q-dobra:focus-visible { outline: var(--iw-foco-largura, 2px) solid var(--iw-foco); outline-offset: -3px; }
+.q-dobra-conta { font-size: 0.72rem; color: var(--plat-dim); }
+/* O nome EM PÉ, lido de cima para baixo — como a lombada de uma pasta. Um
+   nome comprido para no fim da faixa com reticências; o inteiro está no
+   nome acessível e no `title`. */
+.q-dobra-nome {
+  writing-mode: vertical-rl;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.q-dobra-nome::first-letter { text-transform: uppercase; }
+
+/* ─────────────── a navegação por etapas — F06C ───────────────
+   Uma fila de atalhos, na ordem do fluxo, com a contagem de cada coluna. Só
+   aparece quando a faixa não cabe; a fila rola de lado DENTRO dela mesma. */
+.q-etapas { margin: 0 0 var(--iw-e-2); min-width: 0; }
+.q-etapas > ul {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0 0 2px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.q-etapa {
+  --cor-status: var(--hair-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.875rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--iw-texto-2);
+  font-family: inherit;
+  font-size: var(--iw-t-meta);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.q-etapa .q-ponto { width: 7px; height: 7px; }
+.q-etapa-nome::first-letter { text-transform: uppercase; }
+.q-etapa-conta { color: var(--plat-dim); }
+.q-etapa:hover { background: var(--iw-hover); color: var(--plat); }
+/* À VISTA: o "você está aqui" de uma faixa que não cabe na tela. */
+.q-etapa[data-a-vista='true'] { border-color: var(--hair-3); background: var(--iw-selecionado); color: var(--plat); }
+.q-etapa[data-vazia='true']:not([data-a-vista='true']) .q-etapa-nome { color: var(--iw-texto-3); }
+.q-etapa:focus-visible { outline: var(--iw-foco-largura, 2px) solid var(--iw-foco); outline-offset: 1px; }
+@media (pointer: coarse) {
+  .q-etapa { min-height: var(--iw-alvo-toque); }
+}
+
+/* LIGADO É O PADRÃO, então ligado não grita: o estado pressionado deste
+   interruptor é neutro (o da aba ativa), e o verde fica para o que pede
+   atenção. `aria-pressed` continua dizendo o estado. */
+.q-ferramentas .q-interruptor-vazias[aria-pressed='true'] {
+  color: var(--plat);
+  border-color: var(--hair-3);
+  background: var(--iw-selecionado);
+}
+/* O número do interruptor `Recolher vazias`: quantas etapas ele encolhe. */
+.q-interruptor-conta {
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: var(--r-pill);
+  background: var(--ink-2);
+  color: inherit;
+  font-size: 0.7rem;
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .q-dobra, .q-etapa { transition: none; }
+}
+
+/* --- o cartão -------------------------------------------------------------- */
+
+.q-cartao {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: grab;
+  /* O `···` da F17.63 se prende AQUI. `relative` com `z-index: auto` NÃO cria
+     contexto de empilhamento — o `transform` do `:hover` logo abaixo cria, e é
+     por isso que o balão sai por portal e não por `z-index`. */
+  position: relative;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--hair);
+  background: var(--ink-2);
+  padding: 0.55rem 0.65rem;
+  /* Elevação pelo token, e não por uma sombra escrita à mão: é o mesmo degrau
+     que o resto do sistema usa, e ele acompanha o tema claro sozinho. */
+  box-shadow: var(--e-1);
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out),
+    opacity var(--dur-1);
+}
+
+/* F06B: sem o `translateY` de antes. Peça que sobe sob o ponteiro é gesto de
+   vitrine (ver `acabamento.css`, §5), e numa coluna de cinquenta ela tremia a
+   cada passada. Passar o mouse muda a BORDA; o foco ganha o anel; o arrasto
+   (seleção em trânsito) ganha a cor de destaque — três estados, três sinais. */
+.q-cartao:hover {
+  border-color: var(--hair-3);
+}
+
+.q-cartao:active {
+  cursor: grabbing;
+}
+
+/* O cartão em trânsito continua visível, e apagado: some-lo faria a coluna
+   pular de altura no meio do arrasto. */
+.q-cartao[data-arrastando='true'] {
+  opacity: 0.4;
+  border-color: var(--luz);
+}
+
+/* Enquanto a escrita não voltou do servidor, o cartão fica em espera. Não é
+   enfeite: é o que impede um segundo arrasto em cima do primeiro. */
+.q-cartao[data-salvando='true'] {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* O TÍTULO É A COISA MAIS FORTE DO CARTÃO — F06B. 14px (a régua `--iw-t-corpo`)
+   e peso 520, contra 12px/400 do rodapé: dois degraus de tamanho E de peso,
+   para a hierarquia sobreviver em cinza. */
+.q-titulo-cartao {
+  /* O link do título é alvo de ponteiro: 24px de altura no mínimo, também quando
+     o título cabe numa linha (19px) — WCAG 2.5.8. */
+  min-height: 1.5rem;
+  color: var(--plat);
+  font-size: var(--iw-t-corpo);
+  line-height: 1.38;
+  font-weight: 520;
+  letter-spacing: -0.006em;
+  overflow-wrap: anywhere;
+}
+
+/* --- mover a tarefa direto do cartão — F17.63 ------------------------------ */
+
+/*
+  O `···` DO CARTÃO.
+
+  ⚠️ A FAIXA É RESERVADA SEMPRE, e não só quando o botão aparece. Reservá-la no
+  `:hover` faria o título REFLUIR debaixo do ponteiro — a palavra pula de linha
+  no instante em que o mouse entra no cartão, em cinquenta cartões, o dia
+  inteiro. É o mesmo princípio da miniatura da F17.56 dito ao contrário: lá o
+  que não existe não ocupa; aqui o que sempre pode existir sempre ocupa.
+
+  Só o TÍTULO e a linha da mãe pagam a faixa. As etiquetas, a arte e o rodapé
+  começam abaixo do botão e passariam por baixo dele sem encostar.
+*/
+.q-titulo-cartao,
+.q-mae {
+  padding-right: 1.55rem;
+}
+
+/* APARECE AO PASSAR O MOUSE, FICA ABERTO E FICA COM O FOCO — mesma regra do
+   `···` da árvore (`.cu-no-acao`): um botão que só existe sob o ponteiro é
+   inalcançável para quem navega pelo teclado. */
+.q-cartao-acao {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.q-cartao:hover .q-cartao-acao,
+.q-cartao:focus-within .q-cartao-acao,
+.q-cartao-acao[data-fixo='true'],
+.q-cartao-acao:focus-within {
+  opacity: 1;
+}
+
+/* NO TOQUE NÃO HÁ "PASSAR O MOUSE" — F06B. Sem isto o `···` era um alvo
+   invisível no celular (tocável, mas só por quem já soubesse que ele estava
+   ali), e o círculo do responsável vazio ficava a 45%. A faixa do `···` já é
+   reservada no título, então mostrá-lo não reflui nada. */
+@media (hover: none) {
+  .q-cartao-acao { opacity: 1; }
+  .q-cartao .q-responsavel-btn[data-vazio='true'] { opacity: 0.8; }
+}
+
+/* O ✓ DE CONCLUIR — ao lado do `···`, com a mesma regra de aparecer. A faixa
+   do título alarga só nos cartões que o têm. */
+.q-cartao-concluir {
+  position: absolute;
+  top: 0.3rem;
+  right: 2.05rem;
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.q-cartao:hover .q-cartao-concluir,
+.q-cartao:focus-within .q-cartao-concluir {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .q-cartao-concluir { opacity: 1; }
+}
+
+.q-cartao-concluir > .cu-icone-btn {
+  /* 1,5rem = 24px, o alvo mínimo de ponteiro (WCAG 2.5.8); eram 1,35rem. */
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--ink-2);
+}
+
+.q-cartao-concluir > .cu-icone-btn:hover {
+  background: var(--hair);
+  color: var(--ok, currentColor);
+}
+
+.q-cartao:has(.q-cartao-concluir) .q-titulo-cartao,
+.q-cartao:has(.q-cartao-concluir) .q-mae {
+  padding-right: 3.3rem;
+}
+
+/* O fundo do próprio cartão embaixo do botão: sem ele, um título de duas
+   linhas apareceria atravessado pelos três pontos. */
+.q-cartao-acao > .cu-icone-btn {
+  /* 1,5rem = 24px, o alvo mínimo de ponteiro (WCAG 2.5.8); eram 1,35rem. */
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--ink-2);
+}
+
+.q-cartao-acao > .cu-icone-btn:hover {
+  background: var(--hair);
+}
+
+/* --- a miniatura do cartão — F17.56 ---------------------------------------- */
+
+/*
+  A ARTE DA TAREFA, NO CARTÃO.
+
+  ⚠️ ELA NÃO RESERVA ESPAÇO. O elemento só existe quando há arte para desenhar
+  (ver `Miniatura` em `board/CartaoDeTarefa.tsx`), e por isso o cartão sem anexo
+  não muda de altura nem ganha buraco. Um `min-height` aqui — o reflexo comum
+  para "evitar o pulo" — faria exatamente o que a etapa proibiu: mil setecentos
+  e oitenta e um cartões pagando espaço pela arte que dezesseis têm.
+
+  ALTURA FIXA, LARGURA INTEIRA, `cover`. A coluna é estreita e as artes vêm em
+  todo formato: `stories` em pé, capa de post em quadrado, apresentação
+  deitada. Deixar a proporção livre faria cada cartão ter um tamanho, e a
+  coluna deixaria de ser lida como coluna. `cover` corta; e cortar é o certo
+  aqui, porque a miniatura serve para RECONHECER a arte, não para julgá-la — a
+  tarefa está a um clique.
+*/
+.q-miniatura {
+  position: relative;
+  margin-top: 0.45rem;
+  border-radius: var(--r-xs);
+  /* O corte mora aqui, e não na imagem: assim o selo de "+N" também é cortado
+     pelo mesmo canto arredondado. */
+  overflow: hidden;
+  /* O fundo aparece enquanto a arte não decodifica, e por baixo de PNG com
+     transparência — sem ele, arte transparente lê como buraco no cartão. */
+  background: var(--ink-3);
+  line-height: 0;
+}
+
+.q-miniatura img {
+  display: block;
+  width: 100%;
+  height: 7rem;
+  object-fit: cover;
+  /* ARRASTAR O CARTÃO CONTINUA SENDO ARRASTAR O CARTÃO — F17.25. O atributo
+     `draggable={false}` já está no elemento; isto é o par visual dele, e
+     impede que a arte seja SELECIONADA no meio de um arrasto curto. */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Quantas artes a tarefa tem além da que está à vista. Ele fica SOBRE a
+   imagem, no canto, e não numa linha própria: uma linha a mais cresceria o
+   cartão de novo. */
+.q-miniatura-mais {
+  position: absolute;
+  right: 0.3rem;
+  bottom: 0.3rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--r-xs);
+  /* ⚠️ CONTRASTE: este texto é pequeno, e a régua da F17.37 pede 7:1 abaixo de
+     14px. Ele não fica sobre a ARTE — que é imagem, e imagem não tem contraste
+     que se possa garantir —, e sim sobre `--ink-1` opaco, que é o mesmo fundo
+     onde `--plat` já é medido pelo resto do quadro. */
+  background: var(--ink-1);
+  color: var(--plat);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  line-height: 1.5;
+}
+
+.q-linha-cartao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.625rem;
+  margin-top: 0.5rem;
+  /* A altura do avatar: o rodapé não muda de altura entre cartão com e sem
+     prazo. */
+  min-height: 1.5rem;
+  /* F17.20: era `var(--f-mono)` a 0,64rem. Nesta linha convivem a data (número,
+     e ela traz `.tnum` própria) e o NOME do cliente — e `Zeca Hamburgueria` em
+     monoespaçado lê como nome de arquivo. A fonte do corpo serve os dois.
+     F06B: 12px em `--plat-dim` (a régua da F17.37 pede 7:1 abaixo de 14px). */
+  font-size: var(--iw-t-meta);
+  line-height: 1.3;
+  color: var(--plat-dim);
+}
+
+/* ─────────────────────── o rodapé do cartão — F06B ───────────────────────
+
+   PRAZO: um carimbo, sempre com o relógio. O tom vem de `data-estado`, e a
+   palavra está no texto (`Atrasada · 25/09`, `Hoje`, `Amanhã`), então nada
+   aqui depende só da cor. Só os dois estados de alarme ganham fundo: se todo
+   prazo fosse caixa colorida, nenhum chamaria atenção. */
+.q-prazo,
+.mt-prazo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--r-xs);
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.q-prazo { margin-left: -0.375rem; }
+.q-prazo-icone { width: 0.8125rem; height: 0.8125rem; flex: 0 0 auto; opacity: 0.8; }
+.q-prazo[data-estado='atrasada'],
+.mt-prazo[data-estado='atrasada'] { margin-left: 0; background: var(--err-soft); color: color-mix(in srgb, var(--err) 80%, var(--plat)); font-weight: 600; }
+.q-prazo[data-estado='hoje'],
+.mt-prazo[data-estado='hoje'] { margin-left: 0; background: var(--warn-soft); color: color-mix(in srgb, var(--warn) 80%, var(--plat)); font-weight: 600; }
+/* A cor pura sobre o próprio `-soft` dava 4,1–4,3:1 em texto de 12 px (claro:
+   Atrasada 4,11, Hoje 4,29; escuro: Atrasada 4,32) — abaixo do AA. Puxar 20%
+   para a cor do texto (`--plat`, escura no claro e clara no escuro) sobe tudo
+   para ≥ 5,1:1 sem perder o tom. Medido na verificação da F06B. */
+.q-prazo[data-estado='amanha'],
+.q-prazo[data-estado='embreve'],
+.mt-prazo[data-estado='amanha'],
+.mt-prazo[data-estado='embreve'] { color: var(--plat); }
+.q-prazo[data-estado='concluida'],
+.q-prazo[data-estado='ilegivel'],
+.mt-prazo[data-estado='concluida'],
+.mt-prazo[data-estado='ilegivel'] { color: var(--mute); font-weight: 400; }
+
+/* PRIORIDADE: a bandeira na cor do token (vem em `style`), a palavra ao lado. */
+.q-prioridade { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 0.2rem; font-weight: 500; white-space: nowrap; }
+.q-prioridade-icone { width: 0.75rem; height: 0.75rem; }
+
+/* OS INDICADORES: leves, juntos, sem caixa. Antes o comentário e o checklist
+   eram pílulas com borda — o terceiro elemento mais forte do cartão, depois do
+   título e das etiquetas. Continuam todos: ícone + número, com nome. */
+.q-indicadores { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 0.5rem; }
+.q-indicador { display: inline-flex; align-items: center; gap: 0.2rem; color: var(--plat-dim); white-space: nowrap; }
+.q-indicador-icone { width: 0.8125rem; height: 0.8125rem; opacity: 0.8; }
+.q-indicador[data-cheio='true'] { color: var(--ok); }
+
+/* O CLIENTE, quando ele diz algo (ver `clienteDaVisao`): cede largura antes de
+   tudo, e o nome inteiro fica no `title`. */
+.q-cartao-cliente {
+  /* Base zero e crescimento: numa linha que QUEBRA, o que decide a quebra é o
+     tamanho de partida de cada peça. Partindo de zero (com um piso), o nome
+     não empurra o avatar para uma terceira linha — ele ocupa a sobra e corta
+     com reticências. Encostado no avatar, à direita. */
+  flex: 1 1 0;
+  min-width: 3.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+.q-cartao-cliente + .q-cartao-quem { margin-left: 0; }
+
+/* O RESPONSÁVEL mora no canto, sempre — com ou sem os outros. */
+.q-cartao-quem { display: inline-flex; flex: 0 0 auto; margin-left: auto; }
+.q-cartao .q-avatar { width: 1.5rem; height: 1.5rem; font-size: 0.5625rem; border-color: var(--ink-2); }
+
+/* O QUE A TAREFA É: o tipo em texto leve, as etiquetas com a cor da origem. */
+.q-cartao-tipo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.375rem; margin-top: 0.375rem; }
+.q-tipo { color: var(--plat-dim); font-size: 0.6875rem; font-weight: 500; line-height: 1.4; }
+.q-tipo + .q-etiqueta { margin-left: 0.125rem; }
+
+/* --- avatar --------------------------------------------------------------- */
+
+.q-avatares {
+  display: flex;
+  align-items: center;
+}
+
+.q-avatar {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.02em;
+  background: var(--ink-3);
+  color: var(--plat-dim);
+  /* A borda na cor da superfície é o que separa um avatar do outro quando eles
+     se sobrepõem — sem ela vira uma mancha só. */
+  border: 1px solid var(--ink-1);
+}
+
+.q-avatar + .q-avatar {
+  margin-left: -0.35rem;
+}
+
+.q-avatar[data-mais='true'] {
+  background: var(--ink-1);
+  color: var(--mute);
+}
+
+/* --- etiqueta do ClickUp --------------------------------------------------- */
+
+/* As duas cores vêm em par da origem (`bg_color` e `fg_color`) e foram
+   escolhidas para funcionar juntas. Entram como par, com reserva do sistema. */
+.q-etiqueta {
+  --cor-etiqueta-fundo: var(--ink-3);
+  --cor-etiqueta-tinta: var(--plat-dim);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--r-xs);
+  font-size: 0.62rem;
+  line-height: 1.4;
+  background: var(--cor-etiqueta-fundo);
+  color: var(--cor-etiqueta-tinta);
+  white-space: nowrap;
+}
+
+/* --- barra lateral: a árvore ----------------------------------------------- */
+
+.q-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--r-xs);
+  font-size: 0.8rem;
+  color: var(--plat-dim);
+  transition: background var(--dur-1), color var(--dur-1);
+}
+
+.q-item:hover {
+  background: var(--hair);
+  color: var(--plat);
+}
+
+.q-item[aria-current='true'] {
+  background: var(--luz-soft);
+  color: var(--luz-texto);
+}
+
+.q-item-contagem {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 0.64rem;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────────────────────────── os passos, F17.15 ───────────────────────────── */
+
+/*
+  O INTERRUPTOR `Subtarefas` da barra de controle.
+
+  Ele é `aria-pressed`, e não uma caixa de seleção: é um botão que ALTERNA o que
+  a tela mostra, e o estado dele precisa ser lido em voz alta por quem navega
+  sem ver. O rótulo muda com o estado e diz quantos cartões estão escondidos —
+  ver `rotuloDoInterruptor`.
+*/
+.q-interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.6rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.q-interruptor:hover { color: var(--plat); border-color: var(--hair-2); background: var(--ink-2); }
+
+.q-interruptor[aria-pressed='true'] {
+  color: var(--luz-texto);
+  border-color: var(--luz);
+  background: var(--luz-soft);
+}
+
+/*
+  O cartão da SUBTAREFA diz de quem ele é.
+
+  Uma linha miúda acima do título, com a seta de retorno. Sem ela, com o
+  interruptor ligado, cinco passos da mesma tarefa apareceriam como cinco
+  cartões soltos e a coluna passaria a mentir sobre quanto trabalho há.
+*/
+.q-mae {
+  display: block;
+  margin-bottom: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  text-decoration: none;
+}
+
+.q-mae:hover { color: var(--mute); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DE QUE LISTA É ESTE CARTÃO — F17.64.
+
+   No quadro da PASTA a coluna `a fazer arte` junta as tarefas de vinte e cinco
+   clientes. Sem esta linha, o cartão é um pedido de trabalho sem cliente.
+
+   ⚠️ NÃO É `.q-mae` COM OUTRO NOME. Aquele é a seta de retorno da subtarefa, a
+   9,6px em `--mute`; este é a PROCEDÊNCIA, e ele é lido em toda coluna do
+   quadro da pasta. Por isso ele vai a 0,72rem em `--plat-dim` — a régua da
+   F17.37 pede 7:1 abaixo de 14px, e `--plat-dim` é o tom que passa; `--mute`
+   reprova nesse tamanho. É a mesma escolha de `.q-coluna-corte`.
+
+   O fio da esquerda, e não uma caixa: a caixa competiria com a etiqueta do
+   ClickUp logo abaixo, e o cartão passaria a ter dois chips antes do título.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.q-lista-do-cartao {
+  display: block;
+  margin-bottom: 0.2rem;
+  padding-left: 0.4rem;
+  border-left: 2px solid var(--hair-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--plat-dim);
+  font-size: 0.72rem;
+  /* 1,5rem (24px), e não 1,25: o link da lista é alvo de ponteiro e media 14px
+     de altura, com o título logo abaixo — WCAG 2.5.8. Uma linha só (`nowrap`),
+     então a altura é a do `line-height`. */
+  line-height: 1.5rem;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.q-lista-do-cartao:hover {
+  border-left-color: var(--luz);
+  color: var(--plat);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Em quantas listas a etapa existe — `10 de 25 listas`, no topo da coluna.
+
+   Só aparece quando a etapa NÃO está em todas: é o que explica por que a
+   coluna `no radar` tem menos cliente que a vizinha. Escrever `25 de 25` nas
+   treze colunas cheias seria ruído. */
+.q-abrangencia {
+  color: var(--plat-dim);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A BARRA DE FILTRO — F17.55.
+
+   A lupa e o botão `Responsável` do ClickUp, na linha de baixo do cabeçalho do
+   quadro. Ela envolve peças que já existem — `.cu-chip` para o responsável,
+   `.o-btn` para o `Limpar` — e só acrescenta o que não havia: a caixa de busca
+   com ícone dentro, e a frase do que está filtrado.
+
+   ⚠️ NENHUMA COR LITERAL, e nenhuma abaixo de 14px em `--mute` (decisão D10 e
+   F17.37). Os 12px daqui usam `--plat-dim`, que é o tom que passa em 7:1 —
+   a mesma escolha, pelo mesmo motivo, de `.q-coluna-corte` logo acima.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.q-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+/* A caixa inteira é o campo: o ícone e o X moram DENTRO da borda, e não ao lado
+   dela. Um ícone fora da caixa vira enfeite; dentro, ele diz o que a caixa faz
+   sem uma palavra escrita. */
+.q-filtro-caixa {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 12rem;
+  max-width: 22rem;
+  flex: 1 1 14rem;
+  padding: 0.24rem 0.5rem;
+  border: 1px solid var(--hair-2); /* campo: fio firme, como `.o-campo` — F43 Fase 5 */
+  border-radius: var(--r-sm);
+  background: var(--ink-1);
+  color: var(--plat-dim);
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+
+.q-filtro-caixa:focus-within { border-color: var(--hair-3); }
+
+.q-filtro-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.8rem;
+}
+
+.q-filtro-texto:focus { outline: 0; }
+.q-filtro-texto::placeholder { color: var(--plat-dim); }
+
+/* O que está filtrado, em número e em palavra. Ver o cabeçalho de
+   `@/board/BarraDeFiltro`: são sempre DOIS números, nunca um. */
+.q-filtro-dito {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--plat-dim);
+}
+
+
+.q-recolher-etapa {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+.q-recolher-etapa:hover { background: var(--iw-hover); }
+.q-recolher-etapa:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

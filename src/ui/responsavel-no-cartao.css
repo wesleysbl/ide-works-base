@@ -1,0 +1,93 @@
+/*
+  DEFINIR RESPONSÁVEL PELA CAPA DO CARTÃO — etapa F17.69.
+
+  ⚠️ POR QUE UM ARQUIVO SÓ PARA ISTO, E NÃO MAIS UMA SEÇÃO EM `quadro.css`
+    `quadro.css` é a folha de SEIS telas (o quadro da lista, o da pasta,
+    `Todas as tarefas`, a ficha, o cliente e a caixa de entrada), e nesta etapa
+    ela estava fora de alcance. O padrão de folha por peça já existe no projeto
+    — `passos.css` entra por `PassosDaTarefa.tsx`, e é o que esta faz por
+    `CartaoDeTarefa.tsx`.
+
+  COR: NENHUMA LITERAL (decisão D10). Tudo sai de `var(--…)` de
+  `cores-do-tema.css`, então os dois temas vêm de graça e nenhum valor é escrito
+  duas vezes.
+
+  ⚠️ O CONTRASTE. As iniciais têm 0,56rem (~9px), abaixo dos 14px, então valem
+  os 7:1: elas reusam `.q-avatar`, que já é `--plat-dim` sobre `--ink-3` e já
+  passa. O que este arquivo acrescenta é MOLDURA, não tinta nova.
+*/
+
+/*
+  O ALVO. Ele ocupa o mesmo lugar das iniciais no rodapé do cartão, e é por isso
+  que não empurra nada: sem `responsavel` o cartão desenha exatamente o mesmo
+  `<span>` de antes.
+*/
+.q-responsavel {
+  display: inline-flex;
+}
+
+.q-responsavel-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 999px;
+  cursor: pointer;
+  /* A moldura de foco não pode ser cortada pelo cartão: `outline` desenha por
+     fora sem participar da caixa. */
+  outline-offset: 2px;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.q-responsavel-btn:disabled {
+  cursor: progress;
+  opacity: 0.55;
+}
+
+/*
+  ⚠️ O CARTÃO SEM RESPONSÁVEL É O CASO MAIS COMUM — 1.313 de 1.843, medido em
+  2026-09-04. Ele não tem iniciais para servir de alvo, e um gesto que só existe
+  depois de a coisa estar feita não serve para fazê-la.
+
+  O círculo tracejado é o alvo dele: mesmo tamanho e mesmo lugar do avatar, para
+  o rodapé não mudar de altura entre um cartão com dono e um sem.
+*/
+.q-responsavel-btn[data-vazio='true'] {
+  /* DISCRETO EM REPOUSO, e não invisível: `opacity: 0` faria o cartão sem dono
+     esconder justamente o botão que ele mais precisa. Some do primeiro golpe de
+     vista sem sumir da tela. */
+  opacity: 0.45;
+}
+
+.q-cartao:hover .q-responsavel-btn[data-vazio='true'],
+.q-responsavel[data-fixo='true'] .q-responsavel-btn,
+.q-responsavel-btn:focus-visible {
+  opacity: 1;
+}
+
+/* O círculo vazio. `--mute` sobre o fundo do cartão, tracejado para dizer
+   "falta preencher" sem escrever nada — a tela não fala sobre si mesma. */
+.q-responsavel-btn > .q-avatar[data-vazio='true'] {
+  background: none;
+  border: 1px dashed var(--mute);
+  color: var(--mute);
+}
+
+.q-responsavel-btn:hover > .q-avatar[data-vazio='true'] {
+  border-color: var(--plat-dim);
+  color: var(--plat-dim);
+}
+
+/* O aro que diz "isto se clica" quando há iniciais. Ele nasce transparente para
+   não desenhar um segundo círculo em volta de cada avatar em repouso. */
+.q-responsavel-btn > .q-avatares {
+  border-radius: 999px;
+  box-shadow: 0 0 0 0 transparent;
+  transition: box-shadow var(--dur-1) var(--ease-out);
+}
+
+.q-cartao:hover .q-responsavel-btn > .q-avatares,
+.q-responsavel[data-fixo='true'] .q-responsavel-btn > .q-avatares {
+  box-shadow: 0 0 0 2px var(--hair);
+}

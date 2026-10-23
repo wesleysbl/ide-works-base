@@ -1,0 +1,1564 @@
+/**
+ * Estilos do chat — F20.5 / F20.6.
+ *
+ * Layout Obsidian: lista à esquerda, painel à direita. Os balões reusam
+ * `.c-fala` / `.c-fio` de `conversa.css`.
+ */
+
+/* ═══════════════════════ A COMPOSIÇÃO DO CHAT — F08 do plano UX ═══════════════════════
+   rail  ·  Conversas  ·  conversa  (·  membros, só com folga)
+
+   Até a F02 o chat era UM cartão com a lista dentro, abaixo de uma faixa que
+   só dizia "Chat", ao lado da barra expandida com a árvore: três navegações
+   antes da primeira mensagem (UX02). Agora a barra fica em rail no chat
+   (`composicaoEfetiva`), e "Conversas" É o painel de contexto — o mesmo
+   desenho da barra (`--iw-lateral`, fio, raio de painel) — e a conversa é o
+   palco, na superfície da página. Cada um rola por si.
+
+   A régua é a largura do MÓDULO (`data-faixa`, medida em `Chat.tsx`):
+     uma  (< 720)    lista OU conversa, pela rota;
+     duas (< 1040)   lista + conversa; membros por cima da leitura;
+     larga           lista + conversa + membros ao lado.
+   Nada aqui impõe largura mínima de 480 à conversa: sozinha ela funciona em 320. */
+.ch-grade {
+  display: grid;
+  grid-template-columns: clamp(15rem, 30%, 18rem) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: var(--iw-e-3);
+  min-height: 0;
+  min-width: 0;
+}
+
+.ch-lista,
+.ch-painel {
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-painel);
+  overflow: hidden;
+}
+
+/* ───────────────────────────── Conversas ───────────────────────────── */
+.ch-lista {
+  display: flex;
+  flex-direction: column;
+  background: var(--iw-lateral);
+}
+
+.ch-lista-cabeca {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--iw-e-3);
+  padding: var(--iw-e-4) var(--iw-e-3) var(--iw-e-3);
+}
+
+.ch-lista-titulo {
+  padding-inline: var(--iw-e-1);
+  font-size: var(--iw-t-secao);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  color: var(--iw-texto);
+}
+
+.ch-lista-acoes {
+  display: flex;
+  gap: var(--iw-e-2);
+}
+
+.ch-lista-acoes-wrap {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Criar é ação, não conversa: dois botões com contorno, no alto, que não se
+   confundem com as linhas de baixo. */
+.ch-criar {
+  width: 100%;
+  min-height: 2.25rem;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-fundo);
+  color: var(--iw-texto);
+  font-size: var(--iw-t-apoio);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ch-criar svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+  color: var(--iw-texto-3);
+}
+
+.ch-criar > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-criar:hover,
+.ch-criar[aria-expanded='true'] {
+  background: var(--iw-hover);
+}
+
+.ch-lista-itens {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--iw-e-1) var(--iw-e-2) var(--iw-e-3);
+  border-top: 1px solid var(--iw-linha);
+}
+
+/* A LINHA: rosto · nome e horário · prévia e não lidas. Sem fio entre as
+   linhas — o respiro e o rosto já as separam —, e o atual com o MESMO sinal da
+   barra: véu + fio de 3 px na cor de destaque. */
+.ch-item {
+  display: flex;
+  align-items: center;
+  gap: var(--iw-e-3);
+  min-height: 3.5rem;
+  padding: var(--iw-e-2) var(--iw-e-2) var(--iw-e-2) 0.625rem;
+  border-radius: var(--iw-r-controle);
+  color: var(--iw-texto);
+  text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.ch-item:hover {
+  background: var(--iw-hover);
+}
+
+.ch-item[data-atual='true'],
+.ch-item[data-atual='true']:hover {
+  background: var(--iw-selecionado);
+  box-shadow: inset 3px 0 0 var(--luz-texto);
+}
+
+.ch-item:focus-visible {
+  outline-offset: -2px;
+}
+
+.ch-item-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ch-item-linha {
+  display: flex;
+  align-items: baseline;
+  gap: var(--iw-e-2);
+  min-width: 0;
+}
+
+.ch-item-nome {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--iw-t-corpo);
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-item-quando {
+  flex: 0 0 auto;
+  font-size: var(--iw-t-meta);
+  color: var(--iw-texto-3);
+}
+
+.ch-item-previa {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--iw-t-apoio);
+  line-height: 1.35;
+  color: var(--iw-texto-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Com não lidas, a linha inteira sobe um degrau: nome forte, prévia em tinta,
+   horário na cor de destaque — dá para achar sem ler o número. */
+.ch-item[data-nao-lidas='true'] .ch-item-nome { font-weight: 650; }
+.ch-item[data-nao-lidas='true'] .ch-item-previa { color: var(--iw-texto-2); }
+.ch-item[data-nao-lidas='true'] .ch-item-quando { color: var(--luz-texto); font-weight: 600; }
+
+.ch-item-selo {
+  flex: 0 0 auto;
+  align-self: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: var(--r-pill);
+  background: var(--iw-verde-marca);
+  color: var(--iw-verde-marca-tinta);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  text-align: center;
+}
+
+/* ─────────────────── o rosto da conversa (lista e cabeçalho) ─────────────────── */
+.ch-rosto {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.ch-rosto .cu-avatar,
+.ch-rosto-grupo,
+.ch-rosto-marca {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-family: var(--f-body);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.ch-rosto-grupo {
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-selecionado);
+  color: var(--iw-texto-2);
+  box-shadow: inset 0 0 0 1px var(--iw-linha);
+}
+
+.ch-item[data-atual='true'] .ch-rosto-grupo {
+  background: var(--iw-fundo);
+}
+
+.ch-rosto-marca {
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-verde-marca);
+  color: var(--iw-verde-marca-tinta);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.ch-rosto[data-tamanho='grande'] {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+/* ─────────────────────── a conversa e a identidade dela ─────────────────────── */
+.ch-painel {
+  display: flex;
+  flex-direction: column;
+  background: var(--iw-fundo);
+}
+
+.ch-painel-cabeca {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--iw-e-3);
+  min-height: 4rem;
+  padding: var(--iw-e-3) var(--iw-e-3) var(--iw-e-3) var(--iw-e-4);
+  border-bottom: 1px solid var(--iw-linha);
+}
+
+.ch-painel-identidade {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* O nome é UMA linha: se não couber, reticências — o nome inteiro segue no
+   `title` e na lista. Quebrar em qualquer letra desenhava "G / e / r / a / l"
+   em pé (UX01). */
+.ch-painel-nome {
+  min-width: 0;
+  font-size: var(--iw-t-secao);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--iw-texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-painel-sobre {
+  font-size: var(--iw-t-meta);
+  line-height: 1.4;
+  color: var(--iw-texto-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-voltar {
+  display: none;
+}
+
+.ch-voltar-seta {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-top: -0.15rem;
+}
+
+.ch-membros-botao svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+}
+
+.ch-membros-botao {
+  flex: 0 0 auto;
+  gap: 0.4rem;
+  color: var(--iw-texto-2);
+}
+
+.ch-membros-botao,
+.ch-voltar {
+  border-radius: var(--iw-r-controle);
+}
+
+.ch-membros-botao[data-aberto='true'] {
+  background: var(--iw-selecionado);
+  color: var(--iw-texto);
+}
+
+/* ─────────────────────────────── membros ─────────────────────────────── */
+.ch-painel-grupo {
+  width: 15rem;
+  flex-shrink: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-left: 1px solid var(--iw-linha);
+  background: var(--iw-lateral);
+  padding: var(--iw-e-3) var(--iw-e-4) var(--iw-e-4);
+}
+
+.ch-painel-grupo:focus-visible {
+  outline-offset: -2px;
+}
+
+.ch-painel-grupo-cabeca {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--iw-e-2);
+  margin-bottom: var(--iw-e-3);
+}
+
+.ch-painel-grupo-nome {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: 0.3rem;
+}
+
+.ch-painel-grupo-nome strong {
+  font-size: var(--iw-t-corpo);
+  font-weight: 600;
+}
+
+.ch-painel-grupo-de {
+  font-size: var(--iw-t-meta);
+  color: var(--iw-texto-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dentro do painel, a lista é de consulta: frases de apoio pequenas e à
+   esquerda, ações de membro compactas junto do nome. */
+.ch-painel-grupo .ch-vazio {
+  padding: var(--iw-e-2) 0;
+  text-align: left;
+  font-size: var(--iw-t-apoio);
+}
+
+.ch-painel-grupo .ch-membro-acoes .o-btn {
+  min-height: 1.75rem;
+  padding: 0 var(--iw-e-2);
+  font-size: var(--iw-t-meta);
+}
+
+/* Ações de texto (Renomear, Sair do grupo, Passar posse) alinhadas à borda do
+   texto do painel: o recuo do botão fantasma (padding + borda) sai pela
+   margem, e o fundo do hover transborda para a esquerda, como num link. */
+.ch-painel-grupo-bloco > .o-btn-fantasma {
+  padding-inline: var(--iw-e-2);
+}
+.ch-painel-grupo-bloco > .o-btn-fantasma,
+.ch-painel-grupo .ch-membro-acoes .o-btn:first-child {
+  margin-inline-start: calc(-1 * var(--iw-e-2) - 1px);
+}
+
+/* Sem folga para a terceira faixa: por cima da LEITURA, nunca do compositor, e
+   sem espremer os balões. O botão Fechar e o Esc tiram. */
+.ch-painel-grupo[data-sobreposto='true'] {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 3;
+  width: min(20rem, 100%);
+  box-shadow: var(--iw-relevo), -0.5rem 0 1.5rem rgb(0 0 0 / 0.18);
+}
+
+/* ─────────────────────────── uma área por vez ─────────────────────────── */
+.ch-grade[data-faixa='uma'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ch-grade[data-faixa='uma'][data-conversa-aberta='true'] > .ch-lista,
+.ch-grade[data-faixa='uma'][data-conversa-aberta='false'] > .ch-painel {
+  display: none;
+}
+
+.ch-grade[data-faixa='uma'] .ch-voltar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  margin-left: calc(-1 * var(--iw-e-2));
+  padding-inline: 0.35rem 0.5rem;
+}
+
+.ch-grade[data-faixa='uma'] .ch-painel-cabeca {
+  gap: var(--iw-e-2);
+  padding: var(--iw-e-2) var(--iw-e-2) var(--iw-e-2) var(--iw-e-3);
+  min-height: 3.5rem;
+}
+
+/* No celular, cada pixel de largura é do nome: o "Conversas" do voltar vira
+   só a seta (o nome acessível segue "Voltar às conversas"), e Membros vira o
+   ícone com o nome por baixo, para o leitor de tela. */
+@media (max-width: 479.98px) {
+  .ch-grade[data-faixa='uma'] .ch-voltar-rotulo { display: none; }
+  .ch-grade[data-faixa='uma'] .ch-membros-botao > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .ch-grade[data-faixa='uma'] .ch-rosto[data-tamanho='grande'] {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .ch-voltar, .ch-membros-botao, .ch-criar { min-height: var(--iw-alvo-toque); }
+  .ch-item { min-height: 3.75rem; }
+}
+
+/* O título da página continua no DOM (h1 e alvo do "Pular para o conteúdo"),
+   sem gastar a faixa: quem diz onde se está são Conversas e a conversa. */
+:root .iw-app.ch-pagina .o-topo.ch-topo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.ch-painel-corpo {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ch-painel-grupo-bloco {
+  margin-bottom: 0.85rem;
+}
+
+.ch-painel-grupo-titulo {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+  margin-bottom: 0.35rem;
+}
+
+.ch-membros {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ch-membro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--hair);
+  font-size: 0.85rem;
+}
+
+.ch-membro-nome {
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-membro-papel {
+  font-size: 0.72rem;
+  color: var(--mute);
+}
+
+.ch-membro-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.ch-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.ch-campo input {
+  border: 1px solid var(--hair-2); /* campo: fio firme, como `.o-campo` — F43 Fase 5 */
+  border-radius: var(--r-sm);
+  padding: 0.4rem 0.55rem;
+  background: var(--ink-2);
+  color: var(--plat);
+  font: inherit;
+}
+
+.ch-caixa-erro {
+  color: var(--err);
+  font-size: 0.78rem;
+  margin: 0.4rem 0;
+}
+
+/* ══════════════════════ LEITURA E ESCRITA — F09 do plano UX ══════════════════════
+   A conversa é o palco (F08); aqui ela fica fácil de ler e de responder.
+
+   · Bolha: texto de leitura (15 px), nome e hora em uma linha só e só na
+     primeira fala do grupo. O dia já está no separador, então a hora é HH:MM
+     (o instante inteiro fica no `title`).
+   · Grupo: falas seguidas do mesmo autor, com até 5 min entre elas, encostam
+     (2 px) e não repetem rosto nem nome; entre autores, 12 px.
+   · A minha bolha é a única no verde da marca, em véu: identidade, não estado
+     (`--ok` fica para sucesso). As dos outros ficam na superfície neutra.
+   · Ações (Reagir/Editar/Apagar) flutuam sobre a borda da bolha: não reservam
+     altura embaixo de cada mensagem — era a folga que sobrava em todas.
+   · Compositor: UMA caixa, clipe · campo · Enviar na mesma linha em qualquer
+     largura, crescimento até um teto e rolagem interna.
+
+   Nada aqui muda `conversa.css` fora do chat: tudo mora sob `.ch-fio`,
+   `.ch-escrever` ou `.ch-painel` (R43 — a mesma folha desenha comentários). */
+.ch-painel {
+  --ch-bolha: var(--ink-2);
+  --ch-bolha-linha: var(--iw-linha);
+  --ch-bolha-minha: color-mix(in srgb, var(--iw-verde-marca) 15%, var(--iw-fundo));
+  --ch-bolha-minha-linha: color-mix(in srgb, var(--iw-verde-marca) 38%, var(--iw-fundo));
+  --ch-calha: 1.75rem;
+  --ch-raio: 1rem;
+  --ch-raio-canto: 0.3rem;
+}
+
+/* ───────────────────────────── o fio ───────────────────────────── */
+.ch-fio-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* O FIO COLA NO RODAPÉ, e não no topo: `margin-top: auto` empurra o fio para
+   baixo enquanto sobra espaço e sai do caminho quando não sobra. Num monitor
+   largo a coluna tem largura de leitura, centralizada. */
+.ch-fio {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 52rem;
+  margin: auto auto 0;
+  padding: var(--iw-e-5) var(--iw-e-5) var(--iw-e-3);
+}
+
+.ch-linha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: var(--iw-e-3);
+}
+
+.ch-linha[data-minha='true'] { align-items: flex-end; }
+.ch-linha[data-seguida='true'] { margin-top: 2px; }
+
+/* A fala: rosto (ou a calha dele) + bolha. Tira as margens e o fio entre
+   falas de `conversa.css`, que servem ao comentário da tarefa. */
+.ch-fio .c-fala {
+  position: relative;
+  width: auto;
+  max-width: min(78%, 42rem);
+  margin: 0;
+  padding: 0;
+  gap: var(--iw-e-2);
+  border: 0;
+  align-items: flex-end;
+}
+
+.ch-fio .c-fala[data-minha='true'] { flex-direction: row; margin: 0; }
+
+.ch-fio .c-fala[data-seguida='true'] { padding-left: calc(var(--ch-calha) + var(--iw-e-2)); }
+.ch-fio .c-fala[data-seguida='true'][data-minha='true'] { padding: 0; }
+
+.ch-fio .c-fala > .cu-avatar {
+  width: var(--ch-calha);
+  height: var(--ch-calha);
+  align-self: flex-start;
+  font-family: var(--f-body);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+/* A bolha. */
+.ch-fio .c-fala > .c-corpo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0.4375rem 0.75rem 0.5rem;
+  border: 1px solid var(--ch-bolha-linha);
+  border-radius: var(--ch-raio-canto) var(--ch-raio) var(--ch-raio) var(--ch-raio);
+  background: var(--ch-bolha);
+  color: var(--iw-texto);
+  overflow-wrap: anywhere;
+}
+
+.ch-fio .c-fala[data-seguida='true'] > .c-corpo {
+  border-radius: var(--ch-raio-canto) var(--ch-raio) var(--ch-raio) var(--ch-raio-canto);
+}
+
+.ch-fio .c-fala[data-minha='true'] > .c-corpo {
+  border-color: var(--ch-bolha-minha-linha);
+  border-radius: var(--ch-raio) var(--ch-raio-canto) var(--ch-raio) var(--ch-raio);
+  background: var(--ch-bolha-minha);
+}
+
+.ch-fio .c-fala[data-minha='true'][data-seguida='true'] > .c-corpo {
+  border-radius: var(--ch-raio) var(--ch-raio-canto) var(--ch-raio-canto) var(--ch-raio);
+}
+
+/* Nome e hora: uma linha, acima do texto. A minha não tem cabeçalho: o nome
+   fica só para o leitor de tela e a hora desce para o pé da bolha. */
+.ch-fio .c-cabeca {
+  display: flex;
+  align-items: baseline;
+  gap: var(--iw-e-2);
+  margin-bottom: 0.125rem;
+  min-width: 0;
+}
+
+.ch-fio .c-autor {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--iw-texto);
+  font-size: var(--iw-t-apoio);
+  font-weight: 600;
+}
+
+.ch-fio .c-quando,
+.ch-hora-calha,
+.ch-fala-pe .c-quando {
+  flex: 0 0 auto;
+  color: var(--iw-texto-3);
+  font-family: var(--f-body);
+  font-size: var(--iw-t-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* A hora da fala seguida mora na calha do rosto e aparece no hover e no foco.
+   Está sempre no DOM: o leitor de tela ouve a hora de toda mensagem. */
+.ch-hora-calha {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 0;
+  width: var(--ch-calha);
+  text-align: center;
+  font-size: 0.625rem;
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.ch-fio .c-fala[data-minha='true'] > .ch-hora-calha {
+  left: auto;
+  right: calc(100% + var(--iw-e-2));
+  width: auto;
+}
+
+.ch-fio .c-fala:hover > .ch-hora-calha,
+.ch-fio .c-fala:focus-within > .ch-hora-calha,
+.ch-fio .c-fala[data-ativa='true'] > .ch-hora-calha { opacity: 1; }
+
+/* O texto: leitura confortável, parágrafos sem a margem da descrição. */
+.ch-fio .c-texto {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: var(--iw-lh-corpo);
+}
+
+.ch-fio .c-texto .md-p { margin: 0; }
+.ch-fio .c-texto .md-p + .md-p { margin-top: 0.5em; }
+
+/* A IMAGEM TEM MOLDURA FIXA: a altura é conhecida antes do arquivo chegar, e
+   a leitura do passado não pula quando as imagens de cima terminam de baixar.
+   `contain`, nunca `cover` — cortar a arte é mostrar outra arte. */
+.ch-fio .c-texto .imagem-no-texto-link { width: min(20rem, 100%); }
+.ch-fio .c-texto .imagem-no-texto {
+  width: 100%;
+  height: 13.5rem;
+  margin: var(--iw-e-1) 0 0;
+  border: 0;
+  border-radius: calc(var(--ch-raio) - 0.375rem);
+  background: var(--iw-hover);
+  object-fit: contain;
+}
+
+/* O "Carregando imagem…" ocupa a MESMA moldura: nada muda de altura depois. */
+.ch-fio .c-texto .imagem-no-texto-aviso {
+  display: grid;
+  place-items: center;
+  width: min(20rem, 100%);
+  height: 13.5rem;
+  margin-top: var(--iw-e-1);
+  padding: 0;
+  border-radius: calc(var(--ch-raio) - 0.375rem);
+  background: var(--iw-hover);
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+}
+
+.ch-fio .c-corpo[data-so-imagem='true'] { padding: 0.25rem; }
+.ch-fio .c-corpo[data-so-imagem='true'] .imagem-no-texto-aviso { margin: 0; }
+.ch-fio .c-corpo[data-so-imagem='true'] .c-cabeca { padding: 0.125rem 0.5rem 0.125rem; }
+.ch-fio .c-corpo[data-so-imagem='true'] .imagem-no-texto { margin: 0; }
+
+/* Pé da bolha: "editada" e "Enviando…". */
+.ch-fala-pe {
+  order: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--iw-e-2);
+  margin-top: 0.125rem;
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+}
+
+.ch-fio .c-editado {
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+  font-style: normal;
+}
+
+.ch-envio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ch-envio svg { width: 0.8125rem; height: 0.8125rem; }
+
+/* Indicadores de status de mensagem estilo WhatsApp — F36 */
+.ch-status-msg {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+.ch-status-msg svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.ch-status-msg[data-status='pendente'] {
+  color: var(--iw-texto-3);
+  opacity: 0.7;
+}
+.ch-status-msg[data-status='enviada'],
+.ch-status-msg[data-status='entregue'] {
+  color: var(--iw-texto-3);
+}
+.ch-status-msg[data-status='lida'] {
+  color: #0284c7; /* Azul WhatsApp / Mensagem lida */
+}
+.ch-status-msg[data-status='falha'] {
+  color: var(--err);
+}
+
+.ch-lapide {
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-corpo);
+  font-style: italic;
+}
+
+/* ─────────────────────── enviando · falhou · tentar de novo ─────────────────────── */
+.ch-fio .c-fala[data-estado='pendente'] > .c-corpo { opacity: 0.72; }
+
+.ch-fio .c-fala[data-estado='falha'] > .c-corpo {
+  border-style: dashed;
+  border-color: var(--err);
+}
+
+.ch-falha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem var(--iw-e-2);
+  max-width: min(78%, 42rem);
+  margin-top: var(--iw-e-1);
+  color: var(--err);
+  font-size: var(--iw-t-apoio);
+  line-height: var(--iw-lh-denso);
+}
+
+.ch-linha:not([data-minha='true']) > .ch-falha {
+  justify-content: flex-start;
+  padding-left: calc(var(--ch-calha) + var(--iw-e-2));
+}
+
+.ch-falha-frase {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.ch-falha-frase > svg { flex: 0 0 auto; width: 0.9375rem; height: 0.9375rem; margin-top: 0.05rem; }
+
+.ch-falha-repetir {
+  gap: 0.3rem;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-fundo);
+  color: var(--iw-texto);
+}
+
+.ch-falha-repetir svg { width: 0.875rem; height: 0.875rem; }
+.ch-falha-repetir:hover { background: var(--iw-hover); }
+
+/* ─────────────────────────── as ações da mensagem ───────────────────────────
+   Régua flutuante no canto de cima da bolha, do lado de dentro da conversa.
+   Aparece no hover, no foco (Tab alcança as três) e, no toque, na bolha
+   tocada. Escondida, não recebe clique: nada de botão invisível no caminho. */
+.ch-fio .c-fala .c-acoes {
+  position: absolute;
+  top: -1.5rem;
+  right: var(--iw-e-2);
+  z-index: 2;
+  display: flex;
+  gap: 1px;
+  margin: 0;
+  padding: 2px;
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-sobreposicao);
+  box-shadow: var(--iw-relevo);
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+/* Uma linha sempre: numa bolha curta ("ok") a régua não quebra em duas nem
+   cobre o texto. Na minha, ancorada à esquerda, recua o que faltar para não
+   passar da borda direita da bolha (e da janela, a 320 px). */
+.ch-fio .c-fala .c-acoes { flex-wrap: nowrap; width: max-content; }
+
+.ch-fio .c-fala[data-minha='true'] .c-acoes {
+  --ch-regua-minha: calc(3 * 1.875rem + 6px);
+  right: auto;
+  left: min(var(--iw-e-2), calc(100% - var(--ch-regua-minha)));
+}
+
+.ch-fio .c-fala:hover .c-acoes,
+.ch-fio .c-fala:focus-within .c-acoes,
+.ch-fio .c-fala[data-ativa='true'] .c-acoes {
+  opacity: 1;
+}
+
+/* Escondida, a régua não recebe clique nem toque: ela flutua ACIMA da bolha,
+   sobre a fala anterior, e um botão invisível ali roubaria o clique de quem
+   mira a outra mensagem (Reagir/Editar/Apagar sem ter visto nada). Só vira
+   alvo quando está à vista: foco dentro da fala (Tab), toque que a ativou, ou
+   — com ponteiro — o ponteiro já sobre a própria bolha. No toque, o :hover
+   "grudado" do navegador não conta. */
+.ch-fio .c-fala .c-acoes { pointer-events: none; }
+.ch-fio .c-fala:focus-within .c-acoes,
+.ch-fio .c-fala[data-ativa='true'] .c-acoes { pointer-events: auto; }
+
+@media (hover: hover) {
+  .ch-fio .c-fala:hover .c-acoes { pointer-events: auto; }
+}
+
+.ch-fio .c-acoes .c-acao {
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.75rem;
+  padding: 0;
+  border-radius: calc(var(--iw-r-controle) - 2px);
+  color: var(--iw-texto-2);
+}
+
+.ch-fio .c-acoes .c-acao svg { width: 1rem; height: 1rem; }
+.ch-fio .c-acoes .c-acao:hover { background: var(--iw-hover); color: var(--iw-texto); }
+.ch-fio .c-acoes .c-acao[aria-expanded='true'] { background: var(--iw-selecionado); color: var(--iw-texto); }
+.ch-fio .c-acoes .c-acao[data-perigo='true']:hover { color: var(--err); }
+.ch-fio .c-acoes .c-acao:focus-visible { outline-offset: -2px; }
+
+@media (pointer: coarse) {
+  /* F16: no toque a régua tem 44 + 4 px; em -36 px ela descia 12 px sobre a
+     bolha e, a 320 px, cobria a fala de uma linha enquanto aberta. Agora ela
+     fica inteira acima da bolha, com 2 px de folga. O seletor tem o mesmo
+     peso da regra de base (`.ch-fio .c-fala .c-acoes`): com um degrau a
+     menos, o `top` do toque perdia para os -1,5rem e nunca valia. */
+  .ch-fio .c-fala .c-acoes { top: calc(-1 * (var(--iw-alvo-toque) + 6px)); }
+  .ch-fio .c-acoes .c-acao { width: var(--iw-alvo-toque); height: var(--iw-alvo-toque); }
+  .ch-fio .c-fala[data-minha='true'] .c-acoes { --ch-regua-minha: calc(3 * var(--iw-alvo-toque) + 6px); }
+}
+
+/* A edição em linha ocupa a bolha inteira. */
+.ch-fio .c-escrever-resposta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--iw-e-2);
+  min-width: min(22rem, 70vw);
+  padding: var(--iw-e-1) 0 0;
+  border: 0;
+}
+
+.ch-fio .c-escrever-resposta .campo-com-mencoes {
+  padding: var(--iw-e-2);
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-fundo);
+  color: var(--iw-texto);
+  font-size: 0.9375rem;
+}
+
+.ch-fio .c-escrever-resposta .ch-escrever-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--iw-e-2);
+}
+
+/* ─────────────────────── separadores: dia, novas, sistema ─────────────────────── */
+.ch-dia {
+  display: flex;
+  align-items: center;
+  gap: var(--iw-e-3);
+  margin: var(--iw-e-5) 0 var(--iw-e-2);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-meta);
+  font-weight: 600;
+}
+
+.ch-fio > .ch-dia:first-child { margin-top: 0; }
+
+.ch-dia::before,
+.ch-dia::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--iw-linha);
+}
+
+.ch-dia-rotulo {
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--r-pill);
+  background: var(--iw-fundo);
+}
+
+.ch-divisor-novas {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  gap: var(--iw-e-3);
+  margin: var(--iw-e-2) 0 var(--iw-e-3);
+  color: var(--iw-verde-marca-texto);
+  font-size: var(--iw-t-meta);
+  font-weight: 650;
+}
+
+.ch-divisor-novas::before,
+.ch-divisor-novas::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--iw-verde-marca-texto);
+  opacity: 0.55;
+}
+
+.ch-sistema {
+  margin: var(--iw-e-3) auto 0;
+  max-width: 32rem;
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+  text-align: center;
+}
+
+.ch-parede {
+  padding: var(--iw-e-4) var(--iw-e-2) 0;
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+  text-align: center;
+}
+
+.ch-novas {
+  position: sticky;
+  bottom: var(--iw-e-3);
+  align-self: center;
+  z-index: 3;
+  margin: 0 auto var(--iw-e-2);
+  gap: 0.375rem;
+  border-radius: var(--r-pill);
+  box-shadow: var(--iw-relevo), 0 0.375rem 1rem rgb(0 0 0 / 0.14);
+}
+
+.ch-novas-seta { width: 0.9375rem; height: 0.9375rem; }
+
+.ch-carregando {
+  position: absolute;
+  top: var(--iw-e-2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  max-width: 100%;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--r-pill);
+  background: var(--iw-sobreposicao);
+  box-shadow: var(--iw-relevo);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-meta);
+  white-space: nowrap;
+}
+
+/* Estados do fio (carregando, vazio, sem acesso, erro): no meio do palco. */
+.ch-fio-estado {
+  width: min(100% - 2rem, 28rem);
+  margin: auto;
+  padding: var(--iw-e-4) 0;
+}
+
+.ch-fio-estado .iw-estado { margin: 0; }
+
+/* Sem falas, o fio vazio não disputa o centro com o estado. */
+.ch-fio:empty { display: none; }
+
+.ch-painel-estado {
+  flex: 1 1 auto;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: var(--iw-e-4);
+}
+
+.ch-painel-estado > * { width: min(100%, 28rem); }
+
+.ch-vazio {
+  padding: var(--iw-e-5) var(--iw-e-4);
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-apoio);
+  text-align: center;
+}
+
+/* ─────────────── o retorno da conexão (só quando falta) ─────────────── */
+.ch-grade .ch-painel-sobre {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.ch-painel-sobre-texto {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-conexao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: var(--warn);
+}
+
+.ch-conexao:not(:empty) { margin-left: var(--iw-e-2); }
+
+.ch-conexao-ponto {
+  flex: 0 0 auto;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--warn);
+  animation: ch-pulso 1.6s var(--ease-out) infinite;
+}
+
+@keyframes ch-pulso {
+  50% { opacity: 0.35; }
+}
+
+/* ─────────────────────────────── o compositor ─────────────────────────────── */
+.ch-escrever {
+  display: flex;
+  flex-direction: column;
+  gap: var(--iw-e-2);
+  padding: var(--iw-e-2) var(--iw-e-4) var(--iw-e-3);
+  border-top: 0;
+}
+
+.ch-escrever > .ch-compositor,
+.ch-escrever > .ch-escrever-dica,
+.ch-escrever > .o-alerta {
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.ch-compositor {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--iw-linha);
+  border-radius: calc(var(--ch-raio) + 0.125rem);
+  background: var(--iw-fundo);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
+}
+
+.ch-compositor:focus-within {
+  border-color: var(--iw-foco);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--iw-foco) 16%, transparent);
+}
+
+.ch-compositor[data-arrastando='true'] {
+  outline: 2px dashed var(--iw-foco);
+  outline-offset: 2px;
+}
+
+.ch-compositor-linha {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--iw-e-1);
+  padding: 0.3125rem;
+}
+
+.ch-escrever .ch-compositor .c-caixa {
+  display: block;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 2.25rem;
+  max-height: min(10rem, 28dvh);
+  overflow-y: auto;
+  padding: 0.4375rem 0.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--iw-texto);
+  font-size: 0.9375rem;
+  line-height: var(--iw-lh-corpo);
+  resize: none;
+}
+
+/* O anel de foco é da CAIXA inteira (`:focus-within` acima), não do campo. */
+.ch-escrever .ch-compositor .c-caixa:focus,
+.ch-escrever .ch-compositor .c-caixa:focus-visible { border: 0; background: transparent; outline: 0; box-shadow: none; }
+.ch-escrever .ch-compositor .c-caixa[data-vazio='true']::before { color: var(--iw-texto-3); }
+
+.ch-compositor-botao {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--ch-raio) - 0.375rem);
+  background: transparent;
+  color: var(--iw-texto-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+
+.ch-compositor-botao svg { width: 1.125rem; height: 1.125rem; }
+.ch-compositor-botao:hover:not(:disabled) { background: var(--iw-hover); color: var(--iw-texto); }
+.ch-compositor-botao:disabled { cursor: not-allowed; opacity: var(--iw-desabilitado); }
+
+/* Enviar: o verde da marca quando há o que enviar; apagado quando não há. */
+.ch-enviar {
+  background: var(--iw-verde-marca);
+  color: var(--iw-verde-marca-tinta);
+}
+
+.ch-enviar:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--iw-verde-marca) 86%, var(--iw-verde-marca-tinta));
+  color: var(--iw-verde-marca-tinta);
+}
+
+.ch-enviar:disabled {
+  background: var(--iw-selecionado);
+  color: var(--iw-texto-3);
+  opacity: 1;
+}
+
+.ch-enviar svg { width: 1.125rem; height: 1.125rem; stroke-width: 2.4; }
+
+@media (pointer: coarse) {
+  .ch-compositor-botao { width: var(--iw-alvo-toque); height: var(--iw-alvo-toque); }
+  .ch-escrever .ch-compositor .c-caixa { min-height: var(--iw-alvo-toque); padding-block: 0.625rem; font-size: 1rem; }
+}
+
+/* As imagens do rascunho: miniaturas no alto da caixa, com o × no canto. */
+.ch-compositor .imagens-do-rascunho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-2);
+  max-height: min(9rem, 22dvh);
+  overflow-y: auto;
+  padding: var(--iw-e-2) var(--iw-e-2) 0;
+}
+
+.ch-compositor .imagem-do-rascunho {
+  position: relative;
+  display: block;
+  width: 4rem;
+  height: 4rem;
+  margin: 0;
+}
+
+.ch-compositor .imagem-do-rascunho .imagem-no-texto-link { width: 100%; height: 100%; }
+.ch-compositor .imagem-do-rascunho .imagem-no-texto {
+  width: 4rem;
+  height: 4rem;
+  max-height: none;
+  margin: 0;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-hover);
+  object-fit: cover;
+}
+
+.ch-remover-imagem {
+  position: absolute;
+  top: -0.375rem;
+  right: -0.375rem;
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  border: 2px solid var(--iw-fundo);
+  border-radius: 50%;
+  background: var(--iw-texto);
+  color: var(--iw-fundo);
+  cursor: pointer;
+}
+
+.ch-remover-imagem svg { width: 0.75rem; height: 0.75rem; stroke-width: 2.6; }
+
+/* Alvo de toque maior sem crescer o desenho: a área invisível em volta. */
+.ch-remover-imagem::after {
+  content: '';
+  position: absolute;
+  inset: -0.625rem;
+}
+
+.ch-subindo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--iw-e-2);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+}
+
+.ch-subindo-giro {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid var(--iw-linha);
+  border-top-color: var(--iw-texto-2);
+  border-radius: 50%;
+  animation: ch-giro 0.8s linear infinite;
+}
+
+@keyframes ch-giro {
+  to { transform: rotate(360deg); }
+}
+
+.ch-escrever-dica {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--iw-e-3);
+  margin-top: calc(-1 * var(--iw-e-1));
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+}
+
+.ch-escrever-conta[data-no-teto='true'] { color: var(--err); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-conexao-ponto,
+  .ch-subindo-giro { animation: none; }
+}
+
+/* F34: a mesma cadeia de altura dos quadros chega até o histórico. O mínimo
+   100vh de PaginaLarga deve ceder à janela dinâmica, inclusive com teclado.
+
+   ⚠️ DUAS CLASSES, E NÃO UMA. `<main>` também leva `h-screen` e
+   `min-h-screen` do Tailwind, e esta folha entra ANTES dos utilitários no
+   pacote (medido no `dist/`: `.ch-pagina` em 62 mil bytes, `.h-screen` em
+   198 mil). Com uma classe só, empate de especificidade, e quem vinha depois
+   vencia: a altura ficava em 100vh mesmo com `--ch-altura` em 400px, e o
+   teclado do celular cobria a caixa de escrever (F34-leitura-e-teclado). */
+.iw-app.ch-pagina {
+  height: var(--ch-altura, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.q-tela[data-altura='tela'] > .q-conteudo > .ch-grade {
+  flex: 1 1 0;
+}
+
+.ch-painel-cabeca,
+.ch-escrever {
+  flex: 0 0 auto;
+}
+
+.ch-painel-corpo {
+  position: relative;
+}
+
+@media (max-width: 720px) {
+  .ch-fio {
+    padding-inline: var(--iw-e-3);
+  }
+
+  .ch-fio .c-fala,
+  .ch-falha { max-width: 88%; }
+
+  .ch-escrever {
+    padding: var(--iw-e-1) var(--iw-e-2) var(--iw-e-2);
+  }
+
+  .ch-escrever-dica .ch-escrever-dica-teclas {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .ch-escrever-dica .ch-escrever-dica-teclas { display: none; }
+}
+
+@media (max-height: 500px) {
+  .ch-pagina .o-topo {
+    margin-bottom: 0.4rem;
+  }
+
+  .ch-painel-cabeca {
+    padding-block: 0.35rem;
+  }
+
+  .ch-escrever {
+    padding-block: 0.35rem;
+  }
+
+  .ch-escrever-dica {
+    display: none;
+  }
+}
+
+/* ─────────────────── Widget Flutuante do Chat (F36 / Refinamento) ─────────────────── */
+/* O botão flutuante recua quando o foco do teclado está num controle que ele
+   cobriria — WCAG 2.4.11. Quem põe `data-recuado` é `WidgetDoChat`. Some e deixa
+   de pegar o clique, mas continua no fim da ordem do Tab. */
+.ch-fab[data-recuado='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ch-widget-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--iw-linha) transparent;
+}
+
+.ch-widget-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.ch-widget-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ch-widget-scroll::-webkit-scrollbar-thumb {
+  background: var(--iw-linha);
+  border-radius: 9999px;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.ch-widget-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--iw-texto-3);
+}
+
+.ch-widget-bolha-outro {
+  background: var(--iw-superficie);
+  border: 1px solid var(--iw-linha);
+  color: var(--iw-texto);
+}
+
+.ch-widget-bolha-minha {
+  background: color-mix(in srgb, var(--iw-verde-marca) 16%, var(--iw-fundo));
+  border: 1px solid color-mix(in srgb, var(--iw-verde-marca) 36%, var(--iw-linha));
+  color: var(--iw-texto);
+}
+
+:root[data-tema='claro'] .ch-widget-bolha-outro {
+  background: #f4f4f6;
+  border-color: #e5e5e8;
+  color: #202124;
+}
+
+:root[data-tema='claro'] .ch-widget-bolha-minha {
+  background: #e7f8df;
+  border-color: #c9efb8;
+  color: #17181a;
+}
+
+/* ───────────────────────── as reações da bolha — F24.3 ─────────────────────────
+   O rodapé mora DENTRO do balão, embaixo do texto: é dele que a reação fala.
+   Token inventado não reclama, só apaga a borda calado. */
+.ch-reacoes {
+  order: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--iw-e-1);
+  margin-top: 0.375rem;
+}
+
+.ch-reacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.625rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--iw-linha);
+  border-radius: 999px;
+  background: var(--iw-fundo);
+  color: var(--iw-texto-2);
+  font: inherit;
+  font-size: var(--iw-t-meta);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.ch-reacao:hover { background: var(--iw-hover); }
+
+/* A MINHA reação é a única que muda: quem passa o olho precisa saber, sem
+   contar, se já reagiu ali. Fio no verde da marca como TEXTO (legível). */
+.ch-reacao[data-minha='true'] {
+  border-color: var(--iw-verde-marca-texto);
+  background: color-mix(in srgb, var(--iw-verde-marca) 14%, var(--iw-fundo));
+  color: var(--iw-texto);
+}
+
+.ch-reacao:disabled {
+  opacity: var(--iw-desabilitado);
+  cursor: not-allowed;
+}
+
+@media (pointer: coarse) {
+  .ch-reacao { min-height: 2rem; padding-inline: 0.625rem; }
+}
+
+/* A barra dos seis. Não é menu flutuante: é uma fileira dentro do balão, para
+   caber no celular sem posicionamento nenhum e não sumir ao rolar o fio. */
+.ch-barra-reacoes {
+  order: 7;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: fit-content;
+  margin-top: 0.375rem;
+  padding: 0.1875rem;
+  border: 1px solid var(--iw-linha);
+  border-radius: 999px;
+  background: var(--iw-sobreposicao);
+  box-shadow: var(--iw-relevo);
+}
+
+.ch-barra-emoji {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.0625rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+
+.ch-barra-emoji:hover { background: var(--iw-hover); transform: scale(1.12); }
+
+@media (pointer: coarse) {
+  .ch-barra-emoji { width: 2.5rem; height: 2.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-barra-emoji:hover { transform: none; }
+}
+
+/* ⚠️ TOQUE LONGO SELECIONA TEXTO por padrão no celular: quando a espera começa,
+   a bolha para de ser selecionável, e volta a ser assim que o dedo sai. */
+.ch-fio .c-fala[data-pressionada='true'] .c-texto,
+.ch-fio .c-fala[data-pressionada='true'] .c-cabeca {
+  user-select: none;
+  -webkit-user-select: none;
+}
+

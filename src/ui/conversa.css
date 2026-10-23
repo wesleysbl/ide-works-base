@@ -1,0 +1,737 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   A ENTREGA — comentário, anexo e link. Etapa F17.6
+   ═══════════════════════════════════════════════════════════════════════════
+
+   POR QUE UMA FOLHA PRÓPRIA
+     `clickup.css` já tem 1000 linhas e outra sessão trabalha em `src/`. Arquivo
+     novo é edição de risco zero. E as duas seções desta etapa têm gramática
+     própria: a de anexo é uma GRADE de fichas de arquivo, e a de comentário é
+     um FIO de falas com avatar à esquerda.
+
+   A REGRA DE SEMPRE
+     Gramática, estrutura e interação: do ClickUp, fielmente. Cor, tipografia e
+     superfície: do OBSIDIAN (decisão D10), sem exceção. Nenhuma cor literal
+     aqui — tudo sai de `var(--…)`, e há lint (`scripts/proibido.mjs`) e teste
+     sobre o HTML renderizado.
+
+   ONDE ISTO FICA NA FICHA, E POR QUÊ
+     A referência do usuário põe `📎 Anexar arquivo` como a ÚLTIMA seção do
+     corpo da ficha, depois de subtarefa e checklist. É onde `.a-secao` entra.
+
+     O comentário, no ClickUp, fica em COLUNA PRÓPRIA à direita. Aqui ele NÃO
+     fica, e a decisão está registrada em `ConversaDaTarefa.tsx`: a ficha do IDE
+     Works é uma coluna só, e uma segunda coluna cortaria o briefing pela metade
+     num laptop de 1366px — que é o que a agência usa. Ele vira um BLOCO PRÓPRIO
+     abaixo do cartão da ficha, que é a mesma posição que o ClickUp usa quando a
+     janela é estreita.
+
+   O QUE NÃO PODE ACONTECER AQUI
+     Nenhum contêiner destas seções pode cortar o que sai dele — a linha de
+     anexo abre balões ancorados, e um `overflow` no lugar errado os decapita.
+     Por isso `.a-secao` e `.c-bloco` são `overflow: visible`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────── o anexo e o link ───────────────────────────── */
+
+.a-secao {
+  padding: 0.35rem 0.9rem 0.6rem;
+  overflow: visible;
+  border-top: 1px solid var(--hair);
+  padding-top: 0.6rem;
+}
+
+/* GRADE, e não lista: a ficha real do ClickUp mostra os anexos como cartões
+   lado a lado, e a pré-visualização de imagem só faz sentido nesse formato.
+   `auto-fill` com mínimo em rem faz um anexo só ocupar a largura de um cartão,
+   e não a da ficha inteira. */
+.a-grade {
+  display: grid;
+  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.3rem;
+}
+
+.a-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  overflow: visible;
+  min-width: 0;
+}
+
+.a-ficha:hover { border-color: var(--hair-2); }
+
+.a-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+/* A extensão como selo — é o que a pessoa lê primeiro para saber o que é. Ela
+   vem do BANCO, de uma coluna gerada: a tela não a calcula, e por isso nunca
+   discorda do que está guardado. */
+.a-ext {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 2.4rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-xs);
+  background: var(--ink-3);
+  color: var(--plat-dim);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.a-nome {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--plat-dim);
+  font-size: 0.78rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.a-nome:hover { color: var(--plat); text-decoration: underline; text-underline-offset: 2px; }
+.a-nome:disabled { cursor: not-allowed; }
+
+.a-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  color: var(--mute);
+  font-size: 0.65rem;
+}
+
+.a-meta .tnum { font-family: var(--f-mono); }
+
+/* A pré-visualização. `contain` e não `cover`: cortar a arte de um cliente para
+   caber num quadrado é mostrar outra arte. */
+.a-previa {
+  display: block;
+  width: 100%;
+  max-height: 8rem;
+  object-fit: contain;
+  border-radius: var(--r-xs);
+  background: var(--ink-3);
+}
+
+/* A moldura do PDF. `object` e não `iframe`: ele não cria contexto de navegação
+   próprio, então a página do arquivo não pode tentar navegar a nossa. */
+.a-previa-pdf {
+  display: block;
+  width: 100%;
+  height: 11rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-xs);
+  background: var(--ink-3);
+}
+
+/* ───────────────────────────── o link externo ───────────────────────────── */
+
+.a-links { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.3rem; }
+
+/* CARTÃO, E NÃO LINHA — F17.17.
+   O link do Dropbox real tem mais de cem caracteres de `rlkey` e `dl=0`. Numa
+   tarefa com três entregas isso era uma parede de texto. O cartão põe o SELO do
+   tipo à esquerda (a mesma gramática do `.a-ext` do anexo), o rótulo e a linha
+   de meta no meio, e as ações à direita — e a prévia, quando pedida, quebra
+   para a linha de baixo. Daí o `flex-wrap`. */
+.a-link {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.3rem 0.35rem;
+  border-radius: var(--r-sm);
+  overflow: visible;
+  transition: background var(--dur-1) var(--ease-out);
+}
+
+.a-link:hover { background: var(--ink-2); }
+
+/* O miolo cresce e encolhe; o selo e os botões não. Sem `min-width: 0` aqui o
+   `text-overflow` dos filhos não corta nada — é a armadilha clássica do flex. */
+.a-link-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.a-link-rotulo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--plat-dim);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.a-link-rotulo:hover { color: var(--luz-texto); text-decoration: underline; text-underline-offset: 2px; }
+
+/* `PDF · Dropbox · Roteiro Leads quiz 1.pdf` — o que a pessoa precisa saber
+   antes de clicar, e tudo isso saiu do PRÓPRIO endereço, sem chamar ninguém. */
+.a-link-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  min-width: 0;
+  color: var(--mute);
+  font-size: 0.66rem;
+}
+
+/* O endereço aparece em cinza, curto, ao lado do rótulo. É o que impede um
+   rótulo amigável de esconder para onde o clique vai — e num sistema onde a
+   entrega chega por link, saber o destino é parte de confiar nele.
+   Desde a F17.17 ele mostra o NOME DO ARQUIVO quando o endereço o carrega, e o
+   domínio quando não carrega; o endereço inteiro fica no `title`. */
+.a-link-alvo {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+}
+
+/* A prévia ocupa a linha inteira do cartão. Teto de altura para uma arte em pé
+   não empurrar o resto da ficha para fora da tela — o Dropbox devolve a imagem
+   no tamanho original, e uma peça de story tem 1920 de altura. */
+.a-link-previa {
+  flex: 1 1 100%;
+  display: block;
+  max-width: 100%;
+  max-height: 18rem;
+  width: auto;
+  margin-top: 0.15rem;
+  object-fit: contain;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-3);
+}
+
+/* A queda quando a imagem não abre — link privado, morto, ou fora do Dropbox.
+   Ela ocupa a linha inteira para não espremer o rótulo. */
+.a-link-nota {
+  flex: 1 1 100%;
+  color: var(--mute);
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+/* O teto do envio, dito ANTES da escolha, dentro do próprio botão. Discreto de
+   propósito: é uma condição, não uma ação. */
+.a-teto {
+  margin-left: 0.35rem;
+  padding: 0.02rem 0.28rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  white-space: nowrap;
+}
+
+/* ───────────────────────────── a linha de acrescentar ───────────────────────────── */
+
+.a-linha-nova {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  overflow: visible;
+}
+
+.a-linha-nova[data-erro='true'] { border-color: var(--err); }
+
+.a-campo {
+  border: 0;
+  background: transparent;
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  padding: 0.15rem 0.1rem;
+  min-width: 6rem;
+}
+
+.a-campo::placeholder { color: var(--mute); }
+.a-campo:focus { outline: 0; box-shadow: none; }
+
+.a-campo-rotulo { flex: 0 1 9rem; }
+.a-campo-alvo { flex: 1 1 14rem; font-family: var(--f-mono); font-size: 0.74rem; }
+
+/* O botão de escolher arquivo. O `<input type="file">` nativo não se estiliza,
+   então ele fica escondido e o rótulo faz o trabalho — que é o padrão do ClickUp
+   e o único jeito de manter a superfície do OBSIDIAN. Ele continua sendo um
+   `<label for>`, então teclado e leitor de tela o alcançam. */
+.a-arquivo-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.a-erro { color: var(--err); font-size: 0.68rem; padding: 0.2rem 0.35rem 0; }
+.a-nota { padding: 0.2rem 0.35rem 0; color: var(--mute); font-size: 0.68rem; line-height: 1.45; }
+
+/* O aviso de pendência. Ele é FAIXA, e não texto miúdo, porque a pessoa precisa
+   entender que o botão desativado não é defeito — é uma credencial que falta. */
+.a-pendente {
+  margin-top: 0.4rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--hair-2);
+  border-left: 2px solid var(--warn);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  color: var(--plat-dim);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.a-pendente code {
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  color: var(--plat);
+}
+
+/* ───────────────────────────── a conversa ───────────────────────────── */
+
+/* BLOCO PRÓPRIO, abaixo do cartão da ficha. Ver o cabeçalho: coluna própria
+   cortaria o briefing pela metade num laptop de 1366px.
+   F43, Fase 6: na ficha da tarefa ele passou para DENTRO do cartão, logo
+   depois do conteúdo, e lá perde a moldura (`tarefa.css`, ".cu-ficha
+   .t-corpo > .c-bloco"). A moldura daqui vale para quem o desenha solto. */
+.c-bloco {
+  margin-top: 0.6rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  overflow: visible;
+}
+
+.c-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--hair);
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.c-conta {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--mute);
+  letter-spacing: 0.02em;
+}
+
+.c-fio { padding: 0.5rem 0.9rem 0.2rem; overflow: visible; }
+
+/* A FALA. Avatar à esquerda, corpo à direita — a gramática de toda conversa, e
+   a do ClickUp também. */
+.c-fala {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  overflow: visible;
+}
+
+/* O FIO MISTURA FALA E MUDANÇA DESDE A F17.65, então o traço separador não pode
+   perguntar só por `.c-fala`: ele separa degraus IRMÃOS, sejam quais forem. */
+.c-fala + .c-fala,
+.c-fala + .c-mudanca,
+.c-mudanca + .c-fala,
+.c-mudanca + .c-mudanca { border-top: 1px solid var(--hair); }
+
+/* ─────────────────── a mudança na linha do tempo — F17.65 ───────────────────
+
+   *"Helena alterou o status de Aprovação para Enviar Fotos Ao Cliente"*.
+
+   ELA É MAIS DISCRETA QUE A FALA, DE PROPÓSITO. A fala é o produto — o link da
+   entrega mora nela. A mudança é o contexto entre uma fala e outra: some da
+   vista quando não se procura por ela, e está lá quando se procura. Por isso
+   não tem avatar (que a alinharia com a fala e disputaria o olho), e sim uma
+   marca fina de 2px na altura do avatar. */
+.c-mudanca {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  overflow: visible;
+}
+
+/* O lugar do avatar, ocupado por um traço. Ele mantém as duas espécies de
+   degrau alinhadas pela esquerda sem fingir que a mudança tem autor com rosto.
+   `--hair-2` no traço da regra: o robô se distingue sem ganhar cor própria. */
+.c-mudanca-marca {
+  flex: 0 0 auto;
+  width: 2px;
+  align-self: stretch;
+  margin-left: 0.55rem;
+  margin-right: 0.55rem;
+  border-radius: var(--r-pill);
+  background: var(--hair);
+}
+
+.c-mudanca[data-automatica='true'] .c-mudanca-marca { background: var(--hair-2); }
+
+.c-mudanca-corpo { flex: 1 1 auto; min-width: 0; }
+
+.c-mudanca-cabeca {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* O selo que diz que o sujeito da frase é uma REGRA, e não uma pessoa. Sem ele
+   `Passa para o atendimento` se lê como o nome de alguém. Mesma gramática de
+   cápsula do `.pv-selo`: letra do corpo, caixa normal — versalete monoespaçado
+   foi o que a F17.20 tirou do sistema. */
+.c-mudanca-selo {
+  padding: 0.02rem 0.32rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-pill);
+  color: var(--mute);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+/* `--plat-dim` e 0.74rem: menor e mais calmo que o corpo da fala (0.82rem em
+   `--plat`), e acima do piso de 7:1 da F17.37 — o mesmo tom que `.a-nome` e
+   `.pv-nome` já usam neste arquivo. */
+.c-mudanca-frase {
+  margin: 0.05rem 0 0;
+  color: var(--plat-dim);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.c-corpo { flex: 1 1 auto; min-width: 0; overflow: visible; }
+
+.c-cabeca {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.c-autor { color: var(--plat); font-size: 0.78rem; font-weight: 600; }
+.c-quando { color: var(--mute); font-family: var(--f-mono); font-size: 0.64rem; }
+/* F42, Fase 7: "sobre <arquivo> · v2" ao lado do selo "do cliente". Nome de
+   arquivo longo quebra em vez de empurrar a fala para fora a 320 px. */
+.c-material-do-cliente { min-width: 0; overflow-wrap: anywhere; }
+
+/* "editado às 14:32" — INSTANTE, e não a palavra "editado" sozinha. Num
+   comentário que carrega um link de entrega, quem leu ontem precisa saber se o
+   link mudou depois. */
+.c-editado {
+  color: var(--mute);
+  font-size: 0.64rem;
+  font-style: italic;
+}
+
+/* O texto do comentário. Ele é desenhado por `src/ui/Markdown.tsx`, o mesmo
+   renderizador somente-leitura da descrição — não há `dangerouslySetInnerHTML`
+   em ponto nenhum deste caminho, e comentário é texto de TERCEIRO, então aqui
+   isso vale ainda mais. As classes `md-*` vêm de `tarefa.css`. */
+.c-texto { margin-top: 0.1rem; }
+.c-texto .md-p:first-child { margin-top: 0; }
+
+.c-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-top: 0.15rem;
+  flex-wrap: wrap;
+}
+
+.c-acao {
+  border: 0;
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.68rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.c-acao:hover { color: var(--plat-dim); background: var(--hair); }
+.c-acao:disabled { opacity: 0.45; cursor: not-allowed; }
+.c-acao[data-perigo='true']:hover { color: var(--err); }
+
+/* A RESPOSTA EM LINHA — o recuo é o desenho da garantia do banco: UM nível,
+   por `task_comments_parent_fk` com as duas colunas geradas. Não há neto, então
+   não há um segundo recuo possível. */
+.c-respostas {
+  margin-left: 1.6rem;
+  margin-top: 0.25rem;
+  border-left: 1px solid var(--hair);
+  padding-left: 0.5rem;
+}
+
+/* ───────────────────────────── o campo de escrever ───────────────────────────── */
+
+.c-escrever {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem 0.7rem;
+  border-top: 1px solid var(--hair);
+  overflow: visible;
+}
+
+.c-caixa {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.2rem;
+  resize: vertical;
+  border: 1px solid var(--hair-2); /* campo: fio firme, como `.o-campo` — F43 Fase 5 */
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.4rem 0.5rem;
+}
+
+.c-caixa::placeholder { color: var(--mute); }
+/* O FOCO DO COMENTÁRIO — WCAG 2.4.7 e 1.4.11. A borda ia de `--hair` para
+   `--hair-3`: 2,9:1 no escuro e 2,3:1 no claro contra o fundo, abaixo dos 3:1
+   que o sinal de foco pede. Agora ela vai para `--iw-foco`, a cor do anel do
+   resto do sistema (o erro, abaixo, continua mandando na borda). */
+.c-caixa:focus { outline: 0; border-color: var(--iw-foco); background: var(--ink-3); }
+.c-caixa[data-erro='true'] { border-color: var(--err); }
+
+/* A resposta escreve num campo mais baixo e recuado, dentro do fio — e não no
+   pé do bloco. É o que o ClickUp faz, e é o que deixa claro a QUEM se responde. */
+.c-escrever-resposta {
+  border-top: 0;
+  padding: 0.35rem 0 0.2rem;
+}
+
+.c-pe { display: flex; align-items: center; gap: 0.35rem; flex-direction: column; }
+.c-pe > .o-btn { width: 100%; }
+/* F43, Fase 6: a linha de cima do pé — o clipe e o `?` do campo, encostados à
+   direita, onde o clipe sempre esteve. */
+.c-pe-icones { display: flex; align-items: center; justify-content: flex-end; gap: 0.15rem; align-self: flex-end; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A PRÉVIA DO LINK NO TEXTO — etapa F17.21.
+
+   O cartão que nasce EMBAIXO do parágrafo, e embaixo do editor do briefing.
+   Ele repete a gramática do `.a-link` da seção de anexos de propósito: link é
+   link, e a pessoa não deveria ter que aprender duas leituras para a mesma
+   coisa.
+
+   ⚠️ ELE CABE NA LIMPEZA DA F17.20, E ISSO GOVERNOU CADA LINHA
+     · O selo NÃO é versalete monoespaçado. `.a-ext` ainda é — ele mostra
+       extensão (`PNG`, `PDF`), que é sigla e se lê em caixa alta. Aqui o selo
+       mostra palavra (`perfil`, `pasta`, `imagem`), e palavra em versalete é a
+       assinatura de interface gerada que a F17.20 foi tirar.
+     · NÃO existe rodapé explicativo. Quando a imagem não abre, quem responde é
+       o próprio botão que foi apertado.
+     · NÃO existe faixa que só descreve estado. O cartão é conteúdo: nome,
+       tipo, hospedeiro.
+     · Sem moldura em volta e sem sombra — fundo discreto e raio único, como
+       manda `--r-sm`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A pilha de cartões de um parágrafo. `margin-top` pequena: eles pertencem ao
+   texto de cima, não são uma seção nova. */
+.pv-pilha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.3rem 0 0.5rem;
+}
+
+/* `flex-wrap` porque a imagem, quando aparece, quebra para a linha de baixo —
+   a mesma solução do `.a-link`. */
+.pv {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  transition: background var(--dur-1) var(--ease-out);
+}
+
+.pv:hover { background: var(--ink-3); }
+
+/* O ÚNICO `<a>` DO CARTÃO. Ele cobre o selo, o nome e a meta — e nada mais: o
+   botão e a imagem são irmãos dele. Ver o cabeçalho de `Markdown.tsx`. */
+.pv-alvo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 10rem;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* O selo de tipo. Cápsula discreta, letra do corpo, caixa normal — a mesma
+   troca que a F17.20 fez em todos os rótulos do sistema. */
+.pv-selo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 2.6rem;
+  padding: 0.08rem 0.4rem;
+  border-radius: var(--r-xs);
+  background: var(--ink-3);
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* `min-width: 0` — sem ele o `text-overflow` dos filhos não corta nada. É a
+   armadilha clássica do flex, e já mordeu neste mesmo arquivo. */
+.pv-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.02rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* O nome do arquivo quando o endereço o carrega, e o domínio quando não
+   carrega. O endereço inteiro fica no `title` — o destino nunca some. */
+.pv-nome {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--plat-dim);
+  font-size: 0.78rem;
+}
+
+.pv-alvo:hover .pv-nome { color: var(--luz-texto); }
+
+.pv-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mute);
+  font-size: 0.66rem;
+}
+
+/* A imagem ocupa a linha inteira. Teto de altura para uma arte em pé não
+   empurrar o resto da tela para baixo — peça de story tem 1920 de altura. */
+.pv-imagem {
+  flex: 1 1 100%;
+  display: block;
+  max-width: 100%;
+  max-height: 16rem;
+  width: auto;
+  margin-top: 0.15rem;
+  object-fit: contain;
+  border-radius: var(--r-sm);
+  background: var(--ink-3);
+}
+
+
+/* Conversa: autoria define o lado; respostas mantêm uma referência à origem. */
+.c-fio .c-fala {
+  width: fit-content;
+  max-width: min(80%, 46rem);
+  margin: 0.6rem auto 0.6rem 0;
+  align-items: flex-start;
+  border-top: 0;
+}
+.c-fio .c-fala[data-minha='true'] {
+  margin-left: auto;
+  margin-right: 0;
+  flex-direction: row-reverse;
+}
+.c-fala > .c-corpo {
+  padding: 0.7rem 0.85rem;
+  background: var(--ink-2);
+  border: 1px solid var(--hair);
+  border-radius: 0 0.85rem 0.85rem;
+  overflow-wrap: anywhere;
+}
+.c-fala[data-minha='true'] > .c-corpo {
+  background: var(--ok-soft);
+  border-radius: 0.85rem 0 0.85rem 0.85rem;
+}
+.c-fio .c-respostas { margin: 0; padding: 0; border: 0; }
+.c-citacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0.45rem 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid var(--ok);
+  border-radius: var(--r-xs);
+  background: var(--ink-3);
+  color: var(--plat-dim);
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+.c-citacao span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.c-citacao:hover { color: var(--plat); }
+.c-fio .c-mudanca {
+  margin: 0.6rem auto;
+  padding: 0.4rem 0.7rem;
+  max-width: 40rem;
+  border: 0;
+  text-align: center;
+}
+.c-mudanca .c-mudanca-marca { display: none; }
+.c-mudanca .c-mudanca-cabeca { justify-content: center; }
+.c-mudanca .c-autor { font-size: 0.75rem; font-weight: 500; }
+@media (max-width: 600px) {
+  .c-fio { padding-inline: 0.5rem; }
+  .c-fio .c-fala { max-width: 94%; gap: 0.3rem; }
+  .c-fala > .c-corpo { padding: 0.55rem 0.6rem; }
+}

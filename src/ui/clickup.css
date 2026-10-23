@@ -1,0 +1,2946 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   A GRAMÁTICA DO CLICKUP — etapa F17.10b
+   ═══════════════════════════════════════════════════════════════════════════
+
+   POR QUE ESTA FOLHA EXISTE, SENDO QUE JÁ HAVIA `tarefa.css`
+     Porque a F17.10 desenhou um FORMULÁRIO DE SISTEMA — rótulo em cima, campo
+     embaixo, botão no fim — e o usuário comparou com o ClickUp dele e reprovou:
+     *"A tarefa tem esse layout, esses menus, esse formato, não se parece em
+     nada com o que vc fez."*
+
+     O erro não foi técnico, foi de FORMA. O ClickUp não tem formulário: ele tem
+     um MODAL com uma fila de fichas (chips), e cada ficha abre um menu flutuante
+     ancorado nela. É outra gramática de interação, e ela precisa da própria
+     folha.
+
+   A REGRA QUE RESOLVE A TENSÃO COM O OBSIDIAN
+     Gramática, estrutura, menus e interação: do ClickUp, fielmente.
+     Cor, tipografia e superfície: do OBSIDIAN (decisão D10), sem exceção.
+
+     As referências do usuário são escuras e o OBSIDIAN é platina sobre
+     obsidiana — são compatíveis. Nenhuma cor literal aqui: tudo sai de
+     `var(--…)`. Cor que vem do DADO (status, etiqueta, bandeira) entra como
+     variável posta no elemento pelo React: `--cor-status`, `--cor-etiqueta-fundo`,
+     `--cor-bandeira`.
+
+   O QUE NÃO PODE ACONTECER NESTA FOLHA
+     Nenhum contêiner do modal pode cortar o que sai dele. Menu ancorado num
+     chip do pé do corpo abre PARA CIMA e transborda a caixa; um `overflow`
+     no lugar errado o decapita. Por isso só `.cu-corpo` rola, e o modal
+     inteiro é `overflow: visible`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────── o modal ───────────────────────────── */
+
+.cu-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(5, 5, 6, 0.66);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.cu-modal {
+  width: 100%;
+  max-width: 54rem;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ink-1);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e-3);
+  /* Ver o cabeçalho: o balão do chip precisa sair daqui inteiro. */
+  overflow: visible;
+}
+
+/* --- a barra de abas + os dois botões do canto ------------------------------ */
+
+.cu-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem 0;
+}
+
+.cu-abas {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.cu-aba {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.7rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
+}
+
+.cu-aba:hover { color: var(--plat); background: var(--hair); }
+
+.cu-aba[aria-selected='true'] {
+  color: var(--plat);
+  background: var(--ink-3);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+
+.cu-canto {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.cu-icone-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
+}
+
+.cu-icone-btn:hover { color: var(--plat); background: var(--hair); }
+.cu-icone-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* --- os dois seletores da linha de cima ------------------------------------ */
+
+.cu-seletores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem 0.2rem;
+}
+
+.cu-seletor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 22rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
+}
+
+.cu-seletor:hover { background: var(--ink-2); border-color: var(--hair); color: var(--plat); }
+.cu-seletor[aria-expanded='true'] { background: var(--ink-2); border-color: var(--hair-2); }
+.cu-seletor > .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cu-seletor > .seta { opacity: 0.6; }
+
+/* --- título e corpo -------------------------------------------------------- */
+
+.cu-titulo {
+  display: block;
+  width: 100%;
+  padding: 0.35rem 0.9rem 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  resize: none;
+  overflow: hidden;
+}
+
+.cu-titulo::placeholder { color: var(--mute); font-weight: 500; }
+.cu-titulo:focus { outline: 0; box-shadow: none; }
+/* O FOCO DO TÍTULO — WCAG 2.4.7. O campo não tem moldura, e o único sinal de que
+   ele tinha o foco era o cursor piscando: quem chegava com Tab não via onde
+   estava. O mesmo anel do resto do sistema, por DENTRO da caixa (`-2px`) para
+   nenhuma rolagem ou `overflow` de fora o cortar. */
+.cu-titulo:focus-visible { outline: 2px solid var(--iw-foco); outline-offset: -2px; border-radius: var(--r-xs); }
+.cu-titulo[data-erro='true'] { color: var(--err); }
+
+.cu-corpo {
+  flex: 1 1 auto;
+  min-height: 8rem;
+  overflow-y: auto;
+  padding: 0 0.9rem;
+}
+
+/* ───────────────────────────── a fila de chips ───────────────────────────── */
+
+.cu-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.9rem;
+}
+
+/* O chip é a peça central desta etapa: no ClickUp NÃO existe "campo de
+   prioridade" — existe uma ficha que abre um menu. Vazio ele é discreto e
+   convida; cheio ele mostra o valor e some do caminho. */
+.cu-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 16rem;
+  padding: 0.24rem 0.6rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.cu-chip:hover { border-color: var(--hair-3); color: var(--plat); background: var(--ink-2); }
+.cu-chip[aria-expanded='true'] { border-color: var(--hair-3); background: var(--ink-2); color: var(--plat); }
+.cu-chip[data-cheio='true'] { color: var(--plat); border-color: var(--hair-2); }
+.cu-chip:disabled { opacity: 0.5; cursor: not-allowed; }
+/* F38, Fase 7: o cliente que falta numa lista compartilhada. */
+.cu-chip[data-erro='true'] { border-color: var(--err); color: var(--err); background: var(--err-soft); }
+.cu-chip > .rotulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* O chip de status usa a cor da esteira — dado, por variável. */
+.cu-chip[data-status='true'] {
+  border-color: color-mix(in srgb, var(--cor-status, var(--mute)) 55%, transparent);
+  color: var(--plat);
+}
+
+.cu-ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--cor-status, var(--mute));
+}
+
+/* ───────────────────────────── o rodapé ───────────────────────────── */
+
+.cu-rodape {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--hair);
+}
+
+/* O botão partido: o primário e a seta que abre o menu, colados, com um fio
+   entre eles. É a peça do canto inferior direito da referência. */
+.cu-partido {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--hair-2);
+}
+
+.cu-partido > button {
+  border: 0;
+  background: var(--luz);
+  color: var(--ink-0);
+  font-family: var(--f-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--dur-1) var(--ease-out);
+}
+
+.cu-partido > button:hover:not(:disabled) { filter: brightness(1.12); }
+.cu-partido > button:disabled { opacity: 0.5; cursor: not-allowed; }
+.cu-partido > .principal { padding: 0.42rem 0.9rem; }
+.cu-partido > .seta {
+  padding: 0.42rem 0.4rem;
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.28);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ───────────────────────────── o balão de menu ───────────────────────────── */
+
+.cu-ancora { position: relative; display: inline-flex; }
+
+/* ⚠️ O TETO DE ALTURA VEM DA JANELA, E NÃO DE `rem` — F17.35.
+   Medido antes de mexer, em Chrome a 1280×720: `Mover a lista para…` abria com
+   333px a partir de y=529 e terminava em 861 numa janela de 720. Eram 141px de
+   menu fora da tela, e sem alcance nenhum: o balão não tinha `overflow`, então
+   barra de rolagem nem nascia.
+
+   `--cu-teto` é escrito em pixels pelo componente, que sabe onde a âncora está
+   (ver `@/ui/teto`). O `calc(100vh - 1rem)` é só a rede de baixo, para o quadro
+   anterior à primeira medida e para quem desenha sem janela — nunca o teto real.
+
+   A caixa é COLUNA FLEXÍVEL porque o menu tem partes que não podem rolar: o
+   campo de busca no topo, o título, o recado do pé. Quem encolhe e rola é a
+   `.cu-rolagem` no meio; sem `flex`, o teto cortaria a busca junto. E o
+   `overflow-y: auto` do próprio balão é a rede para os menus que não têm
+   `.cu-rolagem` nenhuma — ali quem rola é o balão inteiro. */
+.cu-balao {
+  position: absolute;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  min-width: 13rem;
+  max-width: min(92vw, 30rem);
+  max-height: var(--cu-teto, calc(100vh - 1rem));
+  overflow-y: auto;
+  /* A rolagem do menu não vira rolagem da página quando chega ao fim. */
+  overscroll-behavior: contain;
+  padding: 0.3rem;
+  background: var(--ink-2);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--e-2);
+  color: var(--plat-dim);
+}
+
+/* Em coluna flexível todo filho encolheria para caber. Só a lista pode. */
+.cu-balao > * { flex: 0 0 auto; }
+
+/* Quatro âncoras, porque o chip do pé do modal precisa abrir para CIMA e o
+   seletor do topo para baixo — menu que abre sempre para o mesmo lado sai da
+   tela em metade dos casos. */
+.cu-balao[data-lado='baixo']  { top: calc(100% + 0.3rem); left: 0; }
+.cu-balao[data-lado='cima']   { bottom: calc(100% + 0.3rem); left: 0; }
+.cu-balao[data-lado='baixo-direita'] { top: calc(100% + 0.3rem); right: 0; }
+.cu-balao[data-lado='cima-direita']  { bottom: calc(100% + 0.3rem); right: 0; }
+
+/* O BALÃO EM PORTAL — F17.24.
+   Ele mora em `document.body` para escapar do contexto de empilhamento da
+   barra presa (ver o cabeçalho de `Balao` em `menus.tsx`). Lá fora não há
+   `.cu-ancora` de quem herdar posição: os quatro cantos vêm calculados em
+   `style`, e o `z-index` sobe porque agora ele disputa com o modal e com o
+   painel `Personalizar`, e não mais com os itens da barra. */
+.cu-balao[data-flutuante='1'] { z-index: 200; }
+.cu-balao[data-flutuante='1']:focus { outline: none; }
+
+.cu-balao-titulo {
+  padding: 0.3rem 0.5rem 0.35rem;
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* O cabeçalho de GRUPO dentro de um menu — F17.19.
+   `Não iniciado`, `Ativo`, `Feito`, `Fechado`: os quatro do ClickUp. Ele é mais
+   discreto que o título do balão de propósito — o título diz o que o menu é, o
+   grupo só separa. Sem versalete e sem monoespaçado, que a F17.20 tirou da casa
+   inteira. */
+.cu-grupo-titulo {
+  padding: 0.45rem 0.5rem 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--mute);
+}
+
+/* Entre um grupo e o anterior, um fio: sem ele os quatro grupos viram uma lista
+   só com palavras cinzas no meio. */
+.cu-rolagem > div + div > .cu-grupo-titulo {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--hair);
+  padding-top: 0.45rem;
+}
+
+.cu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cu-item:hover,
+.cu-item[data-focado='true'] { background: var(--ink-3); color: var(--plat); }
+.cu-item[aria-checked='true'] { color: var(--plat); }
+.cu-item > .fim { margin-left: auto; color: var(--mute); font-size: 0.72rem; }
+.cu-item > .marca { width: 0.9rem; flex: 0 0 auto; color: var(--luz-texto); }
+.cu-item:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cu-sep { margin: 0.25rem 0.15rem; border: 0; border-top: 1px solid var(--hair); }
+
+.cu-vazio {
+  padding: 0.45rem 0.5rem;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--mute);
+}
+
+/* ⚠️ SEM `max-height` PRÓPRIA — F17.35.
+   Ela tinha `15rem`. Quinze rem é teto de FONTE: numa tela de 720px o menu
+   ainda passava da borda, e numa de 1200px sobrava meia tela sem uso. Agora
+   quem manda é o teto do balão, e esta caixa só ocupa o que sobrar dele —
+   `min-height: 0` porque, sem isso, filho de flex não encolhe abaixo do
+   próprio conteúdo e a rolagem nunca chega a existir. */
+.cu-rolagem {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ───────────────── a barra de rolagem do menu — F17.35 ─────────────────
+
+   A do sistema tem 10px e moldura de 2px (ver `obsidian.css`): dentro de um
+   balão de 13rem ela é um corredor cinza que rouba a largura do texto. Aqui
+   ela afina para 6px e perde a moldura — mesma paleta, outra escala.
+
+   `scrollbar-width`/`scrollbar-color` é o caminho padrão; o `::-webkit-` é o
+   que o Chrome ainda honra com mais fidelidade. Os dois, porque nenhum dos
+   dois sozinho cobre os navegadores da equipe. */
+.cu-balao,
+.cu-rolagem {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-4) transparent;
+}
+
+.cu-balao::-webkit-scrollbar,
+.cu-rolagem::-webkit-scrollbar { width: 6px; height: 6px; }
+
+.cu-balao::-webkit-scrollbar-track,
+.cu-rolagem::-webkit-scrollbar-track { background: transparent; }
+
+.cu-balao::-webkit-scrollbar-thumb,
+.cu-rolagem::-webkit-scrollbar-thumb {
+  background: var(--ink-4);
+  border: 0;
+  border-radius: 99px;
+}
+
+.cu-balao::-webkit-scrollbar-thumb:hover,
+.cu-rolagem::-webkit-scrollbar-thumb:hover { background: var(--hair-3); }
+
+/* ───────────────────────────── o `?` — F17.24 ─────────────────────────────
+
+   Ele é DISCRETO em repouso e legível ao encostar: a ajuda não pode competir
+   com o controle que ela explica, senão ela vira o ruído que veio tirar.
+
+   `1.15rem` de lado — menor do que isso deixa de ser alvo de toque, e a
+   referência do iOS não desce de 44px de área tocável no dedo. No ponteiro,
+   com a folga do `flex`, dá para acertar sem mira.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* A CAIXA DE CLIQUE TEM 24px, O DESENHO CONTINUA DE 18 — WCAG 2.5.8 (alvo mínimo).
+   O botão media 1,15rem (18,4px), e o `?` está em todas as telas. A caixa passou
+   a 1,5rem; o círculo que se vê é o pseudo-elemento `::before`, do tamanho de
+   sempre, e é ele que ganha a borda de repouso e a de `:hover`. */
+.cu-ajuda {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.cu-ajuda::before {
+  content: '';
+  position: absolute;
+  inset: 0.175rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.cu-ajuda:hover,
+.cu-ajuda[aria-expanded='true'] {
+  color: var(--plat);
+}
+
+.cu-ajuda:hover::before,
+.cu-ajuda[aria-expanded='true']::before {
+  border-color: var(--hair-3);
+}
+
+/* O foco é VISÍVEL. Este botão é a única porta para a explicação depois que a
+   frase saiu da tela; quem chega nele pelo `Tab` precisa saber que chegou. */
+.cu-ajuda:focus-visible {
+  outline: 2px solid var(--luz);
+  outline-offset: 2px;
+  color: var(--plat);
+}
+
+/* O corpo da explicação. Largura de LEITURA, e não a mínima do balão: um
+   parágrafo em 13rem quebra em cinco linhas de três palavras — que é
+   exatamente o aperto que esta etapa veio desfazer. */
+.cu-ajuda-corpo {
+  /* LARGURA DE LEITURA, e não a mínima do balão. 19rem cabe entre 45 e 60
+     caracteres por linha, que é a faixa em que o olho não se perde na volta —
+     e 90vw garante que num celular ela não vaze da tela. */
+  width: min(19rem, 90vw);
+  padding: 0.15rem 0.5rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--plat-dim);
+}
+
+/* Uma frase com o `?` no fim dela. `baseline` alinha o círculo com a letra, e
+   não com a caixa: com `center` o `?` fica alto numa frase de duas linhas. */
+.cu-com-ajuda {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.cu-com-ajuda > span { min-width: 0; }
+
+.cu-ajuda-corpo p { margin: 0 0 0.4rem; }
+.cu-ajuda-corpo p:last-child { margin-bottom: 0; }
+
+/* Uma lista dentro da ajuda — `Ver`, `Executar`, `Criar`, `Administrar`. Ela é
+   uma lista porque são quatro coisas paralelas: em parágrafo corrido, achar a
+   sua exige ler as outras três. */
+.cu-ajuda-corpo dl { margin: 0; display: grid; gap: 0.3rem; }
+.cu-ajuda-corpo dt { color: var(--plat); font-weight: 600; }
+.cu-ajuda-corpo dd { margin: 0 0 0.15rem; color: var(--mute); }
+
+/* Dois ou três casos em fila. Marcador discreto, recuo pequeno: dentro de um
+   balão o recuo padrão do navegador come um terço da largura. */
+.cu-ajuda-corpo .cu-lista-simples {
+  margin: 0 0 0.4rem;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+/* Uma lista de nomes — `Alcançam hoje`. Um nome por linha: em parágrafo
+   separado por `·` ela vira parede, que foi o que o usuário fotografou. */
+.cu-lista-de-gente {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.cu-lista-de-gente > li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: var(--plat-dim);
+}
+
+.cu-lista-de-gente > li > .nivel {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--mute);
+  font-size: 0.72rem;
+}
+
+/* A busca do menu de responsável. */
+.cu-busca {
+  width: 100%;
+  padding: 0.36rem 0.5rem;
+  margin-bottom: 0.2rem;
+  background: var(--ink-1);
+  border: 1px solid var(--hair-2); /* campo: fio firme, como `.o-campo` — F43 Fase 5 */
+  border-radius: var(--r-sm);
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.78rem;
+}
+
+.cu-busca::placeholder { color: var(--mute); }
+.cu-busca:focus { outline: 0; border-color: var(--hair-3); }
+
+/* ───────────────────────────── bandeira de prioridade ───────────────────────────── */
+
+/* A cor da bandeira vem do vocabulário NOSSO (o enum da F17.3), então ela sai de
+   token do OBSIDIAN — e entra pelo elemento como `--cor-bandeira` para o mesmo
+   desenho servir aos quatro níveis e ao "limpar". */
+.cu-bandeira { color: var(--cor-bandeira, var(--mute)); flex: 0 0 auto; }
+
+/* ───────────────────────────── avatar ───────────────────────────── */
+
+.cu-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--cor-pessoa, var(--ink-4));
+  color: var(--ink-0);
+  font-family: var(--f-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.cu-avatar[data-tamanho='mini'] { width: 1.15rem; height: 1.15rem; font-size: 0.5rem; }
+
+.cu-pilha { display: inline-flex; align-items: center; }
+.cu-pilha > .cu-avatar + .cu-avatar { margin-left: -0.35rem; box-shadow: 0 0 0 1.5px var(--ink-1); }
+
+/* ───────────────────────────── o seletor de data ───────────────────────────── */
+
+.cu-data { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.cu-data-campos {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.1rem 0.15rem 0.35rem;
+}
+
+.cu-data-campo { flex: 1 1 0; min-width: 8rem; }
+
+.cu-data-campo > span {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.cu-data-campo > input {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  background: var(--ink-1);
+  border: 1px solid var(--hair-2); /* campo: fio firme, como `.o-campo` — F43 Fase 5 */
+  border-radius: var(--r-sm);
+  color: var(--plat);
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  color-scheme: dark;
+}
+
+:root[data-tema='claro'] .cu-data-campo > input { color-scheme: light; }
+.cu-data-campo > input:focus { outline: 0; border-color: var(--hair-3); }
+
+.cu-atalhos {
+  flex: 0 0 11.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding-right: 0.35rem;
+  border-right: 1px solid var(--hair);
+}
+
+.cu-cal { flex: 1 1 14rem; min-width: 14rem; }
+
+.cu-cal-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.15rem 0.35rem;
+}
+
+.cu-cal-mes {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--plat);
+  text-transform: capitalize;
+}
+
+.cu-cal-grade {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.cu-cal-cabecalho {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  text-align: center;
+  padding: 0.2rem 0;
+  color: var(--mute);
+}
+
+.cu-cal-dia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+
+.cu-cal-dia:hover { background: var(--ink-3); color: var(--plat); }
+.cu-cal-dia[data-fora='true'] { color: var(--mute); opacity: 0.85; }
+/* ↑ 0,85 e não 0,55: o dia do mês vizinho se clica como os outros, então é letra, e
+   a 0,55 caía a 2,6:1. A 0,85 a `--mute` mede mais de 4,5 sobre toda superfície
+   nos dois temas (`test/contraste-legivel.test.ts`). */
+/* Hoje é ANEL, e o escolhido é PREENCHIMENTO: os dois podem ser o mesmo dia, e
+   dois destaques idênticos se anulariam. */
+.cu-cal-dia[data-hoje='true'] { border-color: var(--luz); color: var(--plat); }
+.cu-cal-dia[data-escolhido='true'] { background: var(--luz); color: var(--ink-0); font-weight: 700; }
+/* O destaque de apoio, numa declaração só para dois usos: a OUTRA data da
+   tarefa (a inicial, enquanto se escolhe o vencimento) e a faixa de dias da
+   semana que abriu o seletor da grade semanal (F17.42). Nos dois casos ele
+   ORIENTA, e não escolhe. ⚠️ Ele vem DEPOIS de `data-escolhido` e tem a mesma
+   especificidade, então venceria no mesmo dia: quem marca a faixa só a liga
+   nos dias que não são o escolhido. */
+.cu-cal-dia[data-inicio='true'],
+.cu-cal-dia[data-faixa='true'] { background: var(--luz-soft); color: var(--plat); }
+/* Fora da faixa quando a faixa LIMITA (o `+` da aba Semana, F35): o dia está
+   lá para o mês fazer sentido, mas não se escolhe. */
+.cu-cal-dia:disabled,
+.cu-cal-dia:disabled:hover { background: transparent; color: var(--mute); opacity: 0.45; cursor: default; }
+
+/* ───────────────────────────── o editor rico ───────────────────────────── */
+
+/* A FAIXA FIXA DE FORMATAÇÃO SAIU DAQUI NA F17.16.
+   Ela era `.cu-ferramentas` — `position: sticky` no topo do corpo, visível o
+   tempo todo. O usuário comparou com o ClickUp dele e apontou: lá o modal é
+   limpo, e a formatação aparece só quando há texto selecionado.
+
+   O que substituiu: `.cu-bolha` (a barra que vive DENTRO de um `.cu-balao`
+   ancorado na seleção) e `.cu-flutua` (a âncora de tamanho zero que põe esse
+   balão nas coordenadas da seleção ou do cursor). Ver `EditorRico.tsx`. */
+
+/* A caixa do editor: o editável e, ao lado dele, a âncora do que flutua. Ela é
+   `relative` para que nada posicionado dentro do editor escape para a página —
+   a âncora em si não precisa disso, porque ela é `fixed`. */
+.cu-editor-caixa { position: relative; }
+
+/* Tamanho zero, de propósito: ela não é uma peça, é uma COORDENADA. Quem
+   posiciona o balão em relação a ela é o `data-lado` de `.cu-balao`, que já
+   existia — `cima` para a bolha (não cobre o texto selecionado), `baixo` para o
+   menu `/` (que é alto).
+
+   ⚠️ `fixed`, E NÃO `absolute`. Medido em navegador de verdade em 2026-08-26: com
+   `absolute` o menu `/` saía CORTADO ao terço, porque `.cu-corpo` é o único
+   contêiner que rola e tem pouco mais de 8rem — um menu de doze linhas não cabe
+   nele por lado nenhum. `fixed` sai de qualquer `overflow`; o preço é o
+   componente ter de recalcular a posição na rolagem, e ele recalcula. */
+.cu-flutua {
+  position: fixed;
+  width: 0;
+  height: 0;
+  z-index: 130;
+}
+
+/* A barra de formatação, agora dentro do balão. Uma linha só, sem quebra: ela
+   tem sete peças e cabe — a faixa antiga quebrava em duas linhas em tela
+   estreita, que era metade do incômodo. */
+.cu-bolha {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.05rem;
+}
+
+/* A barra não é uma lista rolável: overflow auto recorta o submenu de
+   estilos até a altura de uma única ferramenta. Só o submenu tem rolagem. */
+.cu-balao-formatacao { overflow: visible; }
+
+.cu-menu-estilos {
+  width: 15rem;
+  min-width: min(15rem, calc(100vw - 1rem));
+}
+
+.cu-menu-estilos .cu-item {
+  min-height: 2.25rem;
+  gap: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8125rem;
+}
+
+:root .cu-menu-estilos .cu-balao-titulo {
+  padding: 0.5rem 0.65rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* A marca do comando no menu `/` — `H1`, `▦`, `—`. Largura fixa para os rótulos
+   alinharem numa coluna só; sem ela a lista fica serrilhada. */
+.cu-marca-comando {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  flex: 0 0 auto;
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+}
+
+/* O item apontado pelas setas do teclado. Ele NÃO tem foco — o foco fica no
+   editor, senão não daria para continuar digitando o filtro —, então o destaque
+   precisa ser desenhado à mão. */
+.cu-item[data-ativo='true'] { background: var(--ink-3); color: var(--plat); }
+
+.cu-emojis {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.1rem;
+}
+
+.cu-ferramenta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.3rem;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.cu-ferramenta:hover { background: var(--hair); color: var(--plat); }
+.cu-ferramenta[aria-pressed='true'] { background: var(--ink-3); color: var(--luz-texto); }
+
+.cu-sep-vertical {
+  width: 1px;
+  height: 1.05rem;
+  margin: 0 0.2rem;
+  background: var(--hair);
+}
+
+/* O texto que se digita é o texto que se lê: as regras abaixo são as mesmas de
+   `.md-*` em `tarefa.css`, escritas por ELEMENTO porque o navegador cria as
+   etiquetas sem classe nenhuma quando alguém formata dentro do editor. */
+.cu-editor {
+  position: relative;
+  min-height: 7rem;
+  padding: 0.35rem 0.1rem 0.9rem;
+  color: var(--plat-dim);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.cu-editor:focus { outline: 0; box-shadow: none; }
+/* O FOCO DO BRIEFING — mesma razão e mesma regra do `.cu-titulo`. */
+.cu-editor:focus-visible { outline: 2px solid var(--iw-foco); outline-offset: -2px; border-radius: var(--r-xs); }
+
+/* O texto de convite fica ATRÁS do cursor, e não acima dele: `display: block`
+   empurraria o parágrafo vazio para a linha de baixo, e o cursor apareceria
+   longe de onde a pessoa vai escrever. */
+.cu-editor[data-vazio='true']::before {
+  content: attr(data-vazio-texto);
+  position: absolute;
+  top: 0.35rem;
+  left: 0.1rem;
+  color: var(--mute);
+  pointer-events: none;
+}
+
+.cu-editor > *:first-child { margin-top: 0; }
+.cu-editor p, .cu-editor div { margin: 0.5rem 0; }
+.cu-editor h1, .cu-editor h2, .cu-editor h3,
+.cu-editor h4, .cu-editor h5, .cu-editor h6 {
+  color: var(--plat);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.05rem 0 0.4rem;
+}
+.cu-editor h1 { font-size: 1.28rem; }
+.cu-editor h2 { font-size: 1.12rem; }
+.cu-editor h3 { font-size: 1rem; }
+.cu-editor h4 { font-size: 0.92rem; }
+.cu-editor h5 { font-size: 0.86rem; }
+.cu-editor h6 { font-size: 0.82rem; color: var(--mute); }
+.cu-editor hr { margin: 1rem 0; border: 0; border-top: 1px solid var(--hair); }
+.cu-editor ul, .cu-editor ol { margin: 0.45rem 0; padding-left: 1.35rem; }
+.cu-editor ul { list-style: disc; }
+.cu-editor ol { list-style: decimal; }
+.cu-editor li { margin: 0.2rem 0; }
+.cu-editor a { color: var(--luz-texto); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.cu-editor code {
+  font-family: var(--f-mono);
+  font-size: 0.82em;
+  background: var(--ink-3);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-xs);
+  padding: 0.05rem 0.28rem;
+}
+.cu-editor pre {
+  margin: 0.6rem 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--ink-0);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+  font-family: var(--f-mono);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.cu-editor pre code { background: transparent; border: 0; padding: 0; font-size: 1em; }
+.cu-editor blockquote {
+  margin: 0.6rem 0;
+  padding: 0.1rem 0 0.1rem 0.8rem;
+  border-left: 3px solid var(--hair-3);
+  color: var(--mute);
+}
+.cu-editor table {
+  border-collapse: collapse;
+  margin: 0.65rem 0;
+  font-size: 0.8rem;
+  width: 100%;
+}
+.cu-editor th, .cu-editor td {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--hair);
+  text-align: left;
+  vertical-align: top;
+  min-width: 3rem;
+}
+.cu-editor th { background: var(--ink-2); color: var(--plat); font-weight: 600; }
+
+/* A caixa de seleção DENTRO do texto. `contenteditable="false"` para o cursor
+   não entrar nela, e clicável para alternar — a caixa que não clica é a
+   reclamação mais previsível de um editor rico. */
+.cu-editor li[data-caixa] { list-style: none; margin-left: -1.35rem; }
+
+.cu-caixa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.92rem;
+  height: 0.92rem;
+  margin-right: 0.4rem;
+  vertical-align: -0.1rem;
+  border: 1px solid var(--hair-3);
+  border-radius: var(--r-xs);
+  background: var(--ink-1);
+  color: var(--ink-0);
+  font-size: 0.62rem;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cu-caixa[data-caixa='1'] { background: var(--luz); border-color: var(--luz); }
+
+/* ───────────────────────────── minimizado ───────────────────────────── */
+
+/* Minimizar guarda o rascunho INTEIRO — é o ponto dele. Fechar sem querer no
+   meio de um briefing de trinta linhas é o defeito que o botão evita. */
+.cu-minimizado {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 24rem;
+  padding: 0.5rem 0.6rem 0.5rem 0.85rem;
+  background: var(--ink-2);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--e-2);
+  color: var(--plat-dim);
+  font-size: 0.78rem;
+}
+
+.cu-minimizado > .texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ───────────────────────────── a ficha aberta ───────────────────────────── */
+
+/* A mesma gramática, sem o scrim: a ficha é PÁGINA (o endereço de uma tarefa
+   precisa poder ser colado num comentário), e não um modal. */
+.cu-ficha {
+  background: var(--ink-1);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.4);
+  overflow: visible;
+}
+
+.cu-trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.9rem 0;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  color: var(--mute);
+}
+
+.cu-trilha .barra { opacity: 0.45; }
+
+.cu-ficha-corpo { padding: 0 0.9rem 0.5rem; }
+
+.cu-carimbos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.1rem;
+  padding: 0.5rem 0.9rem;
+  border-top: 1px solid var(--hair);
+  font-size: 0.7rem;
+  color: var(--mute);
+}
+
+.cu-carimbos > span > b { color: var(--mute); font-weight: 600; }
+
+/* A etiqueta gravada, com a cor que veio da origem. */
+.cu-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-pill);
+  font-size: 0.68rem;
+  background: color-mix(in srgb, var(--cor-etiqueta-fundo, var(--ink-3)) 30%, transparent);
+  color: var(--cor-etiqueta-tinta, var(--plat));
+  border: 1px solid color-mix(in srgb, var(--cor-etiqueta-fundo, var(--hair-2)) 60%, transparent);
+}
+
+.cu-amostra {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: 0 0 auto;
+  border-radius: var(--r-xs);
+  background: var(--cor-etiqueta-fundo, var(--ink-4));
+  border: 1px solid var(--hair-2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A BARRA LATERAL — a árvore que se edita. Etapa F17.14.
+
+   POR QUE ELA MORA AQUI, E NÃO EM `quadro.css`
+     Porque é a MESMA gramática do resto desta folha: linha com `···` que
+     aparece ao passar o mouse, balão ancorado, item de menu com marca. A
+     `quadro.css` guarda a coluna e o cartão; a árvore é do vocabulário do
+     ClickUp, e ele já tem casa.
+
+   A ÁRVORE ROLA DE NOVO — E A DÍVIDA DA F17.14 FOI PAGA PARA ISSO
+     Da F17.14 até a F17.49 ela NÃO rolava: `overflow: visible` e crescendo com
+     o conteúdo, porque balão ancorado numa linha DENTRO de caixa que rola é
+     decapitado (`overflow-y: auto` faz o `overflow-x` calcular como `auto`
+     também). A anotação dizia: a saída certa é desenhar o balão num portal.
+
+     A F17.50 fez isso. Todo balão da árvore nasce em `document.body`, ancorado
+     no `···` que o abriu (`ComAncora`, em `@/board/menus`) — então a caixa pode
+     voltar a recortar sem cortar menu nenhum.
+
+     ⚠️ Quem mexer aqui: NÃO volte `overflow` sem os balões no portal, e não
+     tire os balões do portal deixando o `overflow`. Os dois andam juntos.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️ `z-index` AQUI NÃO É ENFEITE — É O CONSERTO DA F17.19, E FOI MEDIDO.
+   Sintoma: `···` de uma lista → `Esteira…` abria o balão POR BAIXO de `Painel`,
+   `Calendário` e `Planejamento` da seção `Entrega`. Texto sobre texto, ilegível,
+   e o clique caindo no item da barra em vez de no menu.
+
+   A causa NÃO era `overflow` — este bloco já tinha resolvido isso na F17.14.
+   Medido em Chrome em 2026-08-27, com `document.elementsFromPoint` no meio do
+   balão, a pilha voltou nesta ordem, de cima para baixo:
+
+     a.bl-item (Planejamento) · nav.o-card.bl-secao · button.cu-item · div.cu-balao
+
+   `.q-barra` é `position: sticky` acima de 1024px (ver `quadro.css`), e sticky
+   CRIA CONTEXTO DE EMPILHAMENTO mesmo com `z-index: auto`. Então o `z-index:
+   120` do balão não vale na página: ele vale dentro da árvore. E a árvore, na
+   camada dos posicionados sem `z-index`, é desenhada por ORDEM DE DOCUMENTO —
+   ela vem antes das seções `Entrega` e `Personalizar`, então elas passam por
+   cima do cartão inteiro, balão junto.
+
+   Um número positivo põe a árvore na camada de cima da barra e o balão volta a
+   ser o que está por cima. `1` basta: os vizinhos são todos `auto`. O modal de
+   `Personalizar` (`.cu-fundo`, 100) continua acima, que é o certo.
+
+   ⚠️ A F17.50 TIROU O `sticky` DAQUI, E O `z-index` FICOU — DE PROPÓSITO.
+   Sticky dentro de sticky era o que fazia a árvore deslizar por cima das seções
+   (ver o bloco de `.bl-barra`). Sem ele a árvore é só um item de flex que rola
+   dentro de uma barra que cabe na janela — não desliza sobre ninguém.
+
+   O `z-index: 1` continua porque `overflow-y: auto` também cria contexto de
+   empilhamento, e `.q-cartao:hover` ganha `transform`, que cria outro. Sem o
+   número, um cartão sob o ponteiro passaria por cima da barra inteira. Ele não
+   guarda mais o balão — o balão está no portal, fora daqui —, guarda a barra. */
+.q-barra.cu-arvore {
+  /* Não é mais `sticky`: quem gruda é a barra inteira (`.bl-barra`). */
+  position: static;
+  /* O que sobrar da barra depois da marca, das seções e do pé. `min-height: 0`
+     porque item de flex tem mínimo automático = conteúdo, e sem zerá-lo a
+     árvore empurraria a barra para além da janela em vez de rolar. */
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  /* ⚠️ `hidden` E NÃO `visible`: `overflow-x: visible` com `overflow-y: auto`
+     é recalculado para `auto` pelo navegador, e a árvore ganharia uma barra de
+     rolagem horizontal que ninguém pediu. Dizer `hidden` é dizer a mesma coisa
+     sem o efeito colateral — e nada aqui precisa vazar de lado: os balões estão
+     no portal. */
+  overflow-x: hidden;
+  z-index: 1;
+}
+
+/* ⚠️ Abaixo de 1024px a barra NÃO cabe na janela — ela é uma faixa no fluxo da
+   página, e quem rola é a página. Uma árvore que rolasse dentro de si ali seria
+   uma caixinha de 300px dentro de uma página que já rola: duas rolagens
+   disputando o mesmo dedo. */
+@media (max-width: 1023.98px) {
+  .q-barra.cu-arvore {
+    flex: 0 0 auto;
+    overflow-y: visible;
+    overflow-x: visible;
+  }
+}
+
+.cu-arvore-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.1rem 0.35rem 0.35rem;
+  /* ⚠️ O TOPO DA ÁRVORE FICA NO ALTO AO ROLAR — F29 (Fase 4, achado da
+     verificação da Fase 3). Numa árvore de cinquenta espaços, rolar até o fim
+     levava junto o título, o `+` de Novo espaço e o botão que devolve a
+     coluna — e para criar um espaço ou devolver a árvore era preciso rolar
+     tudo de volta. Quem rola é a própria árvore (`.q-barra.cu-arvore`, na
+     barra e na coluna), e `top: 0` gruda na borda de cima dela.
+
+     O fundo é o da página (`--ink-0`, o mesmo de `.t-cabeca` e da gaveta):
+     a árvore não tem fundo próprio — `acabamento.css` tira o do `.o-card` —,
+     e ela está pousada sobre a página. Medido: com `--ink-1` o título virava
+     uma faixa mais clara que o resto da barra. Sem fundo nenhum os nós
+     passariam visíveis por trás do título. `z-index: 1` é o menor número que
+     vence o conteúdo em fluxo que passa por baixo — o mesmo de `.t-cabeca` —,
+     e fica dentro do contexto da própria árvore (que já é `z-index: 1`): os
+     balões, que moram no portal, continuam por cima dele. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--ink-0);
+}
+
+.cu-arvore-topo > h2 { margin-right: auto; }
+/* F06A: `Compartilhado comigo` em UMA linha. Com os dois botões ao lado, o
+   título encolhia até quebrar em duas na barra de 288 px; agora ele fica com
+   o que sobra e nunca quebra. */
+.cu-arvore-topo > h2 { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
+.cu-arvore-topo > h2 > .bl-secao-alternar { overflow: hidden; }
+/* Medido na barra de 288 px: o título pede 149 px e sobravam 138. Com
+   ponteiro fino os dois botões do topo descem a 24 px (o mínimo da WCAG 2.2)
+   e o vão encolhe — cabe inteiro. No toque ficam como estavam. */
+@media (pointer: fine) {
+  .cu-arvore-topo { gap: 0.2rem; }
+  .cu-arvore-topo .cu-icone-btn { width: 1.5rem; height: 1.5rem; }
+}
+
+/* O `+` do cabeçalho: o mesmo botão de ícone da folha, com o sinal em tamanho
+   de leitura. */
+.cu-mais { font-size: 1.05rem; line-height: 1; font-weight: 500; }
+
+.cu-espaco + .cu-espaco { margin-top: 0.35rem; }
+
+/* --- o esqueleto da primeira carga (F17.CARGA03) --------------------------- */
+
+/* ⚠️ ELE OCUPA O MESMO ESPAÇO QUE A ÁRVORE VAI OCUPAR, e é o ponto inteiro:
+   `min-height` é a mesma `1.75rem` de `.cu-no`, e o recuo por nível repete o
+   de `.cu-no[data-nivel]`. Um esqueleto mais baixo que o conteúdo faz a barra
+   crescer quando o dado chega, e o que estava debaixo do cursor anda.
+
+   A largura decrescente por nível existe para ele PARECER uma árvore em vez de
+   uma pilha de barras iguais — quem espera precisa reconhecer o que está
+   chegando. Quem pediu movimento reduzido não pulsa: o bloco de
+   `prefers-reduced-motion` do `obsidian.css` zera a duração de toda animação. */
+.cu-esqueleto { padding: 0.1rem 0; }
+
+.cu-esqueleto-linha {
+  min-height: 1.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.cu-esqueleto-linha::after {
+  content: '';
+  height: 0.6rem;
+  border-radius: var(--r-xs);
+  background: var(--hair);
+  animation: cu-esqueleto-pulso 1.4s var(--ease-out) infinite;
+}
+
+.cu-esqueleto-linha[data-nivel='0']::after { margin-left: 0;      width: 72%; }
+.cu-esqueleto-linha[data-nivel='1']::after { margin-left: 0.6rem;  width: 58%; }
+.cu-esqueleto-linha[data-nivel='2']::after { margin-left: 1.2rem;  width: 46%; }
+
+/* As linhas não pulsam em uníssono: um pulso só, igual em seis barras, lê como
+   um bloco piscando. Escalonar dá a sensação de carga que a referência tem. */
+.cu-esqueleto-linha:nth-child(2)::after { animation-delay: 0.1s; }
+.cu-esqueleto-linha:nth-child(3)::after { animation-delay: 0.2s; }
+.cu-esqueleto-linha:nth-child(4)::after { animation-delay: 0.3s; }
+.cu-esqueleto-linha:nth-child(5)::after { animation-delay: 0.4s; }
+.cu-esqueleto-linha:nth-child(6)::after { animation-delay: 0.5s; }
+
+@keyframes cu-esqueleto-pulso {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* --- a linha --------------------------------------------------------------- */
+
+/* Uma linha é: seta · alvo (ícone + nome + contagem) · `···`. O alvo é um botão
+   que ocupa o resto — não dá para aninhar o `···` dentro dele, então os dois são
+   irmãos e o FUNDO fica na linha. É o que faz a linha selecionada da referência
+   parecer uma faixa inteira, e não um retângulo em volta do texto. */
+.cu-no {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  border-radius: var(--r-xs);
+  min-height: 1.75rem;
+  transition: background var(--dur-1) var(--ease-out);
+}
+
+.cu-no[data-nivel='0'] { padding-left: 0; }
+/* F06A: 0,6rem por nível (era 0,85): a seta de cada nível já desenha a
+   hierarquia, e cada rem a menos de recuo é nome de lista a mais à vista. */
+.cu-no[data-nivel='1'] { padding-left: 0.6rem; }
+.cu-no[data-nivel='2'] { padding-left: 1.2rem; }
+
+.cu-no:hover { background: var(--hair); }
+
+/* PASTA SEM LISTA — F28. Uma linha só, e o vazio dito pelo tom: `--mute` é o
+   mais discreto da escada e ainda passa na régua de 7:1
+   (`test/contraste-legivel.test.ts`). Sem `opacity` por cima — apagar de novo
+   é o defeito da F17.37. Vem ANTES de `data-atual` de propósito: a pasta vazia
+   aberta no quadro acende como qualquer outra. */
+.cu-no[data-vazia='true'] .cu-no-nome { color: var(--mute); }
+
+/* A LINHA SELECIONADA TEM FUNDO — item explícito da referência. */
+.cu-no[data-atual='true'] { background: var(--luz-soft); }
+.cu-no[data-atual='true'] .cu-no-nome { color: var(--luz-texto); }
+
+/* Arquivado aparece apagado e riscado: ele está ali para poder VOLTAR, não para
+   ser confundido com o que está em uso. */
+.cu-no[data-morto='true'] { opacity: 0.55; }
+.cu-no[data-morto='true'] .cu-no-nome { text-decoration: line-through; }
+
+.cu-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+  /* Recolhida aponta para a direita; aberta, para baixo. */
+  transform: rotate(-90deg);
+}
+
+.cu-caret[data-aberto='true'] { transform: rotate(0deg); }
+.cu-caret:hover { color: var(--plat); }
+
+.cu-no-alvo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.25rem 0.2rem 0.25rem 0.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: 0.79rem;
+  text-align: left;
+  cursor: pointer;
+  /* F28: a linha carrega texto só para o leitor de tela (`sr-only`, que é
+     `position: absolute`). Sem um ancestral posicionado aqui, o bloco dele
+     seria a `.bl-barra`, FORA da árvore que rola — e cada frase escondida
+     esticaria a página até a altura em que a linha dela estaria. */
+  position: relative;
+}
+
+.cu-no-alvo[data-campo='1'] { cursor: default; }
+
+.cu-no-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Os dois espaços da casa se chamam `Demandas`. Sem a empresa na frente a barra
+   mostraria dois itens idênticos — o mesmo motivo que `buildTree` documenta.
+   F31: ela só aparece nesse caso, o de homônimo em outra empresa; ver
+   `espacosHomonimos`. */
+.cu-no-empresa { color: var(--mute); font-family: var(--f-mono); font-size: 0.62rem; }
+
+.cu-no-contagem {
+  margin-left: auto;
+  padding-left: 0.3rem;
+  font-family: var(--f-mono);
+  font-size: 0.64rem;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.cu-selo-morto {
+  flex: 0 0 auto;
+  padding: 0.02rem 0.3rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hair-2);
+  font-family: var(--f-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* O menu da linha APARECE AO PASSAR O MOUSE — item explícito da referência. Ele
+   fica quando o menu está aberto (`data-fixo`) e quando chega o foco pelo
+   teclado: um botão que só existe sob o ponteiro é inalcançável sem ponteiro. */
+.cu-no-acao {
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.cu-no:hover .cu-no-acao,
+.cu-no-acao[data-fixo='true'],
+.cu-no-acao:focus-within { opacity: 1; }
+
+.cu-no-acao > .cu-icone-btn { width: 1.4rem; height: 1.4rem; }
+
+/* O `···` NÃO RESERVA LARGURA PARADO — F06A. Invisível, ele ainda comia
+   1,4rem de cada linha, e o nome da lista truncava mais cedo do que
+   precisava. Com ponteiro fino, ele só ocupa lugar quando aparece (linha sob
+   o ponteiro, menu aberto, foco pelo teclado — o Tab ainda chega nele, e
+   `:focus-within` o abre). Na mesma hora a contagem cede o lugar, então o
+   nome não anda quando o ponteiro passa. No toque não há "passar": o `···`
+   fica sempre à vista, senão seria um alvo invisível. */
+@media (hover: hover) {
+  .cu-no-acao:not([data-fixo='true']):not(:focus-within) { width: 0; overflow: hidden; }
+  .cu-no:hover .cu-no-acao { width: auto; overflow: visible; }
+  .cu-no:hover .cu-no-contagem:not(:empty),
+  .cu-no:has(.cu-no-acao[data-fixo='true']) .cu-no-contagem:not(:empty),
+  .cu-no:has(.cu-no-acao:focus-within) .cu-no-contagem:not(:empty) { display: none; }
+}
+@media (hover: none) {
+  .cu-no-acao { opacity: 1; }
+}
+
+/* O SINAL DO CLIENTE, NA PRÓPRIA LINHA — F17.43.
+   Mesmo tamanho do `···`, e `flex: 0 0 auto` para o nome da lista continuar
+   sendo o que encolhe quando a barra é estreita. Ele NÃO fica dentro de
+   `.cu-no-acao` de propósito: aquele bloco só aparece ao passar o mouse, e o
+   vínculo é um sinal — precisa estar à vista para dizer que a lista é de um
+   cliente antes de alguém procurar por ele. */
+.cu-no > .cu-icone-btn { width: 1.4rem; height: 1.4rem; flex: 0 0 auto; }
+
+/* O campo que toma o lugar do nome ao renomear e ao criar. */
+.cu-no-campo {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.16rem 0.35rem;
+  background: var(--ink-0);
+  border: 1px solid var(--luz);
+  border-radius: var(--r-xs);
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.79rem;
+}
+
+.cu-no-campo:focus { outline: 0; box-shadow: 0 0 0 2px var(--luz-soft); }
+
+/* A marca do espaço: quadrado com a inicial, na cor que veio do ClickUp
+   (`spaces.color`). Cor de DADO, por variável — decisão D10.
+
+   ⚠️ A TINTA ACOMPANHA O FUNDO, E NÃO ACOMPANHAVA — F17.37.
+   `color: var(--ink-0)` está certo QUANDO HÁ COR: tinta escura sobre um
+   quadrado vivo. Sem cor, o fundo cai para `--ink-4`, que é um cinza escuro —
+   e `--ink-0` sobre ele deu 1,41 de contraste medido no Chrome, a 9,3px. A
+   inicial do espaço não existia para quem olha, e são sete delas na barra
+   lateral. No tema claro dava 1,21, pelo mesmo motivo invertido.
+
+   A saída é a mesma da cor: uma segunda variável, escrita junto com a
+   primeira. Sem cor ninguém escreve nenhuma das duas, e a tinta cai na
+   platina — que é o que se lê sobre `--ink-4` nos dois temas. */
+.cu-marca-espaco {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  border-radius: var(--r-xs);
+  background: var(--cor-espaco, var(--ink-4));
+  color: var(--tinta-espaco, var(--plat));
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.cu-recuo-1 { padding-left: 1.45rem; }
+.cu-recuo-2 { padding-left: 2.05rem; }
+
+/* O interruptor do arquivado, no pé da barra. */
+.cu-arvore-pe {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.3rem 0.4rem;
+  border: 0;
+  border-top: 1px solid var(--hair);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.cu-arvore-pe:hover { color: var(--plat-dim); }
+.cu-arvore-pe[aria-pressed='true'] { color: var(--luz-texto); }
+
+/* --- a caixa da esteira ---------------------------------------------------- */
+
+/* ⚠️ A LARGURA É FIXA, E FOI MEDIDA — F17.19.
+   O balão desta caixa é ancorado à DIREITA da linha da lista, dentro de uma
+   barra de 16,5rem. Com a linha da etapa numa fila só (nome + grupo + cor +
+   três botões) ele passou a 412px em Chrome, e o canto esquerdo dele saiu da
+   janela: `left: -117`. Ninguém veria o nome da primeira etapa.
+
+   A caixa passa a caber na barra por construção, e o que sobra de controle
+   desce para a segunda linha da etapa. `max-width: 100%` é a rede para a barra
+   estreita do modo `Somente ícones`. */
+.cu-esteira {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.15rem;
+  width: 15.5rem;
+  max-width: 100%;
+}
+
+/* A etapa em DUAS linhas: o nome em cima, o resto embaixo. Numa fila só, o
+   seletor de grupo (`Não iniciado` é a palavra mais comprida da tela) empurrava
+   o campo de nome para 4rem — grande o bastante para caber `a faze`. */
+.cu-esteira-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0;
+}
+
+.cu-esteira-linha + .cu-esteira-linha { border-top: 1px solid var(--hair); }
+
+/* `width: 100%` num item de caixa flexível que quebra é o que garante a
+   segunda linha — sem ele a quebra dependeria da soma dos filhos, que muda com
+   o idioma do navegador. O recuo alinha os controles com o nome de cima. */
+.cu-esteira-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  width: 100%;
+  padding-left: 0.95rem;
+}
+
+.cu-esteira-acoes > .cu-mini-select { flex: 1 1 auto; min-width: 0; }
+
+.cu-esteira-nome {
+  flex: 1 1 6rem;
+  min-width: 0;
+  padding: 0.22rem 0.35rem;
+  background: var(--ink-1);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-xs);
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.76rem;
+}
+
+.cu-esteira-nome:focus { outline: 0; border-color: var(--hair-3); }
+
+.cu-esteira-cor {
+  width: 1.7rem;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.cu-esteira-pe {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.2rem;
+}
+
+.cu-esteira-pe > .o-btn { margin-left: auto; }
+
+/* --- a pergunta do destino, F17.19 ------------------------------------------
+   Ela NÃO é um aviso de erro, e por isso não usa a cor de recusa: é uma
+   pergunta que a caixa faz quando uma etapa que tem tarefa dentro vai sumir. O
+   fundo é o degrau de superfície de sempre, e o único destaque é o fio de cima
+   — que separa a pergunta da lista de etapas. */
+.cu-destinos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--hair);
+}
+
+.cu-destino {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--plat-dim);
+}
+
+.cu-destino > span { flex: 1 1 auto; min-width: 0; }
+.cu-destino > .cu-mini-select { flex: 0 1 8rem; }
+
+/* ─────────────── as etapas escolhidas na CRIAÇÃO — F17.16 ─────────────── */
+
+/* A tira de moldes que aparece embaixo do campo de nome, na barra lateral, e
+   dentro do balão de espaço novo. Ela é estreita nos dois lugares: a barra tem
+   pouco mais de 15rem, e por isso os moldes QUEBRAM em várias linhas em vez de
+   rolarem — rolagem horizontal numa tira de cinco itens esconde metade deles. */
+.cu-moldes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.2rem 0 0.35rem;
+}
+
+.cu-moldes-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.cu-moldes-rotulo {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-right: 0.15rem;
+}
+
+.cu-molde {
+  padding: 0.16rem 0.38rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.cu-molde:hover:not(:disabled) { color: var(--plat); border-color: var(--hair-3); }
+.cu-molde:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* O escolhido, marcado por PREENCHIMENTO e não só por borda: numa tira de seis
+   fichas pequenas, uma borda um tom mais clara não se distingue de relance. */
+.cu-molde[aria-checked='true'] {
+  background: var(--luz-soft);
+  border-color: var(--luz);
+  color: var(--luz-texto);
+}
+
+/* A prévia das etapas do molde escolhido. Ver o porquê em `ArvoreDoQuadro.tsx`:
+   escolher `Vídeo` sem ver as dez colunas é escolher no escuro. */
+.cu-molde-previa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.3rem;
+}
+
+.cu-molde-etapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.64rem;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* O que FECHA a esteira aparece mais forte: é o único que o banco exige que
+   exista, e é o que a pessoa procura para saber onde é o fim. */
+.cu-molde-etapa[data-fim='true'] { color: var(--plat-dim); }
+
+.cu-molde-etapa > .cu-ponto { width: 0.4rem; height: 0.4rem; }
+
+/* O único `select` desta folha, e ele é deliberado: o editor de esteira é um
+   painel de configuração, não a fila de chips da tarefa — que é onde a caixa
+   de seleção foi reprovada. O ClickUp usa uma no mesmo lugar. */
+.cu-mini-select {
+  flex: 0 0 auto;
+  max-width: 8rem;
+  padding: 0.22rem 0.3rem;
+  background: var(--ink-1);
+  border: 1px solid var(--hair-2); /* campo: fio firme, como `.o-campo` — F43 Fase 5 */
+  border-radius: var(--r-xs);
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: 0.72rem;
+}
+
+.cu-campo { display: block; padding: 0.1rem 0.15rem 0.35rem; }
+
+.cu-campo > span {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.cu-campo > .cu-mini-select { width: 100%; max-width: none; }
+
+/* ═══════════════════ A CAIXA DA AUTOMAÇÃO — etapa F17.45 ═══════════════════
+
+   *"Criamos essa de exemplo, mas não entendi a lógica POR DETRÁS DELA. Além
+   disso, a caixa de configuração está confusa e desalinhada... poucas pessoas
+   realmente sabem criar uma automação, não é o caso das atendentes."*
+
+   O QUE ESTAVA DESALINHADO, MEDIDO ANTES DE MEXER
+     Em Chrome a 1280×720, a caixa criando uma regra tinha as bordas esquerdas
+     dos seus campos em TRÊS colunas: 43 (os rótulos), 158 e 172 (os seletores,
+     cada um com a largura do próprio conteúdo, porque `.cu-destino` põe rótulo
+     e campo na mesma linha e o campo é `flex: 0 1 8rem`). Rótulo curto empurrava
+     o seletor para a direita; rótulo comprido puxava de volta. Nada se alinhava
+     com nada, e a caixa parecia torta sem que se soubesse dizer por quê.
+
+   A REGRA DESTA SEÇÃO
+     Rótulo EM CIMA, campo embaixo, os dois na mesma borda esquerda, e todo
+     seletor com a largura inteira da coluna. Uma coluna só — que é o que
+     "alinhado" quer dizer quando os rótulos têm comprimentos diferentes.
+
+   A LARGURA É A MESMA DA ESTEIRA, E NÃO POR ACASO
+     `15.5rem`. A F17.35 mediu a caixa da esteira a 412px abrindo com o canto
+     esquerdo em `left: -117` dentro da barra: o balão preso abre por
+     `right: 0` e não tem como se prender na borda da janela. Toda caixa que
+     mora no `···` da árvore cabe por construção ou não cabe nunca. */
+
+/* A REGRA JÁ GRAVADA, na lista de regras. */
+.cu-regra {
+  width: 15.5rem;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.35rem 0.35rem 0.3rem;
+}
+
+.cu-regra + .cu-regra { border-top: 1px solid var(--hair); }
+
+/* A PAUSADA CONTINUA LEGÍVEL. Apagar o texto dela seria trocar "está parada"
+   por "não interessa" — e o que se lê ali é justamente o que a pessoa vai
+   retomar. O sinal é o selo ao lado do nome, e não a tinta da frase. */
+.cu-regra[data-pausada='sim'] > .cu-regra-nome > b { color: var(--mute); }
+
+.cu-regra-nome {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--plat);
+}
+
+.cu-regra-nome > b { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+
+.cu-regra-selo {
+  flex: 0 0 auto;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 999px;
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* ─── a regra por extenso, em passos ───
+
+   `Quando` numa coluna e a frase noutra: é a coluna do rótulo que faz os três
+   passos serem TRÊS, e não uma frase de quatro linhas onde a pessoa tem de
+   descobrir onde a chegada termina e o efeito começa. */
+.cu-regra-passos { display: block; }
+
+.cu-passo {
+  display: grid;
+  grid-template-columns: 3.1rem 1fr;
+  gap: 0.1rem 0.35rem;
+  align-items: baseline;
+  padding: 0.06rem 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--plat-dim);
+}
+
+.cu-passo-rotulo {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.cu-passo-frase { min-width: 0; overflow-wrap: anywhere; }
+
+/* O NOME QUE VEIO DO BANCO, dentro da frase — nome de etapa, de lista, de
+   pessoa. Sem destaque ele some no meio do texto, e era metade do defeito
+   antigo: `chega em a fazer` não tinha como se ler, porque `a fazer` não se
+   distinguia do resto da frase. Peso e tinta, nunca cor de dado. */
+.cu-passo-nome { font-weight: 600; color: var(--plat); }
+
+.cu-regra-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  margin-left: 2.75rem;
+}
+
+.cu-regra-acoes > .cu-icone-btn { margin-left: auto; }
+
+/* ─── o formulário: um bloco por passo ─── */
+
+.cu-regra-forma {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 15.5rem;
+  max-width: 100%;
+  padding: 0.15rem;
+}
+
+.cu-regra-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--hair);
+}
+
+.cu-regra-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* UMA COLUNA SÓ: rótulo em cima, campo embaixo, os dois na mesma borda. Ver a
+   medida das três colunas no cabeçalho desta seção. */
+.cu-regra-campo { display: block; }
+
+.cu-regra-campo > span {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--plat-dim);
+}
+
+.cu-regra-campo > .cu-mini-select,
+.cu-regra-campo > .cu-busca {
+  width: 100%;
+  max-width: none;
+  margin-bottom: 0;
+}
+
+/* A regra pronta, antes de gravar — no MESMO formato em que ela vai aparecer
+   na lista depois de gravada. */
+.cu-regra-previa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.35rem;
+  background: var(--ink-1);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+}
+
+.cu-regra-previa > .cu-regra-passos > span > .cu-passo:first-child { padding-top: 0; }
+
+/* ───────────────────────────── caber em telas estreitas ───────────────────────────── */
+
+@media (max-width: 640px) {
+  .cu-fundo { padding: 0; align-items: stretch; }
+  .cu-modal { max-width: none; max-height: 100vh; border-radius: 0; border-width: 0; }
+  .cu-atalhos { flex: 1 1 100%; border-right: 0; border-bottom: 1px solid var(--hair); padding-bottom: 0.35rem; }
+  .cu-titulo { font-size: 1.2rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A BARRA LATERAL COM SEÇÕES, `MEU TRABALHO` E O PAINEL `PERSONALIZAR`
+   Etapa F17.18.
+
+   POR QUE ISTO MORA AQUI
+     Porque é a MESMA gramática do resto desta folha — aba, balão, item com
+     marca, linha com fundo quando selecionada. A `quadro.css` guarda a coluna e
+     o cartão; a barra e o painel são do vocabulário do ClickUp, e ele já tem
+     casa. Foi o mesmo raciocínio que trouxe a árvore da F17.14 para cá.
+
+   COR
+     Nenhuma literal. Tudo sai de `var(--…)` do OBSIDIAN, e o que vem da origem
+     — a cor do status no ponto da linha — entra como variável no elemento
+     (decisão D10).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────── a barra ─────────────────────────── */
+
+/* ⚠️ A BARRA CABE NA JANELA, E QUEM ROLA DENTRO DELA É A ÁRVORE — F17.50.
+
+   O QUE SE MEDIU, COM A ÁRVORE CHEIA (46 listas, 5 espaços, Chrome 1440×900)
+     Com a página no TOPO, nada se sobrepunha. Rolando até o MEIO e até o FIM,
+     `document.getBoundingClientRect` de peça contra peça devolvia:
+
+       árvore × seção `Entrega`            31.152 px² de área comum
+       árvore × pé (`Personalizar…`)        7.920 px²
+
+     e `document.elementFromPoint` no meio de `Personalizar a barra lateral`
+     devolvia `.cu-arvore-pe` — o interruptor de arquivados, da ÁRVORE. O botão
+     estava lá, desenhado, e o clique não chegava nele.
+
+   A CAUSA NÃO ERA `overflow`, E ISSO IMPORTA
+     Era `position: sticky` DENTRO de `position: sticky`. `.bl-barra` gruda, e
+     `.q-barra` (a árvore) grudava também, dentro dela. Sticky não empurra
+     irmão: ele DESLOCA a caixa e deixa o espaço reservado onde estava. Uma
+     árvore de 1.524px numa janela de 900 desliza para baixo conforme a página
+     rola — e passa por cima de tudo o que vem depois dela na barra.
+
+     Prova: no topo da página o deslocamento é zero, e a sobreposição era zero.
+     Ela nascia da rolagem, não da altura.
+
+   A SAÍDA
+     A barra inteira cabe na janela (`max-height`), e a ÁRVORE ganha o que
+     sobrar e rola dentro de si. As seções e o pé ficam sempre visíveis — que é
+     o que a referência faz — e nenhuma peça precisa deslizar sobre outra.
+
+   ⚠️ ISTO SÓ É POSSÍVEL PORQUE OS MENUS DA ÁRVORE SAÍRAM PARA O PORTAL (F17.50,
+   ver `ComAncora` em `@/board/menus`). Balão ancorado dentro de caixa que rola
+   sai decapitado — `overflow-y: auto` faz o `overflow-x` calcular como `auto`
+   também. Devolver `overflow` sem levar os balões para fora trocaria um defeito
+   que se vê por um que some sem avisar. */
+.bl-barra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: visible;
+}
+
+@media (min-width: 1024px) {
+  .bl-barra {
+    position: sticky;
+    top: 0.75rem;
+    /* ⚠️ O TETO CONTA ONDE A BARRA COMEÇA — F28.
+
+       Era `calc(100vh - 1.5rem)`: a folga do `top` e a mesma embaixo, como se
+       a barra nascesse no topo da janela. Ela nasce abaixo do cabeçalho da
+       página. Medido em 1280×720, com a página no topo: `/painel` 63..759,
+       `Minhas tarefas` 72..768, a visão do espaço 36..732 — "Agentes de IA"
+       abaixo da dobra até alguém rolar a página. É o mesmo chute que a F17.72
+       achou no quadro; lá a saída foi `max-height: 100%` porque a página é uma
+       cadeia de altura (ver `quadro.css`), e aquela regra continua ganhando
+       desta. Aqui a página tem a altura do que há nela, e não há linha de
+       grade que diga a sobra.
+
+       `--bl-inicio` é onde a grade da barra começa na página, em pixels,
+       escrito por `BarraLateral`. O teto passa a ser a janela menos esse
+       começo e a folga de baixo: a barra inteira cabe na janela com a página
+       no topo. A folga de baixo é `1.5rem`, o `py-6` de `PaginaLarga`: com
+       `0.75rem` a barra cabia, mas barra + respiro da página passavam 12px da
+       janela e uma página curta ganhava rolagem só por causa dela. Rolada a
+       página, a barra gruda em `top` e sobra embaixo a diferença entre o
+       começo e o `top` — troca aceita: um vão no pé é melhor que um pé fora
+       da tela.
+
+       `clamp(0.75rem, …, 25vh)`: o piso é o próprio `top` (a barra nunca fica
+       mais perto do topo do que ele), e o teto é a trava contra página com
+       muita coisa acima da grade — sem ela a barra encolheria até virar
+       fresta. Passando de um quarto da janela, vale o de antes: cortada no
+       começo, inteira quando gruda. Sem a variável (o primeiro quadro, antes
+       da medida), o teto é o de antes menos a folga de baixo. */
+    max-height: calc(100vh - clamp(0.75rem, var(--bl-inicio, 0.75rem), 25vh) - 1.5rem);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A GAVETA — F17.75. Abaixo de 1024px a barra SAI DO FLUXO.
+
+   ⚠️ POR QUE, COM O NÚMERO
+     A F17.72 deixou dívida declarada: abaixo de 1024px a coluna do quadro
+     continuava cortando, e matar o teto `calc(100vh - 16rem)` lá foi MEDIDO e
+     recusado — sem ele a página ia a 7.422px e a barra que rola de lado descia
+     7.398px. Aquela medição estava certa e a conclusão dela também: naquela
+     forma, era um defeito trocado por outro.
+
+     O que faltava era medir a OUTRA metade. Chrome, pasta `TIME HELENA`,
+     820×900:
+
+       .q-tela começa em ............... y=112
+       .q-conteudo (o quadro) começa em . y=1.627
+       a barra empilhada no meio ....... 1.515px
+       o quadro pedia .................... 942px
+       a página inteira ................ 2.593px numa janela de 900
+
+     Não era o quadro que não cabia: era a barra ocupando 58% de uma página que
+     a pessoa tinha de rolar inteira antes de ver o primeiro cartão. Tirada do
+     fluxo, sobram os 942px do quadro numa janela de 900 — e a cadeia de altura
+     da F17.27 passa a valer aqui pelo mesmo motivo por que já valia lá em cima.
+
+   ⚠️ SEM `transform`, E ISSO NÃO É ESTILO
+     `transform` num ancestral vira bloco contentor de `position: fixed`, e o
+     painel `Personalizar` (`.cu-fundo`, `position: fixed`, z=100) é DESCENDENTE
+     de `.bl-barra`. Uma gaveta que deslizasse com `translateX` prenderia aquele
+     painel dentro dos 20rem dela. Aqui a gaveta troca `display`, e nada mais.
+
+   ⚠️ E A GAVETA CABE NA JANELA
+     `max-height: 100dvh` com `overflow-y: auto`: quem rola é a gaveta, uma vez
+     só. É a mesma decisão da F17.50 lá em cima, e é o que permite à página
+     atrás dela parar de crescer.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── PULAR PARA O CONTEÚDO — F29 (Fase 5a) ───────────────────────────────
+
+   O primeiro item focável de toda tela com barra (ver `BarraLateral`). Some
+   para o olho até receber foco, e aí aparece no canto de cima, por cima de
+   tudo menos das janelas.
+
+   ⚠️ `position: fixed` NOS DOIS ESTADOS, E ISSO É A GRADE
+     O link é filho de `.q-tela`, que é grade. Em fluxo ele ocuparia uma
+     célula — e abaixo de 1024px a grade da cadeia de altura conta as linhas
+     (`auto minmax(0, 1fr)`: o botão da gaveta e o conteúdo). Fixo, ele não é
+     item de grade em estado nenhum.
+
+   ⚠️ ESCONDIDO POR RECORTE, NÃO POR `display: none`
+     `display: none` o tiraria da ordem do Tab — o contrário do que ele veio
+     fazer. O recorte (`clip-path`) o mantém focável e fora da vista; é o mesmo
+     truque do `sr-only` da árvore.
+
+   O anel é o de sempre (`:focus-visible`, `obsidian.css`); a caixa é a do
+   botão da gaveta, que mora ao lado. */
+.bl-pular {
+  position: fixed;
+  top: 0.75rem;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-sm);
+  background: var(--ink-1);
+  color: var(--plat);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.bl-pular:not(:focus) {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* O alvo do link é o `Topo` (`id="conteudo"`, `tabindex="-1"`). Ele recebe o
+   foco para o PRÓXIMO Tab partir dele, e não para ser operado: o anel de
+   controle em volta do topo inteiro diria "aperte aqui" onde não há o que
+   apertar. O próximo Tab cai no primeiro degrau da trilha, com o anel dele. */
+.o-topo:focus,
+.o-topo:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
+/* Acima de 1024px o botão e o véu não existem para o desenho. `display: none`
+   também os tira da GRADE — é por isso que `.q-tela` continua com duas colunas
+   e uma linha, sem uma regra a mais. */
+.bl-abrir,
+.bl-veu {
+  display: none;
+}
+
+@media (max-width: 1023.98px) {
+  .bl-abrir {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: start;
+    justify-self: start;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--hair-2);
+    border-radius: var(--r-sm);
+    background: var(--ink-1);
+    color: var(--plat);
+    font-family: inherit;
+    /* 0,8125rem = 13px, abaixo dos 14 da F17.37: a cor tem de passar em 7:1, e
+       `--plat` passa. `--mute` reprovaria. */
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+
+  .bl-abrir:hover {
+    color: var(--luz-texto);
+    border-color: var(--luz);
+  }
+
+  .bl-veu {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    border: 0;
+    padding: 0;
+    /* D10: cor de token, e o esmaecimento vem de `opacity`. Um `rgba` literal
+       aqui seria a cor escrita fora do dicionário — e no tema claro `--ink-0` é
+       claro, então o véu clareia em vez de escurecer, que é o que o tema pede. */
+    background: var(--ink-0);
+    opacity: 0.72;
+    cursor: pointer;
+  }
+
+  .bl-barra[data-gaveta='fechada'] {
+    display: none;
+  }
+
+  /* F29: recolher não se aplica à gaveta — ela abre sempre expandida. O JSX
+     já não desenha o botão com a gaveta aberta; esta regra é a mesma decisão
+     dita pela folha, para a fronteira ser uma só (a desta media query). */
+  .bl-recolher {
+    display: none;
+  }
+
+  .bl-barra[data-gaveta='aberta'] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 91;
+    /* 88vw para a gaveta nunca cobrir a tela inteira num telefone: a faixa de
+       fundo que sobra é o que diz que ela é uma gaveta, e não outra página. */
+    width: min(20rem, 88vw);
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.75rem;
+    background: var(--ink-0);
+    border-right: 1px solid var(--hair);
+  }
+}
+
+/* A LARGURA DA GRADE SEGUE A APARÊNCIA.
+   O atributo fica em `.q-tela` (a grade), e não na barra: quem tem a coluna a
+   redimensionar é a grade, e um seletor que olha o filho seria dependência que
+   este projeto não precisa assumir. */
+@media (min-width: 1024px) {
+  .q-tela[data-barra='icones'] { grid-template-columns: 3.5rem minmax(0, 1fr); }
+
+  /* A TERCEIRA FAIXA — F29: a árvore numa coluna própria, entre a barra e o
+     conteúdo. O atributo é da grade pelo mesmo motivo do de cima, e só nasce
+     com a árvore em coluna e as listas abertas (`arvoreNaColuna`). Desde a
+     F02B vale também com o rail — ver a regra combinada abaixo. O conteúdo continua com `minmax(0, 1fr)` — é ele que encolhe. */
+  .q-tela[data-coluna='arvore'] { grid-template-columns: 16.5rem 16.5rem minmax(0, 1fr); }
+  /* F02B (R08): o rail e a coluna agora valem juntos — menu compacto, listas
+     abertas. O atributo da aparência e o da coluna se somam. */
+  .q-tela[data-barra='icones'][data-coluna='arvore'] { grid-template-columns: 3.5rem 16.5rem minmax(0, 1fr); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A COLUNA DA ÁRVORE — F29 (decisão 5 do plano).
+
+   Irmã da `.bl-barra` na grade, e desenhada por ela (`BarraLateral`). Abaixo
+   de 1024px ela não existe para o desenho: lá a barra é a gaveta, e a árvore
+   fica sempre dentro dela — `display: none` também a tira da grade, que
+   continua com as linhas de sempre (ver `.q-tela[data-altura='tela']`).
+
+   A ALTURA É A DA JANELA, E NÃO A DA ÁRVORE: `height`, e não `max-height`. A
+   coluna vai até o pé mesmo com três espaços — é uma coluna, e não um cartão
+   que cresce —, e a árvore dentro dela (`.q-barra.cu-arvore`, `flex: 1 1
+   auto`) ganha o que sobra e rola por dentro. O teto é o MESMO da barra
+   (F28): a janela menos onde a grade começa (`--bl-inicio`, que a barra
+   mede e passa também para cá) e a folga de baixo.
+
+   Nas telas de cadeia de altura (quadro e pasta) a regra de baixo troca o
+   teto pela linha da grade, como a F17.72 fez com a barra — `100%` é a sobra
+   de verdade, e a linha é `minmax(0, 1fr)`: a coluna não a infla. A cadeia do
+   Quadro e da Pasta não é tocada; esta regra só vale para a peça nova.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bl-coluna {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .bl-coluna {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    position: sticky;
+    top: 0.75rem;
+    height: calc(100vh - clamp(0.75rem, var(--bl-inicio, 0.75rem), 25vh) - 1.5rem);
+    /* O fio à esquerda diz que é outra coluna, e não a barra que cresceu — o
+       mesmo fio da borda da gaveta. */
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--hair);
+  }
+
+  .q-tela[data-altura='tela'] > .bl-coluna {
+    height: auto;
+    max-height: 100%;
+    min-height: 0;
+  }
+}
+
+/* ⚠️ A BARRA SEM A ÁRVORE CONTINUA INDO ATÉ O PÉ — F29.
+   A árvore (`flex: 1 1 auto`) era a peça que enchia a barra até o teto. Sem
+   ela — no ícone único de `Somente ícones`, ou com ela na coluna —, a barra
+   encolhia até o conteúdo e o chip da conta subia para o meio da janela
+   (medido: de y=659 para y=470 em `/painel`, 1280×720). O chip mora no pé, e
+   é lá que a pessoa o procura. Então a barra ganha como ALTURA o teto que já
+   tinha (o mesmo cálculo de `max-height`, F28), e o chip é empurrado para o
+   fim. Nas telas de cadeia de altura a barra já estica até a linha da grade
+   (`align-items: stretch`), e a altura fica com ela: `auto`. */
+@media (min-width: 1024px) {
+  .bl-barra[data-arvore='fora'] {
+    height: calc(100vh - clamp(0.75rem, var(--bl-inicio, 0.75rem), 25vh) - 1.5rem);
+  }
+  .q-tela[data-altura='tela'] > .bl-barra[data-arvore='fora'] { height: auto; }
+  .bl-barra[data-arvore='fora'] > .bl-conta { margin-top: auto; }
+}
+
+/* O botão que solta a árvore — F29. No título da árvore, ao lado do `+`.
+   Ligado, ele fica aceso: o mesmo sinal do interruptor de arquivados
+   (`.cu-arvore-pe[aria-pressed='true']`). Abaixo de 1024px ele some pela
+   mesma fronteira de `.bl-recolher`: a coluna não existe lá. */
+.bl-soltar-arvore[aria-pressed='true'] { color: var(--luz-texto); }
+
+@media (max-width: 1023.98px) {
+  .bl-soltar-arvore {
+    display: none;
+  }
+}
+
+/* O topo. Ele leva para a tela escolhida na aba `Início` do painel.
+
+   ⚠️ F28: ERA `.bl-marca` ("ide Trabalho", em letra de rótulo) e virou um
+   `.bl-item` com a classe `.bl-inicio`. O desenho inteiro vem de `.bl-item` —
+   hover, ícone, modo `Somente ícones` —, e esta classe existe só para a regra
+   de altura logo abaixo: o item fica FORA das seções, direto na coluna, e
+   item de flex sem `flex-shrink: 0` encolhe junto com a árvore. */
+
+/* ⚠️ SÓ A ÁRVORE CEDE ALTURA — F17.50.
+   A barra é um flex em coluna com teto (`max-height`). Sem isto, o navegador
+   encolhe TODOS os itens em proporção ao tamanho deles: as seções perderiam
+   alguns pixels cada, o conteúdo delas vazaria da caixa encolhida, e a
+   sobreposição que esta etapa veio desfazer voltaria por outra porta. A árvore
+   é a única peça que sabe rolar, então é a única que pode encolher. */
+.bl-topo,
+.bl-inicio,
+.bl-secao,
+.bl-conta {
+  flex: 0 0 auto;
+}
+
+/* A LINHA DO ALTO — F29: a marca à esquerda, o botão de recolher à direita.
+   Recolhida, a linha fica só com o botão, ao centro da coluna estreita. */
+.bl-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0 0.1rem 0 0.5rem;
+}
+.bl-barra[data-aparencia='icones'] .bl-topo { justify-content: center; padding: 0; }
+
+/* A marca, no mesmo desenho do cabeçalho de `PaginaLarga` (`o-titulo` em
+   `--luz`): é a mesma marca, e duas caras para ela seriam duas marcas.
+
+   O TAMANHO É O DO TÍTULO DA PÁGINA — pedido do Wesley em 25/09. A marca e
+   o título (`o-titulo text-xl` no `Topo`) ficam lado a lado na mesma linha;
+   a 1,05rem a marca parecia um rótulo menor ao lado de "Calendário". */
+.bl-topo-marca {
+  color: var(--luz-texto);
+  font-family: var(--f-body);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.bl-recolher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.bl-recolher:hover { background: var(--hair); color: var(--plat); }
+
+/* O TÍTULO DA SEÇÃO É UM BOTÃO — F29. Ele herda a letra de rótulo do `h2`
+   (`eyebrow`) em vez de ganhar uma própria: o título tem de continuar com a
+   cara de título, e o que diz que ele abre e fecha é a seta. Serve também ao
+   título da árvore, desenhado por `ArvoreDoQuadro`. */
+.bl-secao-alternar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bl-secao-alternar:hover { color: var(--plat-dim); }
+
+/* A seta: apontando para a direita fechada, girada para baixo aberta — o
+   mesmo gesto dos grupos de `Minhas tarefas` (`.mt-caret`).
+
+   F29: SUBIU DE 0,6 PARA 0,75rem, o tamanho da letra do título (`eyebrow`).
+   Medido na verificação da Fase 1: a 0,6rem o `▸` lia-se como um ponto, e a
+   seção não parecia um botão.
+
+   F29, Fase 3: E DEIXOU DE SER LETRA. Mesmo a 0,75rem o `▸` da fonte ainda
+   parecia um ponto na verificação da Fase 2; virou o `IconeChevron` (SVG,
+   traço grosso para o tamanho). A caixa continua quadrada, do tamanho de
+   antes, para o giro acontecer em torno do centro e o título não andar. E o
+   giro lê o `aria-expanded` do botão — o estado que o leitor de tela ouve é
+   o mesmo que o olho vê, dito uma vez só. */
+.bl-seta {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 auto;
+  transform: rotate(0deg);
+  transition: transform var(--dur-1) var(--ease-out);
+}
+.bl-secao-alternar[aria-expanded='true'] > .bl-seta { transform: rotate(90deg); }
+
+.bl-secao { min-width: 0; }
+.bl-secao-titulo { padding: 0.1rem 0.25rem 0.3rem; }
+
+/* A seção da árvore não ganha cartão próprio: a árvore JÁ é um cartão. Dois
+   cartões um dentro do outro dariam duas bordas para a mesma coisa. */
+.bl-secao-arvore { display: contents; }
+
+.bl-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.32rem 0.4rem;
+  border-radius: var(--r-sm);
+  color: var(--plat-dim);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.bl-item:hover { background: var(--hair); color: var(--plat); }
+
+/* O ITEM ABERTO TEM FUNDO — item explícito da referência, e o mesmo desenho da
+   linha selecionada da árvore. */
+.bl-item[data-atual='true'] { background: var(--luz-soft); color: var(--luz-texto); }
+
+.bl-item-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A PASTILHA DA CAIXA DE ENTRADA — F17.46.
+
+   ⚠️ A COR NÃO PINTA A LETRA, e isto é a régua da F17.37 aplicada a uma peça
+   nova. O caminho óbvio seria letra branca sobre `--luz`: medido, ele dá 2,81
+   de contraste no tema claro, contra os 7 que o sistema exige de todo texto
+   abaixo de 14px. Letra em `--luz` sobre `--luz-soft` dá os mesmos 2,80.
+
+   Então o verde entra no FUNDO e no CONTORNO — que não passam por régua de
+   texto — e a letra fica em `--plat`, o tom mais forte da escada (15,3 sobre o
+   pior fundo do tema claro). É a mesma decisão que a etiqueta de cliente tomou
+   quando a cor vinha do banco: a cor marca a peça, nunca a letra.
+
+   Nenhuma cor literal aqui — `--luz`, `--luz-soft` e `--plat` são do OBSIDIAN
+   (decisão D10). */
+.bl-selo {
+  margin-left: auto;
+  min-width: 1.3rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--luz);
+  border-radius: var(--r-pill);
+  background: var(--luz-soft);
+  color: var(--plat);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Em `Somente ícones` a coluna é estreita: o item vira quadrado centrado. */
+.bl-barra[data-aparencia='icones'] .bl-item { justify-content: center; padding: 0.4rem; }
+
+/* E a pastilha ACOMPANHA o ícone em vez de ser empurrada para a borda: sem o
+   nome no meio, `margin-left: auto` a jogaria contra a parede da coluna, longe
+   do desenho que ela conta. Ela NÃO some no modo estreito — um aviso que
+   desaparece quando a barra encolhe é um aviso do qual não se pode depender. */
+.bl-barra[data-aparencia='icones'] .bl-selo { margin-left: 0.2rem; }
+
+/* A ÁRVORE EM `Somente ícones` VIROU UM ÍCONE SÓ — F29.
+   Até a Fase 3 a árvore inteira ficava na coluna de 3.5rem, com o título
+   escondido do olho por uma regra daqui (F28) — e os nós vazavam da borda:
+   cinquenta ícones de espaço além dela, medido na Fase 1. Agora `BarraLateral`
+   desenha um botão com o ícone de galhos no lugar dela, que expande a barra;
+   a regra do título escondido não tinha mais o que esconder e saiu.
+
+   O botão usa `.bl-item` (o mesmo desenho, o mesmo quadrado centrado deste
+   modo); esta classe só tira o que o `button` traz do navegador. */
+.bl-item-arvore {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.bl-recusa {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--r-sm);
+  background: var(--err-soft);
+  color: var(--err);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+/* `Tentar de novo` dentro da faixa — F17.CARGA03. Sublinhado, e não botão com
+   moldura: numa faixa de 0.72rem uma segunda caixa competiria com a frase, que
+   é o que importa ler. */
+.bl-recusa-acao {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bl-recusa-acao:hover { text-decoration: none; }
+
+/* O PÉ É A CONTA — F29. O chip fica FORA das seções e nunca some: é por ele
+   que se chega ao `Personalizar` (sem ele, esconder as três seções trancaria
+   a personalização por fora) e aos `Agentes de IA`. Ver `ContaNoPe`.
+
+   Tem o desenho de um `.bl-item` — mesmo recuo, mesmo hover — porque ele é
+   uma linha da barra, e não um cartão: as iniciais no lugar do ícone, o nome
+   e o papel em duas linhas, e a seta à direita dizendo que abre um menu. */
+.bl-conta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  min-width: 0;
+  /* ⚠️ O RECUO E O VÃO SÃO MENORES QUE OS DO `.bl-item`, DE PROPÓSITO — F29.
+     O avatar tem 1.4rem e o ícone de um item tem 1rem: com o mesmo recuo e o
+     mesmo vão (0,5rem), o nome começava 6,4px à direita do texto dos itens
+     acima (medido, Fase 2). O avatar não encolhe — as iniciais precisam ser
+     lidas —, então quem cede é o espaço em volta: 0,3rem de cada lado põe o
+     centro do avatar no centro dos ícones (0,3 + 0,7 = 0,5 + 0,5) e o nome na
+     mesma coluna dos rótulos (0,3 + 1,4 + 0,3 = 0,5 + 1 + 0,5). */
+  padding: 0.36rem 0.5rem 0.36rem 0.3rem;
+  border: 0;
+  border-top: 1px solid var(--hair);
+  border-radius: 0;
+  background: transparent;
+  color: var(--plat-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.bl-conta:hover,
+.bl-conta[aria-expanded='true'] { background: var(--hair); color: var(--plat); }
+
+.bl-conta-texto {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.bl-conta-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+/* `--plat-dim`, e não `--mute`: a letra é de 0,7rem, e abaixo de 14px o
+   sistema pede 7:1 — a mesma régua da pastilha (`.bl-selo`, F17.37). */
+.bl-conta-papel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  color: var(--plat-dim);
+}
+/* F29: a seta é o `IconeChevron` dos títulos (SVG, apontando para a direita):
+   para baixo fechado, para cima aberto — o menu sobe do chip. O giro lê o
+   `aria-expanded` do chip, como o dos títulos. */
+.bl-conta-seta {
+  flex: 0 0 auto;
+  color: var(--plat-dim);
+  width: 0.7rem;
+  height: 0.7rem;
+  transform: rotate(90deg);
+  transition: transform var(--dur-1) var(--ease-out);
+}
+.bl-conta[aria-expanded='true'] .bl-conta-seta { transform: rotate(-90deg); }
+
+/* Em `Somente ícones` só as iniciais, ao centro da coluna estreita — o mesmo
+   gesto do `.bl-item` nesse modo. */
+.bl-barra[data-aparencia='icones'] .bl-conta { justify-content: center; padding: 0.4rem; }
+
+/* Os itens do menu que são LINKS (`Agentes de IA`, `Pessoas`…): `.cu-item`
+   foi desenhada para `button`, e um `a` traria o sublinhado junto. */
+.bl-conta-menu a.cu-item { text-decoration: none; }
+
+/* `Já bateu seu ponto hoje?` — F30. A pergunta e, embaixo, o domínio para onde
+   o clique leva: o item sai do sistema, e diz isso antes. `--plat-dim` na
+   linha miúda pelo mesmo motivo de `.bl-conta-papel` (0,7rem pede 7:1). */
+.bl-conta-ponto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.bl-conta-ponto-dominio {
+  font-size: 0.7rem;
+  color: var(--plat-dim);
+}
+
+/* ─────────────────────────── `Meu trabalho` ─────────────────────────── */
+
+.mt-grupo { margin-bottom: 0.6rem; }
+
+.mt-grupo-topo { display: flex; align-items: center; }
+
+.mt-recolher {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--plat);
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.mt-recolher[data-fixo='true'] { cursor: default; }
+.mt-recolher:hover:not([data-fixo='true']) { color: var(--luz-texto); }
+
+/* F05: a seta virou o `IconeChevron` (SVG), como na barra; o giro lê o
+   `aria-expanded` do botão, o mesmo estado que o leitor de tela ouve. */
+.mt-caret {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--mute);
+  transform: rotate(0deg);
+  transition: transform var(--dur-1) var(--ease-out);
+}
+.mt-recolher[aria-expanded='true'] > .mt-caret { transform: rotate(90deg); }
+
+.mt-conta {
+  margin-left: 0.15rem;
+  padding: 0 0.35rem;
+  border-radius: var(--r-pill);
+  background: var(--ink-2);
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+}
+
+.mt-lista {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  overflow: hidden;
+}
+
+.mt-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+}
+.mt-linha + .mt-linha { border-top: 1px solid var(--hair); }
+.mt-linha:hover { background: var(--ink-2); }
+
+/* Concluída fica um degrau mais apagada — sem risco no texto: risco em linha de
+   histórico transformaria a aba `Feito` inteira numa parede riscada. */
+.mt-linha[data-concluida='true'] .mt-titulo { color: var(--mute); }
+
+/* A cor do status vem da origem, por variável. Sem cor, o ponto fica no fio —
+   nunca invisível, porque ele é o único sinal de "em que pé está". */
+.mt-ponto {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: var(--r-pill);
+  background: var(--cor-status, var(--hair-3));
+  box-shadow: 0 0 0 1px var(--hair-2);
+}
+
+.mt-texto { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 0.05rem; }
+
+.mt-titulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--plat);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+.mt-titulo:hover { color: var(--luz-texto); text-decoration: underline; text-underline-offset: 2px; }
+
+.mt-trilha {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+}
+.mt-trilha .barra { opacity: 0.45; }
+.mt-arquivada { color: var(--warn); }
+
+.mt-avatares { flex: 0 0 auto; }
+
+.mt-prazo {
+  flex: 0 0 auto;
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.mt-vazio {
+  padding: 0.65rem 0.6rem;
+  color: var(--mute);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+/* O CORTE DE `Minhas tarefas` — F17.AUD06.
+   A linha embaixo da lista (e do quadro) que diz `87 de 312` e oferece
+   `Carregar mais`. É a irmã de `.q-coluna-corte` (F17.50), que vive dentro de
+   uma coluna; esta vive embaixo do conjunto inteiro, por isso sem a margem
+   lateral da coluna. O botão é o MESMO `.q-coluna-mais`: dois botões de
+   "mais" com dois desenhos ensinariam que são duas coisas. `--plat-dim`, e
+   não `--mute`: 0,75rem = 12px, e a F17.37 pede 7:1 abaixo de 14px. */
+.mt-corte {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.15rem 0.1rem;
+  border-top: 1px solid var(--hair);
+  font-size: 0.75rem;
+  color: var(--plat-dim);
+}
+
+/* ⚠️ O BOTÃO FICA AO LADO DO NÚMERO, E NÃO NO CANTO DIREITO.
+   `.q-coluna-mais` nasce com `margin-left: auto` porque, dentro da coluna do
+   quadro, o `Mostrar mais` vai para a ponta. Aqui a linha é a ÚLTIMA coisa da
+   página, e a ponta direita dela é o canto inferior direito da janela. Lá
+   morava o botão fixo de tema, que cobria o `Carregar mais` — ele saiu em
+   2026-09-11 para a aba `Temas` do `Personalizar`. A posição ficou: ao lado do
+   número, `87 de 312 · Carregar mais`, a ação lê junto do que ela explica. */
+.mt-corte .q-coluna-mais {
+  margin-left: 0;
+}
+
+/* A trilha dentro do cartão de `Todas as tarefas`: ali o cartão saiu da lista
+   dele, e sem isto o quadro por tipo seria uma parede de títulos sem dono. */
+.q-cartao-trilha {
+  margin-top: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+}
+/* O cartão que não arrasta não finge que arrasta. */
+.q-cartao[data-estatico='true'] { cursor: default; }
+
+/* ─────────────────────────── o painel `Personalizar` ─────────────────────────── */
+
+.pz-modal { max-width: 34rem; }
+
+.pz-corpo {
+  padding: 0.6rem 0.9rem 0.4rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* O topo de uma aba: o que a lista abaixo é, em duas ou três palavras, e o
+   "?" com a explicação — F43 Fase 10. No lugar das frases fixas (`.pz-nota`)
+   que diziam como arrastar e que esconder não apaga. */
+.pz-aba-cabeca {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  color: var(--plat-dim);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.pz-grupo { margin-bottom: 0.9rem; }
+
+.pz-rotulo {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* O rótulo que leva um `?` ao lado — F17.24. `inline-flex` porque `block` com
+   um botão dentro põe o `?` na linha de baixo. */
+.pz-rotulo-com-ajuda {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pz-caixa {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.28rem 0.15rem;
+  color: var(--plat-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.pz-caixa:hover { color: var(--plat); }
+.pz-caixa input { accent-color: var(--luz); width: 0.9rem; height: 0.9rem; }
+.pz-caixa-texto { display: flex; flex-direction: column; }
+.pz-caixa-fim { margin-left: auto; }
+
+.pz-detalhe { color: var(--mute); font-size: 0.7rem; line-height: 1.4; }
+.pz-solto { margin: -0.6rem 0 0.9rem; }
+
+.pz-fila { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.pz-opcao {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  background: var(--ink-1);
+  color: var(--plat-dim);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.pz-opcao:hover { color: var(--plat); border-color: var(--hair-3); }
+/* O escolhido é marcado por PREENCHIMENTO, e não só por borda: numa fila de
+   três, borda sozinha se perde. Mesma decisão da tira de moldes da F17.16. */
+.pz-opcao[aria-checked='true'] {
+  background: var(--luz-soft);
+  border-color: var(--luz);
+  color: var(--luz-texto);
+}
+
+/* --- as seções que se arrastam --- */
+
+.pz-secoes { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.pz-secao {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-1);
+  color: var(--plat-dim);
+  font-size: 0.8rem;
+  cursor: grab;
+}
+.pz-secao:hover { border-color: var(--hair-2); }
+.pz-secao:focus-visible { outline: 2px solid var(--luz); outline-offset: 2px; }
+.pz-secao[data-arrastando='true'] { opacity: 0.45; }
+
+.pz-pega { color: var(--mute); font-size: 0.85rem; line-height: 1; }
+.pz-secao-nome { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- as amostras de cor --- */
+
+.pz-cores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.3rem;
+}
+
+.pz-cor {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-1);
+  color: var(--plat-dim);
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+}
+.pz-cor:hover { border-color: var(--hair-3); color: var(--plat); }
+.pz-cor[aria-checked='true'] { border-color: var(--luz); background: var(--luz-soft); color: var(--plat); }
+
+/* A amostra pinta a variável que a folha define — nunca um valor copiado.
+   Ver `src/ui/cores.ts` e `src/ui/cores-do-tema.css`. */
+.pz-amostra {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--r-pill);
+  background: var(--amostra, var(--luz));
+  box-shadow: 0 0 0 1px var(--hair-2);
+}
+.pz-cor-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.pz-pe {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem 0.7rem;
+  border-top: 1px solid var(--hair);
+}
+.pz-pe > .pz-detalhe { flex: 1 1 auto; }
+
+/* ═══════════════════════ a visão geral do espaço — F17.26 ═══════════════════
+   Prefixo `ve-`. Nenhuma cor literal: tudo sai das variáveis do OBSIDIAN
+   (decisão D10). A barra em si é a `.o-barra` que o cockpit já usa — duas
+   barras de progresso diferentes no mesmo sistema seriam duas verdades sobre
+   a mesma ideia.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.ve-bloco { margin-bottom: 0.75rem; padding: 0.65rem 0.75rem; }
+.ve-bloco[data-morto='true'] { opacity: 0.6; }
+
+.ve-cabeca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ve-titulo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.ve-quantas {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  color: var(--mute);
+}
+
+/* O nome da pasta virou LINK — F17.64: ele abre o quadro dela.
+
+   Herda a cor do título em vez de pintar de luz: o cabeçalho da pasta é um
+   título, e um título inteiro em verde neon competiria com o progresso ao lado.
+   O sublinhado só aparece no ponteiro, que é onde ele informa. */
+.ve-abre {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ve-abre:hover {
+  color: var(--luz-texto);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* O progresso empurrado para a direita quando é o da PASTA ou o do ESPAÇO: ele
+   é o resumo da linha, e resumo mora no fim. */
+.ve-progresso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 8rem;
+}
+.ve-progresso[data-largo='true'] { margin-left: auto; min-width: 14rem; }
+.ve-progresso > .o-barra { flex: 1 1 auto; min-width: 3.5rem; }
+
+.ve-fracao {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  color: var(--plat);
+  white-space: nowrap;
+}
+.ve-de { color: var(--mute); }
+.ve-sem-tarefa { color: var(--mute); font-size: 0.68rem; }
+
+.ve-pct {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  color: var(--mute);
+  min-width: 2.4rem;
+  text-align: right;
+}
+
+.ve-listas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.5rem;
+}
+
+/* A LINHA É O ATALHO PARA O QUADRO DA LISTA — menos o sinal do cliente,
+   que precisa ser um alvo próprio (ficha), fora deste link. Link dentro de
+   link não é HTML válido; a árvore já resolveu a mesma briga. */
+.ve-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--r-sm);
+  color: var(--plat-dim);
+  transition: background var(--dur-1) var(--ease-out);
+}
+.ve-lista:hover { background: var(--hair); color: var(--plat); }
+
+.ve-lista-nome {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.ve-lista-nome:focus-visible { outline: 2px solid var(--luz); outline-offset: 2px; }
+.ve-lista > .cu-chip { flex: 0 0 auto; }
+.ve-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+.ve-heranca { opacity: 0.7; }
+
+.ve-vazio {
+  padding: 0.4rem 0.15rem;
+  color: var(--mute);
+  font-size: 0.78rem;
+}
+
+/* A CAIXA DE ENTRADA (F17.46) mudou-se para `layout-foco.css` na F10 do plano UX:
+   a linha ganhou ponto de novo, horário e rodapé com o botão separado do destino. */

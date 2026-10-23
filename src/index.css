@@ -1,0 +1,28 @@
+/* O OBSIDIAN vem ANTES do Tailwind porque `@import` só é válido no topo da
+   folha — regra do CSS, não preferência. Não há conflito de ordem: o preflight
+   do Tailwind não define fundo nem cor de texto do `body`, e toda classe daqui
+   tem especificidade maior que os seletores universais dele. */
+@import './ui/obsidian.css';
+/* A cor do tema — F17.18. Um dicionário a mais, DEPOIS do OBSIDIAN e antes do
+   Tailwind: ele só redefine `--luz` quando há `data-cor` no <html>, e por isso
+   o padrão (o verde da agência) fica byte a byte como era. Mora em arquivo
+   próprio porque `obsidian.css` está sendo editado por outra sessão, e um bloco
+   novo no meio dele seria conflito garantido. */
+@import './ui/cores-do-tema.css';
+/* O acabamento iOS — F17.20. Terceiro e último dicionário, DEPOIS dos dois
+   anteriores porque ele redefine tokens dos dois: a fonte e o raio do OBSIDIAN,
+   e o halo de `--glow-luz` que o `cores-do-tema.css` recalcula por cor. Mora em
+   arquivo próprio pelo mesmo motivo que ele: o `obsidian.css` está sendo
+   editado por outra sessão. */
+@import './ui/acabamento.css';
+/* A interação — F17.25. Quarto arquivo, e o único que NÃO redefine token: ele
+   só acrescenta regra (o que se seleciona, o quadro que se puxa, a trilha).
+   Entra por aqui, e não por dentro de um componente, porque a regra da seleção
+   é do `body` para baixo — ela precisa valer nas trinta telas, inclusive nas da
+   Meta, que esta sessão não pode tocar. Mesmo caminho da F17.20. */
+@import './ui/interacao.css';
+@import './ui/layout-foco.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

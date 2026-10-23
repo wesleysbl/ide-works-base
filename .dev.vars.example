@@ -1,0 +1,19 @@
+# Copie para .dev.vars. É lido pela API em desenvolvimento (wrangler dev).
+# NUNCA vai para o git. Em produção estes valores entram com
+#   npx wrangler secret put NOME
+# Veja docs/tutoriais/03-rodar-no-computador.md e 05-publicar-na-cloudflare.md.
+
+# Obrigatório para convidar pessoas e para anexos (o mesmo valor do .env).
+IDEWORKS_SERVER_SUPABASE_SERVICE_KEY=
+
+# Obrigatório para o link de aprovação do cliente: 32 bytes aleatórios em base64.
+# Gere com:  node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+IDEWORKS_APPROVAL_LINK_KEY=
+
+# Opcional: coleta da Meta (Instagram e anúncios). Ver docs/tutoriais/07-integracoes.md.
+IDEWORKS_META_TOKEN=
+
+# Opcional: materiais do Dropbox na aprovação do cliente. Ver docs/tutoriais/dropbox.md.
+IDEWORKS_DROPBOX_APP_KEY=
+IDEWORKS_DROPBOX_APP_SECRET=
+IDEWORKS_DROPBOX_REFRESH_TOKEN=

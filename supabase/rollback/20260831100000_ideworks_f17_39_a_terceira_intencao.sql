@@ -1,0 +1,34 @@
+-- =============================================================================
+-- ROLLBACK da F17.39 — a terceira intencao
+-- =============================================================================
+-- ⚠️ NAO HA COMO DESFAZER AUTOMATICAMENTE, e isso e do Postgres, nao do
+-- projeto: valor de enum nao se remove. Nao existe `alter type ... drop value`.
+--
+-- O QUE DA PARA DESFAZER
+--   Tudo o que USA o valor: a F17.39b tem rollback proprio, e ele devolve
+--   `aplicar_convite`, `admin_pending_invitations` e a decisao do convite ao
+--   estado da F17.34b, apaga as duas funcoes novas e — o que mais importa —
+--   converte de volta para `invite` as linhas pendentes que tenham nascido com
+--   a intencao nova. Feito isso, o sistema se comporta exatamente como antes
+--   desta etapa: quem ja tem conta volta a ser vinculado com a senha intacta.
+--
+-- O QUE NAO DA
+--   O rotulo `invite_with_password` continua existindo dentro do tipo
+--   `ideworks.invitation_purpose`. Ele fica inerte: nenhuma linha o tem,
+--   nenhuma funcao o le, nenhuma tela o oferece. O retrato de schema vai
+--   registrar a diferenca, e esse registro e honesto — o tipo mudou mesmo.
+--
+-- SE FOR MESMO NECESSARIO TIRA-LO DO TIPO
+--   Nao e rotina, e por isso nao esta automatizado aqui. O caminho e:
+--     1. rodar o rollback da F17.39b, para nenhuma linha usar o valor;
+--     2. renomear `ideworks.invitation_purpose` e criar o tipo de novo sem ele;
+--     3. reapontar `ideworks.invitations.purpose`, com o `default` derrubado e
+--        recriado em volta do `alter column ... type`;
+--     4. recriar TODA funcao que cita o tipo na assinatura ou no corpo —
+--        `admin_pending_invitations`, `aplicar_convite`, `issue_password_reset`,
+--        `find_reset_account` e as irmas —, porque elas guardam o identificador
+--        do tipo velho e sao o que impede o `drop type`;
+--     5. so entao apagar o tipo velho.
+-- =============================================================================
+
+-- (nada a desfazer automaticamente)

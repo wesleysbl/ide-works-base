@@ -1,0 +1,56 @@
+# CABECALHOS DO SITE (Cloudflare Workers Static Assets) — F42, Fase 6.
+#
+# A pagina do cliente (`/aprovar/:token`) carrega o token do link no endereco.
+# A pagina ja poe `<meta name="referrer" content="no-referrer">` e `robots:
+# noindex` no <head> quando abre, e cada imagem/video/link repete a politica;
+# isto e a mesma regra no proprio documento, antes de qualquer JavaScript.
+# Nao vale no `npm run dev` (Vite); conferir na publicacao com
+# `curl -sI https://<dominio>/aprovar/x -H 'Sec-Fetch-Mode: navigate'`.
+/aprovar/*
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+# O SITE INTEIRO — revisão de segurança de 09/10/2026.
+#
+# Nenhuma pagina do site se deixa embutir em outro site: a do cliente tem um
+# botao que muda estado (Aprovar) e o token no endereco, e embutida numa pagina
+# alheia o cliente seria levado a clicar no que nao ve. `nosniff` porque o site
+# so serve arquivos com o tipo que declara. Cloudflare SOMA as regras que casam,
+# e os nomes daqui e os de /aprovar/* sao diferentes: um bloco nao pisa no outro.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+
+# OS ARQUIVOS DO PACOTE SÃO IMUTÁVEIS — perf-front, 08/10/2026.
+#
+#   Tudo em `/assets/` sai do Vite com o hash do CONTEÚDO no nome
+#   (`Quadro-DsDZUQ7t.js`): mudou o arquivo, mudou o endereço. Um endereço nunca
+#   passa a significar outra coisa — então o navegador pode guardá-lo para
+#   sempre e nem perguntar.
+#
+#   Sem esta regra a Cloudflare responde `Cache-Control: public, max-age=0,
+#   must-revalidate` (medido com o runtime local do `wrangler dev`): o
+#   navegador guarda, mas PERGUNTA de novo a cada abertura — uma ida à rede
+#   (304) por arquivo, e a tela só desenha quando o último volta. A abertura de
+#   `/meu-trabalho` com o cache quente fazia 22 perguntas dessas.
+#   Quem deixa uma dezena de abas abertas o dia inteiro paga isso em cada F5,
+#   em cada aba nova e em cada volta de uma rota ainda não visitada.
+#
+#   ⚠️ O QUE A REGRA NÃO COBRE, DE PROPÓSITO: `/` e o `index.html` (nomes
+#   fixos, o conteúdo muda a cada publicação — continuam revalidando),
+#   `favicon.svg`, os ícones e o manifesto (também de nome fixo).
+#
+#   ⚠️ UM EFEITO COLATERAL CONHECIDO: um endereço de `/assets/` que NÃO existe
+#   (aba aberta antes de uma publicação pedindo um pedaço que já foi trocado)
+#   cai no desvio de página única, devolve o `index.html` com 200 — e agora
+#   com esta mesma regra. O endereço morto fica guardado como HTML, mas é um
+#   endereço que nenhuma publicação nova volta a pedir. O único caso em que
+#   isso morde é voltar a publicação ao pacote ANTIGO (rollback) com a aba de
+#   alguém ainda guardando o HTML no lugar de um pedaço de código daquele
+#   pacote: a tela daquela aba falha até um F5 forçado (Ctrl+Shift+R).
+#   Conferido com `wrangler dev` (runtime de assets da Cloudflare, sem tocar
+#   em conta nenhuma): `/assets/x.js` inexistente responde 200 text/html com
+#   o cabeçalho abaixo.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

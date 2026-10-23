@@ -1,0 +1,32 @@
+-- =============================================================================
+-- ROLLBACK da F17.36 — `quadro` entra na lista de areas
+-- =============================================================================
+-- ⚠️ NAO HA COMO DESFAZER AUTOMATICAMENTE, e isso e do Postgres, nao do
+-- projeto: valor de enum nao se remove. Nao existe `alter type ... drop value`.
+--
+-- O QUE DA PARA DESFAZER
+--   Tudo o que USA o valor: a F17.36b tem rollback proprio e tira `quadro` das
+--   listas de `ideworks.profiles.areas` e `ideworks.invitations.areas`, e o
+--   codigo volta a classificar `/board` como `entrega`. Feito isso, o sistema
+--   se comporta exatamente como antes desta etapa.
+--
+-- O QUE NAO DA
+--   O rotulo `quadro` continua existindo dentro do tipo `ideworks.area`. Ele
+--   fica inerte: ninguem o tem, nenhuma rota o pede, e a lista de areas da tela
+--   nao o oferece. O retrato de schema vai registrar a diferenca, e esse
+--   registro e honesto — o tipo mudou mesmo.
+--
+-- SE FOR MESMO NECESSARIO TIRA-LO DO TIPO
+--   Nao e rotina, e por isso nao esta automatizado aqui. O caminho e:
+--     1. rodar o rollback da F17.36b, para nenhuma linha usar `quadro`;
+--     2. renomear `ideworks.area` e criar o tipo de novo sem `quadro`;
+--     3. reapontar `ideworks.profiles.areas` e `ideworks.invitations.areas`,
+--        com `default` derrubado e recriado em volta do `alter column ... type`;
+--     4. recriar TODA funcao que cita o tipo na assinatura ou no corpo —
+--        `acting_areas`, `acting_can`, `set_user_areas`, `admin_people`,
+--        `aplicar_convite` e as irmas —, porque elas guardam o identificador do
+--        tipo velho e sao o que impede o `drop type`;
+--     5. so entao apagar o tipo velho.
+-- =============================================================================
+
+-- (nada a desfazer automaticamente)

@@ -1,0 +1,18 @@
+-- =============================================================================
+-- ROLLBACK — F17.53b  O corpo das duas funcoes, com os comentarios
+-- =============================================================================
+-- A F17.53b nao mudou comportamento nenhum: ela so reaplicou os corpos das duas
+-- funcoes com os comentarios de dentro do `$fn$`, para que `pg_proc.prosrc` no
+-- banco batesse com o arquivo da F17.53.
+--
+-- Desfaze-la sozinha nao faz sentido — voltaria a divergencia de texto que ela
+-- existiu para tirar, sem devolver regra nenhuma. Quem quiser desfazer a
+-- estreitada do diretorio deve rodar o rollback da F17.53
+-- (`20260901185104_ideworks_f17_53_o_diretorio_tambem_respeita_a_empresa.sql`),
+-- que reescreve `team_directory()` inteira e apaga `can_assign_person`.
+--
+-- Este arquivo existe para que toda migration tenha irma em `rollback/`, como
+-- manda `supabase/README.md`. Ele nao executa nada.
+-- =============================================================================
+
+-- (sem comandos: ver acima)

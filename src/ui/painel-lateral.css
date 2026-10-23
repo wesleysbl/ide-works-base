@@ -1,0 +1,104 @@
+/* O PAINEL AO LADO — F43, Fase 3 (`@/ui/PainelLateral`).
+
+   AS CAMADAS
+     95: acima da gaveta da barra lateral (90/91) e do chat flutuante (40/50),
+     abaixo da `Janela` (`.o-scrim`, 100) e dos balões em portal (120/200) —
+     a janela de uma peça e o seletor de dia abrem POR CIMA do painel, que é de
+     onde eles foram chamados.
+
+   O VÉU É TOKEN, NÃO `rgba` (D10, a mesma decisão de `.bl-veu`): o fundo da
+     página com opacidade. No tema claro ele clareia em vez de escurecer, que é
+     o que o tema pede — e a lista atrás continua legível, que é o ponto.
+
+   O PAINEL TEM O FUNDO DA PÁGINA, e não o de um cartão: os blocos de dentro
+     (`--iw-superficie`, as semanas da grade) se separam dele por tom, como na
+     ficha do cliente. Quem o separa da página de trás é o fio e a sombra.
+
+   Só tokens que existem (`test/token-de-cor-existe.test.ts`). */
+
+.pll { position: fixed; inset: 0; z-index: 95; }
+
+.pll-veu {
+  position: absolute;
+  inset: 0;
+  background: var(--ink-0);
+  opacity: 0.62;
+  animation: ac-assentar var(--dur-1) var(--ease-out);
+}
+
+.pll-painel {
+  --pll-largura: min(40rem, 100vw);
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: var(--pll-largura);
+  max-width: 100%;
+  /* `--hair-2`, e não o fio das linhas (`--iw-linha`): no tema claro o painel
+     branco encosta na página esmaecida, e só o fio mais firme os separa. */
+  border-left: 1px solid var(--hair-2);
+  background: var(--iw-fundo);
+  box-shadow: var(--e-3);
+  outline: none;
+  animation: pll-entrar var(--dur-2) var(--ease-out);
+}
+
+/* Entra deslizando um pouco, sem atravessar a tela: a pessoa vê de onde ele
+   veio. `prefers-reduced-motion` zera a duração (`obsidian.css`). */
+@keyframes pll-entrar {
+  from { opacity: 0; transform: translateX(1.5rem); }
+}
+
+/* A linha de cima: onde se está (ou um controle do painel) e o `X`. */
+.pll-topo {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--iw-e-2);
+  min-height: 3.25rem;
+  padding: var(--iw-e-2) var(--iw-e-3) var(--iw-e-2) var(--iw-e-5);
+}
+.pll-contexto { display: flex; flex: 1 1 auto; align-items: center; gap: var(--iw-e-2); min-width: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+
+/* O corpo rola SOZINHO: o topo e o rodapé ficam, e a rolagem não escorre para
+   a página de trás quando chega ao fim. */
+.pll-corpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--iw-e-5) var(--iw-e-5);
+}
+
+.pll-cabeca { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--iw-e-1) var(--iw-e-3); margin-bottom: var(--iw-e-4); }
+.pll-titulo { margin: 0; min-width: 0; color: var(--iw-texto); font-size: var(--iw-t-titulo); font-weight: 650; line-height: 1.2; overflow-wrap: anywhere; }
+.pll-subtitulo { margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+
+.pll-rodape {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-2) var(--iw-e-4);
+  padding: var(--iw-e-3) var(--iw-e-5);
+  border-top: 1px solid var(--iw-linha);
+  font-size: var(--iw-t-apoio);
+}
+
+/* CELULAR: a tela inteira. Sem a tira de página de um lado (ninguém a usa a
+   390 px) e sem o fio, que encostaria na borda do aparelho. */
+@media (max-width: 639.98px) {
+  .pll-painel { left: 0; width: auto; border-left: 0; }
+  .pll-topo { padding-left: var(--iw-e-4); }
+  .pll-corpo, .pll-rodape { padding-inline: var(--iw-e-4); }
+}
+
+/* NO TABLET TAMBÉM — F43, Fase 7 (`telaInteira="tablet"`). O card ao lado do
+   Quadro pede 64rem; abaixo de 1024 px a tira de Quadro que sobraria ao lado
+   não cabe nem um cartão, e a ficha perderia a largura que a conversa pede. */
+@media (max-width: 1023.98px) {
+  .pll-painel[data-tela-inteira='tablet'] { left: 0; width: auto; border-left: 0; }
+}

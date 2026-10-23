@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="IDE Works">
+  <!--
+    O ÍCONE DA ABA — F17.66.
+
+    ⚠️ AS DUAS CORES LITERAIS AQUI SÃO A ÚNICA EXCEÇÃO LEGÍTIMA À D10, E NÃO
+    SÃO DESCUIDO. O favicon é buscado pelo navegador como documento próprio:
+    ele NÃO enxerga `obsidian.css`, não herda `:root`, e uma `var()` de CSS
+    aqui resolveria para nada — o desenho sairia preto, ou sumiria. A cor tem
+    de estar escrita dentro do arquivo.
+      `#0c0c10` é a variável `ink‑0` do tema escuro. `#00ff66` é a `luz`.
+    Quem mudar a marca muda os dois lugares, e é por isso que este bloco existe.
+
+    ⚠️ E ELE NÃO PODE CITAR AS VARIÁVEIS COM OS DOIS TRAÇOS DA FRENTE.
+    A primeira versão deste arquivo escrevia os nomes como no CSS, e o SVG
+    inteiro ficou inválido: SVG é XML, e comentário de XML não aceita dois
+    traços seguidos em lugar nenhum. O navegador não reclama — ele desiste do
+    arquivo e volta ao globo cinza, que é o defeito que esta etapa conserta.
+    Quem pegou foi `scripts/ver-o-icone.mjs`, desenhando o arquivo de verdade.
+
+    ⚠️ POR QUE ELE CARREGA O PRÓPRIO FUNDO
+    O traço verde sozinho seguiria o tema de quem olha, e verde sobre branco é
+    a pior combinação do OBSIDIAN — foi ela que deixou o botão principal
+    ilegível até a F17.58, com contraste de 1,43. O quadro escuro faz o ícone
+    valer igual na barra clara e na escura, e dispensa `prefers-color-scheme`
+    aqui dentro, que nem todo navegador honra em favicon.
+
+    ⚠️ POR QUE UMA LETRA SÓ
+    Ele tem 16 px na aba. `IDE` daria cerca de 4 px por letra e viraria borrão;
+    foi a alternativa oferecida ao usuário em 2026-09-04, e ele escolheu o W.
+    O traço é grosso (3,6 de 32) porque fio fino desaparece nessa escala.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0c0c10"/>
+  <path d="M6.5 9.5 L11.5 22.5 L16 14 L20.5 22.5 L25.5 9.5"
+        fill="none" stroke="#00ff66" stroke-width="3.6"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

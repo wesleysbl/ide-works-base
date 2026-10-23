@@ -1,0 +1,131 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   A COR DO TEMA — etapa F17.18.
+
+   POR QUE ESTE ARQUIVO EXISTE, EM VEZ DE MAIS UM BLOCO EM `obsidian.css`
+     Porque o `obsidian.css` está sendo editado por outra sessão agora, e um
+     bloco novo no meio dele é conflito garantido. Aqui não se toca em nada do
+     que já existe: as regras abaixo só ACRESCENTAM um dicionário, e ele só
+     entra em cena quando há `data-cor` no `<html>`.
+
+   COMO ISTO FUNCIONA — é o mecanismo da decisão D10, e não um mecanismo novo
+     O OBSIDIAN guarda a cor da marca em UMA variável, `--luz`. Trinta telas
+     pedem `var(--luz)` e nenhuma sabe o que ele vale. Trocar o espectro do
+     sistema inteiro é, então, redefinir essa variável — que é exatamente o que
+     `:root[data-tema='claro']` e `[data-contexto='instagram']` já fazem.
+
+     Nenhum componente sabe que isto existe. Nenhum componente muda.
+
+   O PADRÃO NÃO TEM REGRA
+     `Ide` (o verde da agência) é a AUSÊNCIA de escolha e não carimba atributo
+     nenhum. Sem atributo, nada aqui casa e o sistema fica idêntico ao de antes
+     desta etapa — inclusive o degradê do botão sólido.
+
+   CONTRASTE MEDIDO
+     `--luz` aparece como texto e como fundo. Cada valor abaixo passa de 4.5:1
+     nos dois papéis, no tema em que vive. `src/ui/cores.test.ts` mede — ele lê
+     ESTE arquivo e o `obsidian.css`, e não uma cópia dos números.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────── a paleta, no tema escuro ─────────────── */
+
+:root {
+  /* `Ide` é o token vivo do OBSIDIAN, repetido aqui só para a AMOSTRA do painel
+     ter um nome de variável como todas as outras. Ele não redefine nada: nenhuma
+     regra abaixo o usa, porque a escolha padrão não carimba atributo. */
+  --cor-ide: #00ff66;
+
+  /* Monocromático: no escuro o destaque é a platina. Um preto literal sobre
+     obsidiana seria um destaque que não se vê. */
+  --cor-preto: #f5f2ec;
+
+  --cor-roxo: #c084fc;
+  --cor-azul: #60a5fa;
+  --cor-rosa: #f472b6;
+  --cor-violeta: #a78bfa;
+  /* F01: um passo mais claro (era #818cf8) — sobre o `--ink-3` do Foco dava
+     4,36; agora 4,75. Mesma escolha, mesmo matiz. */
+  --cor-anil: #8a94f9;
+  --cor-laranja: #fb923c;
+  --cor-petroleo: #2dd4bf;
+  --cor-bronze: #d4a373;
+  --cor-menta: #6ee7b7;
+}
+
+/* ─────────────── a paleta, no tema claro ─────────────── */
+
+/* Mesmo matiz, na intensidade que o branco comporta — é a mesma regra que o
+   OBSIDIAN aplicou ao prisma dele quando o tema claro entrou. Sobre branco, o
+   tom vivo do escuro cai para 2 ou 3 de contraste: ele não fica "claro demais",
+   ele fica ilegível. */
+:root[data-tema='claro'] {
+  --cor-ide: #00a344;
+  --cor-preto: #16161a;
+  --cor-roxo: #7e22ce;
+  --cor-azul: #1d4ed8;
+  --cor-rosa: #be185d;
+  --cor-violeta: #6d28d9;
+  --cor-anil: #4338ca;
+  --cor-laranja: #9a4708;
+  /* F01: um passo mais escuro (era #0f766e) — 4,48 sobre o `--ink-3` do Foco;
+     agora 4,86. */
+  --cor-petroleo: #0d7068;
+  --cor-bronze: #8a5a2b;
+  --cor-menta: #0f6b32;
+}
+
+/* ─────────────── a escolha ─────────────── */
+
+/* Uma linha por cor, e nada além de `--luz`: o resto é derivado logo abaixo,
+   num lugar só. Repetir `--luz-soft` dez vezes seria dez lugares para errar a
+   opacidade. */
+:root[data-cor='preto']    { --luz: var(--cor-preto); }
+:root[data-cor='roxo']     { --luz: var(--cor-roxo); }
+:root[data-cor='azul']     { --luz: var(--cor-azul); }
+:root[data-cor='rosa']     { --luz: var(--cor-rosa); }
+:root[data-cor='violeta']  { --luz: var(--cor-violeta); }
+:root[data-cor='anil']     { --luz: var(--cor-anil); }
+:root[data-cor='laranja']  { --luz: var(--cor-laranja); }
+:root[data-cor='petroleo'] { --luz: var(--cor-petroleo); }
+:root[data-cor='bronze']   { --luz: var(--cor-bronze); }
+:root[data-cor='menta']    { --luz: var(--cor-menta); }
+
+/* O derivado. `color-mix` já é usado pelo OBSIDIAN (a chave ligada), então não
+   é dependência nova. */
+:root[data-cor] {
+  --luz-soft: color-mix(in srgb, var(--luz) 16%, transparent);
+  --glow-luz: 0 0 34px var(--luz-soft);
+
+  /* A tinta do botão sólido — F17.58. O OBSIDIAN passou a fixá-la em escuro,
+     porque o verde da marca é claro nos dois temas. As dez cores daqui não
+     são: elas são tons VIVOS no tema escuro e tons ESCUROS no claro, que é
+     justamente o desenho de `--ink-0`. Então aqui ela volta a ser `--ink-0`,
+     que é o que estas cores sempre usaram e o que `cores.test.ts` mede. */
+  --tinta-solido: var(--ink-0);
+}
+
+:root[data-tema='claro'][data-cor] {
+  /* No claro a névoa é mais discreta e o brilho vira fio — mesma decisão que o
+     OBSIDIAN tomou para o tema claro dele. */
+  --luz-soft: color-mix(in srgb, var(--luz) 14%, transparent);
+  --glow-luz: 0 0 0 1px var(--luz-soft);
+}
+
+/* ─────────────── o degradê do botão sólido ─────────────── */
+
+/* NASCEU COMO REMENDO, E DEIXOU DE SER — F17.58.
+
+   O segundo ponto do degradê de `.o-btn-solido` era um verde ESCRITO à mão em
+   `obsidian.css`. Com `--luz` roxo, o botão saía roxo→verde, e a saída daqui
+   foi substituir o degradê inteiro quando há cor escolhida.
+
+   A F17.58 tirou o literal de lá: o segundo ponto passou a ser a própria luz
+   escurecida, em todo tema e todo contexto. Esta regra continua porque ela
+   escolhe outro GRAU de escurecimento (86% contra os 90% do OBSIDIAN) — nas
+   dez cores o pé mais fundo assenta melhor. É afinação da paleta agora, não
+   mais correção de um verde teimoso.
+
+   Isto não edita `obsidian.css`: `:root[data-cor] .o-btn-solido` é mais
+   específico que `.o-btn-solido`, e o arquivo dele fica intocado. */
+:root[data-cor] .o-btn-solido {
+  background: linear-gradient(180deg, var(--luz), color-mix(in srgb, var(--luz) 86%, #000));
+}

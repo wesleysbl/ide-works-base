@@ -1,0 +1,2451 @@
+/* Direção aprovada: superfícies neutras, navegação em duas faixas e trabalho
+   em primeiro plano. As cores de status e a preferência de destaque continuam
+   sendo as do sistema; geometria de rolagem dos quadros permanece intacta.
+
+   QUEM É DONO DE QUÊ — F01 do plano UX
+     cor, superfície e papéis (`--ink-*`, `--plat*`, `--iw-lateral`…) → obsidian.css
+     cor escolhida pela pessoa (`--luz` sob `data-cor`)                → cores-do-tema.css
+     fonte, raio, movimento e a régua `--iw-t-*`/`--iw-e-*`/`--iw-r-*` → acabamento.css
+     Esta folha só ACRESCENTA regra de componente — não redefine token. Até a
+     F01 ela redefinia a paleta inteira por cima do OBSIDIAN, e os testes de
+     contraste mediam a paleta que a tela não usava. */
+
+/* A MARCA — máscara do lettering original, pintada com a tinta do tema.
+   Sem filtro, sem `mix-blend-mode`: não há retângulo nem halo em fundo
+   nenhum. No modo de alto contraste do sistema o fundo seria trocado pela
+   cor da janela e a marca sumiria; lá ela usa a cor de texto do sistema. */
+.iw-marca {
+  display: block;
+  width: 8rem;
+  flex: 0 1 8rem;
+  aspect-ratio: 874 / 160;
+  background-color: var(--iw-marca-tinta);
+  -webkit-mask: url('/ideworks-marca.png') center / contain no-repeat;
+  mask: url('/ideworks-marca.png') center / contain no-repeat;
+}
+@media (forced-colors: active) {
+  .iw-marca { forced-color-adjust: none; background-color: CanvasText; }
+}
+/* A MOLDURA PÚBLICA — F15 do plano UX: entrar, ativar, redefinir e 404.
+   Uma coluna de 26rem — o formulário lê de cima para baixo, sem colunas —,
+   um cartão com a marca no alto e o fio verde da marca, e um pé discreto.
+   O verde da ARTE (`--iw-verde-marca`) só aparece no fio: é identidade, não
+   estado nem ação. A ação continua na cor escolhida (`--luz`), como no resto.
+   Sem sombra pesada, sem fundo desenhado: a primeira tela abre instantânea.
+   Fundo e cartão invertem no claro: página cinza-clara, cartão branco (no
+   escuro, o cartão é o degrau acima da página). */
+.iw-publica {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: var(--iw-e-6) var(--iw-e-4);
+  background: var(--ink-0);
+}
+.iw-publica-coluna { width: 100%; max-width: 26rem; }
+.iw-publica-cartao {
+  position: relative;
+  padding: var(--iw-e-6) var(--iw-e-6) var(--iw-e-5);
+  border: 1px solid var(--hair);
+  border-radius: var(--iw-r-dialogo);
+  background: var(--ink-1);
+  box-shadow: var(--iw-relevo);
+}
+:root[data-tema='claro'] .iw-publica { background: var(--ink-1); }
+:root[data-tema='claro'] .iw-publica-cartao { background: var(--ink-0); }
+/* A assinatura: um traço curto do verde da arte, encostado na borda de cima,
+   alinhado à marca. Curto de propósito — marca o começo, não emoldura. */
+.iw-publica-cartao::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: var(--iw-e-6);
+  width: 2.75rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--iw-verde-marca);
+}
+.iw-publica-cabeca {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--iw-e-3);
+  margin-bottom: var(--iw-e-5);
+}
+.iw-publica-cabeca > .o-btn { margin-right: -0.5rem; }
+.iw-publica-marca { margin: 0; line-height: 0; }
+.iw-marca-entrada { width: 10rem; flex-basis: 10rem; }
+.iw-marca-publica { width: 6.25rem; flex-basis: 6.25rem; }
+.iw-publica-titulo {
+  margin: 0;
+  color: var(--plat);
+  font-size: var(--iw-t-titulo);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.iw-publica-subtitulo {
+  margin: var(--iw-e-1) 0 0;
+  text-wrap: pretty;
+  color: var(--plat-dim);
+  font-size: var(--iw-t-corpo);
+  line-height: 1.45;
+}
+.iw-publica-miolo { margin-top: var(--iw-e-5); }
+.iw-publica-pe {
+  margin: var(--iw-e-4) 0 0;
+  color: var(--mute);
+  font-size: var(--iw-t-meta);
+  text-align: center;
+}
+/* O botão principal ocupa a linha: é a única ação do cartão. */
+.iw-publica .o-form > .o-btn[type='submit'] { align-self: stretch; min-height: 2.5rem; }
+/* Os caminhos de fora (ativar, redefinir) moram no pé do cartão, abaixo de um
+   fio: estão perto de quem não consegue entrar, sem competir com o Entrar. */
+.iw-publica-caminhos {
+  display: grid;
+  gap: var(--iw-e-3);
+  margin-top: var(--iw-e-5);
+  padding-top: var(--iw-e-4);
+  border-top: 1px solid var(--hair);
+  font-size: var(--iw-t-apoio);
+  line-height: 1.45;
+}
+.iw-publica-caminhos h2 { margin: 0; color: var(--plat); font-size: var(--iw-t-apoio); font-weight: 600; }
+.iw-publica-caminhos p { margin: 0.125rem 0 0; color: var(--mute); }
+.iw-publica-caminhos a,
+.iw-publica-link {
+  color: var(--luz-texto);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.iw-publica-nota { margin: var(--iw-e-4) 0 0; color: var(--mute); font-size: var(--iw-t-meta); line-height: 1.5; }
+/* Sucesso: o sinal e a ação, na mesma linha de leitura do formulário. */
+.iw-publica-feito { display: grid; gap: var(--iw-e-4); }
+.iw-publica-feito > .o-btn { justify-self: stretch; min-height: 2.5rem; }
+.iw-publica-endereco {
+  display: block;
+  margin-top: var(--iw-e-2);
+  padding: var(--iw-e-2) var(--iw-e-3);
+  border-radius: var(--iw-r-controle);
+  background: var(--ink-2);
+  color: var(--plat-dim);
+  font-family: var(--f-mono);
+  font-size: var(--iw-t-meta);
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .iw-publica-cartao { animation: ac-surgir var(--dur-2) var(--ease-out); }
+}
+/* CELULAR: o cartão perde a caixa e a coluna encosta no alto. Com o teclado
+   aberto a janela fica com ~360 px; centrar na vertical empurraria o botão
+   para baixo do teclado. */
+@media (max-width: 640px) {
+  .iw-publica { align-items: flex-start; padding: var(--iw-e-5) var(--iw-e-4) var(--iw-e-4); }
+  .iw-publica-cartao { padding: var(--iw-e-5) 0 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  .iw-publica-cartao::before { left: 0; top: 0; border-radius: 3px; }
+  :root[data-tema='claro'] .iw-publica { background: var(--ink-0); }
+  :root[data-tema='claro'] .iw-publica-cartao { background: none; }
+  .iw-publica .o-form > .o-btn[type='submit'],
+  .iw-publica-feito > .o-btn { min-height: 44px; }
+  .iw-publica-pe { text-align: left; }
+}
+:root .iw-app { padding-left: 0.75rem; padding-right: 0.75rem; }
+:root .iw-app .q-tela { column-gap: 1.5rem; }
+/* O TOPO — F03 do plano UX. Uma hierarquia para todas as telas:
+     trilha (onde fica)  →  12 px, `--mute`, discreta, em cima
+     título (onde estou) →  18→22 px, peso 600, a coisa mais forte da coluna
+     ações (o que faço)  →  à direita; no celular, numa linha só delas
+   Sem fio embaixo na variante de página: o respiro de 16 px já separa o topo
+   do trabalho, e o fio repetia a divisória que a busca, as abas e os cartões
+   logo abaixo já desenham. O fio fica onde separa de verdade — na ficha, que
+   gruda e tem conteúdo rolando por baixo. */
+/* F16 — DENSIDADE UNIFORME: o título sem ações não reserva a altura de um
+   botão (sobravam 14 px mortos) e o respiro até o trabalho cai de 24 para
+   16 px. Medido em 1440: de ~40–50 px entre título e controles para ~20. */
+:root .iw-app .o-topo { min-height: 0; padding: var(--iw-e-1) 0 0; margin-bottom: var(--iw-e-4); row-gap: var(--iw-e-3); border-bottom: 0; }
+:root .iw-app .o-topo:has(> .o-topo-acoes) { min-height: 2.5rem; }
+:root .iw-app .o-topo .o-titulo {
+  font-size: var(--iw-t-titulo);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+:root .iw-app .o-topo-trilha { margin-bottom: 0.125rem; }
+/* A COMPACTA — ficha que gruda, chat. Cada pixel dela cobre conteúdo; o teto
+   da ficha é 60 px (e2e `data-e-cabecalho`, V1/V2): trilha 22 + título 25 +
+   8 de respiro + 1 de fio (só na ficha) = 56. Título em uma linha com reticências — o nome
+   inteiro continua na trilha e no `<title>` da aba. */
+:root .iw-app .o-topo[data-variante='compacta'] {
+  min-height: 0;
+  padding-block: var(--iw-e-1);
+  margin-bottom: var(--iw-e-3);
+}
+/* O fio só onde o conteúdo passa por baixo: a ficha, que gruda. No chat a
+   conversa tem moldura própria, e um fio aqui seria a mesma divisa duas vezes. */
+:root .iw-app .o-topo.t-cabeca { border-bottom: 1px solid var(--iw-linha); }
+:root .iw-app .o-topo[data-variante='compacta'] .o-titulo {
+  font-size: var(--iw-t-secao);
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* No celular as ações da página ganham a linha inteira debaixo do título, em
+   vez de espremer o nome ao lado: o botão principal (o primeiro) fica à
+   esquerda, onde o polegar e o olho chegam primeiro. A compacta não desce —
+   a ação dela é o X, que cabe ao lado. */
+@media (max-width: 639.98px) {
+  :root .iw-app .o-topo:not([data-variante='compacta']) > .o-topo-acoes { flex-basis: 100%; justify-content: flex-start; }
+}
+:root .iw-app .bl-barra {
+  gap: 1rem;
+  background: var(--iw-lateral);
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-painel);
+  padding: 0.85rem 0.65rem;
+}
+:root .iw-app .bl-topo { min-height: 2rem; padding-left: 0.4rem; gap: 0.5rem; }
+:root .iw-app .bl-item { min-height: 2.4rem; padding: 0.5rem 0.6rem; gap: 0.6rem; font-size: var(--iw-t-apoio); border-radius: var(--iw-r-controle); }
+:root .iw-app .bl-item[data-atual='true'] { background: var(--iw-selecionado); color: var(--plat); font-weight: 500; box-shadow: inset 3px 0 0 var(--luz-texto); }
+/* O fio de 3px na cor de destaque é o que torna o atual inequívoco no claro:
+   o véu sozinho difere da barra só 1,13:1; o fio dá ≥ 4,5 (verificação F01). */
+/* Passar o mouse não pode parecer o item atual: o hover é um véu mais leve,
+   e o atual tem véu + peso + tinta cheia. */
+:root .iw-app .bl-item:hover { background: var(--iw-hover); }
+:root .iw-app .bl-item[data-atual='true']:hover { background: var(--iw-selecionado); }
+:root .iw-app .bl-secao-alternar { color: var(--mute); font-size: var(--iw-t-meta); }
+:root .iw-app .bl-secao-titulo { padding-bottom: 0.4rem; }
+:root .iw-app .bl-conta { margin-top: auto; border-top: 1px solid var(--iw-linha); border-radius: 0; padding-top: 0.8rem; }
+:root .iw-app .bl-selo { background: var(--iw-selecionado); color: var(--plat); }
+:root .iw-app .bl-coluna { background: var(--iw-lateral); border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); padding: 0.8rem; }
+:root .iw-app .cu-arvore-topo h2 { font-size: var(--iw-t-meta); }
+:root .iw-app .cu-arvore-topo { background: var(--iw-lateral); }
+:root .iw-app .cu-item { min-height: 2rem; }
+:root .iw-app .q-coluna { border-color: var(--iw-linha); border-radius: var(--iw-r-painel); }
+:root .iw-app .q-cartao { border-color: var(--iw-linha); box-shadow: none; }
+:root .iw-app .q-cartao { padding: 0.625rem 0.75rem; border-radius: var(--iw-r-cartao); }
+/* F06B — os três estados do cartão com sinais diferentes: o ponteiro escurece
+   a borda; o foco do teclado é o anel global (`:focus-visible`); o arrasto usa
+   a cor de destaque (`data-arrastando`, em quadro.css). A regra acima fixava a
+   borda e apagava o hover — este é o degrau dele. */
+:root .iw-app .q-cartao:hover { border-color: var(--hair-3); }
+:root .iw-app .q-cartao[data-arrastando='true'] { border-color: var(--luz); }
+
+@media (min-width: 1024px) {
+  :root .iw-app .q-tela { grid-template-columns: 18rem minmax(0, 1fr); }
+  :root .iw-app .q-tela[data-barra='icones'] { grid-template-columns: 3.5rem minmax(0, 1fr); }
+  :root .iw-app .q-tela[data-coluna='arvore'] { grid-template-columns: 18rem 16.5rem minmax(0, 1fr); }
+  /* F02B (R08): menu compacto + listas abertas — a quarta combinação. Rail de
+     3.5rem, coluna de 16.5rem, conteúdo com o resto. Sem esta regra a de cima
+     reservaria 18rem para um rail de 3.5rem: uma faixa vazia de 14.5rem. */
+  :root .iw-app .q-tela[data-barra='icones'][data-coluna='arvore'] { grid-template-columns: 3.5rem 16.5rem minmax(0, 1fr); }
+  :root .iw-app .bl-barra {
+    height: calc(100vh - clamp(0.75rem, var(--bl-inicio, 0.75rem), 25vh) - 1.5rem);
+  }
+  :root .iw-app .q-tela[data-altura='tela'] > .bl-barra { height: auto; }
+  /* UMA BARRA SÓ — F43, Fase 8. Aqui morava o trilho de atalhos do layout Foco:
+     uma faixa de 3rem de ícones sem nome encostada à esquerda da barra (com um
+     recuo de 3.65rem reservando o lugar dela) e as regras que escondiam,
+     acima de 1024px, as cópias com nome de Início, Notificações, Chat e Painel.
+     Saiu tudo: cada destino aparece uma vez, com o nome. A largura da faixa da
+     grade (18rem, `FAIXAS_EM_REM.barra`) não mudou — o que era do trilho virou
+     largura dos nomes e da árvore, e o conteúdo à direita ficou onde estava. */
+  :root .iw-app .bl-barra[data-aparencia='icones'] { padding: 0.8rem 0.25rem; }
+  :root .iw-app .bl-barra[data-aparencia='icones'] .bl-item { position: relative; padding: 0.4rem; }
+  /* F08: no rail (o chat mora nele) a pastilha vai para o canto do ícone — ao
+     lado dele, "99+" quebrava em três linhas numa coluna de 56 px e esticava o
+     item. */
+  :root .iw-app .bl-barra[data-aparencia='icones'] .bl-item .bl-selo {
+    position: absolute; right: -3px; top: -4px; margin: 0;
+    min-width: 1.05rem; padding: 0 0.2rem; font-size: 0.6rem; white-space: nowrap;
+  }
+}
+
+/* A ALTURA DOS ITENS COM O PONTEIRO FINO — F43, Fase 8.
+   Com o trilho fora, Início, Notificações, Chat e Painel voltaram a ser linhas
+   da coluna, e a árvore — a única peça que cede altura (F17.50) — ficava com
+   uma linha só à vista a 1024×768, embaixo do título. Os itens fixos descem
+   de 38 para 32 px e o vão entre os blocos de 16 para 12: medido na prévia, a
+   árvore passa a 150 px a 1024×768 (quatro linhas) e 282 px a 1440×900. Só com
+   mouse: no toque o alvo de 44 px continua (a regra `pointer: coarse` abaixo),
+   e a gaveta do celular não passa por aqui. */
+@media (min-width: 1024px) and (pointer: fine) {
+  :root .iw-app .bl-barra[data-aparencia='icones-e-rotulos'] { gap: 0.75rem; }
+  :root .iw-app .bl-barra[data-aparencia='icones-e-rotulos'] .bl-item { min-height: 2rem; padding-block: 0.375rem; }
+}
+
+/* F05: a introdução de Minhas tarefas SAIU (era apoio do título desde a F03).
+   Ela prometia "hoje" acima de grupos com outras datas e custava ~90 px antes
+   da primeira tarefa no celular. O título basta. */
+.iw-busca { display: flex; align-items: center; gap: var(--iw-e-2); padding: 0.3rem 0.4rem 0.3rem 0.8rem; border: 1px solid var(--hair-2); border-radius: var(--iw-r-painel); margin-bottom: var(--iw-e-5); color: var(--mute); background: var(--iw-fundo); transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out); }
+.iw-busca-lupa { display: flex; flex-shrink: 0; color: var(--mute); cursor: text; }
+.iw-busca input { min-width: 0; flex: 1; width: 100%; border: 0; color: var(--plat); background: transparent; padding: 0.4rem 0; font-size: var(--iw-t-corpo); }
+.iw-busca input::placeholder { color: var(--mute); }
+.iw-busca input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+/* O anel é da CAIXA (`:focus-within`), não do campo: dois anéis, um dentro do
+   outro, diriam a mesma coisa duas vezes. */
+.iw-busca input:focus-visible { outline: 0; box-shadow: none; }
+.iw-busca:focus-within { border-color: var(--iw-foco); box-shadow: 0 0 0 3px var(--luz-soft); }
+.iw-busca-limpar { display: grid; place-items: center; flex-shrink: 0; width: 2rem; height: 2rem; border-radius: var(--iw-r-controle); color: var(--mute); }
+.iw-busca-limpar:hover { color: var(--plat); background: var(--iw-hover); }
+/* ── AS DUAS TELAS DA PESSOA — F05 do plano UX ─────────────────────────────
+   Uma faixa de controles com a mesma ordem nas duas: QUAL conjunto (só em
+   Minhas) → buscar → quanto há (só em Todas) → COMO ver, na ponta direita.
+   No computador cabe numa linha; no celular a situação ganha a primeira e a
+   busca divide a segunda com a forma em ícones. */
+.mt-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-2) var(--iw-e-3);
+  margin-bottom: var(--iw-e-4);
+}
+.mt-controles > .mt-situacao { flex: 0 0 auto; }
+.mt-controles > .iw-busca {
+  flex: 1 1 14rem;
+  min-width: 0;
+  max-width: 30rem;
+  margin-bottom: 0;
+  padding-block: 0.125rem;
+}
+.mt-controles > .iw-forma { flex: 0 0 auto; margin-left: auto; }
+.mt-controles > .td-filtro { flex: 1 1 22rem; min-width: 0; }
+.td-filtro > .q-filtro { margin: 0; }
+.td-total { color: var(--iw-texto-3); font-size: var(--iw-t-meta); white-space: nowrap; margin-left: auto; }
+.mt-controles > .td-total + .iw-forma { margin-left: 0; }
+.iw-forma .iw-segmento svg { flex: none; opacity: 0.85; }
+@media (max-width: 479.98px) {
+  /* A forma recolhe para os ícones e fica ao lado da busca; o nome segue no
+     leitor de tela (a palavra continua no botão, só fora do desenho). */
+  :root .mt-controles > .iw-forma { display: inline-flex; width: auto; }
+  :root .mt-controles > .iw-forma .iw-segmento { flex: 0 0 auto; width: 2.5rem; padding: 0; }
+  .iw-forma .iw-forma-rotulo {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .mt-controles > .td-filtro { flex-basis: 100%; }
+}
+
+/* O RESULTADO DA BUSCA, COM O ALCANCE — o número do lote e o total da aba
+   lado a lado, e a passagem para a busca geral na ponta. */
+.iw-resultado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--iw-e-1) var(--iw-e-4);
+  margin: 0 0 var(--iw-e-2);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+}
+.iw-resultado-dica { color: var(--iw-texto-3); }
+.iw-passagem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--luz-texto);
+  font-weight: 500;
+  font-size: var(--iw-t-apoio);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: var(--r-xs);
+}
+.iw-passagem:hover { text-decoration: underline; text-underline-offset: 3px; }
+.iw-passagem-linha { display: block; margin-top: var(--iw-e-2); }
+.iw-passagem-alcance { color: var(--iw-texto-3); }
+
+/* O AVISO DE ALCANCE em Todas as tarefas — um fio de cor à esquerda, e não
+   um alerta: nada deu errado, só o universo da busca cresceu. */
+.iw-alcance {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--iw-e-3);
+  margin: 0 0 var(--iw-e-4);
+  padding: var(--iw-e-2) var(--iw-e-2) var(--iw-e-2) var(--iw-e-3);
+  border: 1px solid var(--iw-linha);
+  border-left: 3px solid var(--luz-texto);
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-superficie);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+  line-height: 1.5;
+}
+.iw-alcance p { flex: 1; min-width: 0; padding-block: 0.2rem; }
+.iw-alcance b { color: var(--iw-texto); font-weight: 600; }
+.iw-alcance a { color: var(--luz-texto); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.iw-alcance-fechar { display: grid; place-items: center; flex: none; width: 1.75rem; height: 1.75rem; border-radius: var(--iw-r-controle); color: var(--iw-texto-3); font-size: 1.1rem; line-height: 1; }
+.iw-alcance-fechar:hover { color: var(--iw-texto); background: var(--iw-hover); }
+
+/* OS GRUPOS — cabeçalho como régua: nome forte, contagem em pastilha e um
+   fio até a borda. O primeiro encosta nos controles; entre grupos, 20 px. */
+:root .iw-trabalho .mt-grupo { margin: 0 0 var(--iw-e-4); }
+:root .iw-trabalho .mt-grupo + .mt-grupo { margin-top: var(--iw-e-5); }
+:root .iw-trabalho .mt-grupo-topo { gap: var(--iw-e-3); }
+:root .iw-trabalho .mt-grupo-topo::after { content: ''; flex: 1; height: 1px; background: var(--iw-linha); }
+:root .iw-trabalho .mt-recolher {
+  gap: 0.45rem;
+  padding: 0.25rem 0;
+  color: var(--iw-texto);
+  font-size: var(--iw-t-apoio);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  border-radius: var(--r-xs);
+}
+:root .iw-trabalho .mt-caret { width: 0.75rem; height: 0.75rem; color: var(--iw-texto-3); }
+:root .iw-trabalho .mt-conta {
+  min-width: 1.35rem;
+  padding: 0 0.4rem;
+  border-radius: var(--r-pill);
+  background: var(--iw-hover);
+  color: var(--iw-texto-2);
+  font: inherit;
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-align: center;
+}
+/* Em atraso COM tarefa: o número ganha a cor de erro (o nome do grupo já diz
+   o que é — a cor reforça, não substitui). Vazio fica quieto. */
+:root .iw-trabalho .mt-grupo[data-grupo='atraso']:not([data-vazio]) .mt-conta { background: var(--err-soft); color: var(--err); }
+:root .iw-trabalho .mt-grupo[data-vazio] .mt-recolher { color: var(--iw-texto-2); }
+:root .iw-trabalho .mt-lista { border: 0; background: transparent; margin-top: var(--iw-e-1); }
+:root .iw-trabalho .mt-linha { padding: 0.625rem 0.5rem; border-radius: var(--r-xs); gap: 0.75rem; }
+:root .iw-trabalho .mt-linha + .mt-linha { border-top: 1px solid var(--iw-linha); }
+:root .iw-trabalho .mt-linha:hover { background: var(--iw-hover); }
+:root .iw-trabalho .mt-titulo { font-size: var(--iw-t-corpo); font-weight: 500; }
+:root .iw-trabalho .mt-trilha { font-family: var(--f-body); font-size: var(--iw-t-meta); margin-top: 0.25rem; color: var(--iw-texto-3); }
+:root .iw-trabalho .mt-prazo { font-family: var(--f-body); font-size: var(--iw-t-meta); font-weight: 500; }
+:root .iw-trabalho .mt-vazio { order: 1; padding: 0; font-size: var(--iw-t-apoio); color: var(--iw-texto-3); white-space: nowrap; }
+:root .iw-trabalho .mt-grupo-topo::after { order: 2; }
+/* Depois de um grupo vazio (uma linha só), o respiro encolhe: a régua do
+   próximo já separa. */
+:root .iw-trabalho .mt-grupo[data-vazio] + .mt-grupo { margin-top: var(--iw-e-3); }
+.iw-listas { margin: var(--iw-e-6) 0 var(--iw-e-5); padding-top: var(--iw-e-4); border-top: 1px solid var(--iw-linha); }
+.iw-listas h2 { font-size: var(--iw-t-apoio); font-weight: 600; color: var(--iw-texto); margin-bottom: var(--iw-e-3); }
+.iw-listas > div { display: flex; flex-wrap: wrap; gap: var(--iw-e-2); }
+.iw-listas a { display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); padding: 0.5rem 0.65rem; font-size: var(--iw-t-apoio); color: var(--iw-texto); }
+.iw-listas a svg { flex-shrink: 0; color: var(--iw-texto-3); }
+.iw-listas-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iw-listas-lugar { color: var(--iw-texto-3); white-space: nowrap; }
+.iw-listas-lugar::before { content: '·'; margin-right: 0.4rem; }
+.iw-listas-conta { min-width: 1.25rem; padding: 0 0.35rem; border-radius: var(--r-pill); background: var(--iw-hover); color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.25rem; text-align: center; }
+.iw-listas a:hover { background: var(--iw-hover); }
+
+@media (max-width: 1023.98px) {
+  :root .iw-app .bl-barra[data-gaveta='aberta'] { border-radius: 0; padding: 1rem; }
+  :root .iw-app .bl-abrir { background: var(--iw-lateral); border-color: var(--iw-linha); border-radius: var(--iw-r-controle); }
+  .iw-busca input { font-size: var(--iw-t-leitura); }
+}
+/* A LINHA NO CELULAR — F06B. Ela quebrava com `flex-wrap`, e o prazo caía na
+   linha de baixo encostado no ponto, fora do alinhamento do texto. Agora é uma
+   grade: título e trilha com a largura toda, o prazo numa terceira linha
+   ALINHADO AO TEXTO, e os avatares no canto. `Atrasada · 25/09` ao lado do
+   título comia metade dele a 390 px. */
+@media (max-width: 639.98px) {
+  :root .iw-trabalho .mt-linha {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'ponto texto quem' 'ponto prazo quem';
+    column-gap: var(--iw-e-3);
+    row-gap: var(--iw-e-1);
+    align-items: center;
+  }
+  :root .iw-trabalho .mt-ponto { grid-area: ponto; }
+  :root .iw-trabalho .mt-texto { grid-area: texto; }
+  :root .iw-trabalho .mt-prazo { grid-area: prazo; justify-self: start; }
+  :root .iw-trabalho .mt-prazo:not([data-estado='atrasada']):not([data-estado='hoje']) { margin-left: -0.375rem; }
+  :root .iw-trabalho .mt-ponto { align-self: start; margin-top: 0.4rem; }
+  :root .iw-trabalho .mt-avatares { grid-area: quem; justify-self: end; }
+}
+/* ALVO DE TOQUE — só onde se toca. Os controles que a pessoa opera com o dedo
+   ganham 44 px de altura; ícones decorativos e texto não crescem. O X da busca
+   cresce por margem negativa: o alvo aumenta, a caixa não. */
+@media (pointer: coarse) {
+  :root .iw-app .bl-item, :root .iw-app .bl-recolher, :root .iw-app .bl-secao-alternar,
+  :root .iw-segmentos .iw-segmento, :root .iw-app .o-topo-acoes .o-btn,
+  :root .iw-estado .iw-estado-acao, :root .iw-estado .iw-estado-acoes > * { min-height: var(--iw-alvo-toque); }
+  .iw-busca-limpar { width: var(--iw-alvo-toque); height: var(--iw-alvo-toque); margin-block: -0.4rem; }
+}
+
+/* ── CONTROLE SEGMENTADO — F03 (`AlternadorDeVista` e `Abas`) ──────────────
+   Um trilho rebaixado e o escolhido em relevo. O mesmo desenho para botão
+   pressionável (Lista × Quadro) e aba (Pendente × Feito): para o olho os dois
+   são "escolha um"; o que muda é o teclado, e isso é do componente.
+   O escolhido não depende só da cor: sobe (fundo + fio + sombra). O PESO NÃO
+   MUDA — 600 no escolhido alargava o rótulo ~1,4 px e empurrava os vizinhos a
+   cada troca (medido na verificação da F03); o relevo já basta. */
+:root .iw-segmentos {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 3px;
+  background: var(--iw-superficie);
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-cartao);
+}
+:root .iw-segmentos .iw-segmento {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: calc(var(--iw-r-cartao) - 3px);
+  background: transparent;
+  color: var(--iw-texto-3);
+  font-family: var(--f-body);
+  font-size: var(--iw-t-apoio);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
+}
+:root .iw-segmentos .iw-segmento:hover { color: var(--iw-texto); background: var(--iw-hover); }
+:root .iw-segmentos .iw-segmento[aria-pressed='true'],
+:root .iw-segmentos .iw-segmento[aria-selected='true'] {
+  color: var(--iw-texto);
+  background: var(--iw-elevado);
+  box-shadow: var(--iw-relevo);
+}
+:root .iw-segmentos .iw-segmento:focus-visible { outline-offset: 1px; }
+.iw-segmento-conta {
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: var(--r-pill);
+  background: var(--iw-hover);
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+  line-height: 1.35rem;
+  text-align: center;
+}
+/* No celular o trilho ocupa a linha e os itens dividem a largura: um controle
+   segmentado que quebra em duas linhas deixa de parecer uma escolha só. */
+@media (max-width: 479.98px) {
+  :root .iw-segmentos { display: flex; flex-wrap: nowrap; width: 100%; }
+  :root .iw-segmentos .iw-segmento { flex: 1 1 auto; justify-content: center; gap: 0.3rem; padding: 0 0.5rem; }
+}
+.iw-segmento[aria-pressed='true'] .iw-segmento-conta,
+.iw-segmento[aria-selected='true'] .iw-segmento-conta { color: var(--iw-texto-2); }
+
+/* ── ESTADOS DA ÁREA — F03 (`EstadoDaPagina`) ──────────────────────────────
+   Carregando: a frase e a FORMA do que vem (esqueleto), para a lista não
+   empurrar a tela ao chegar. O esqueleto só aparece depois de 150 ms — a
+   resposta rápida não pisca um cinza. O brilho para sob movimento reduzido.
+   Vazio / sem resultado / sem acesso: um bloco quieto, alinhado à esquerda
+   como o resto da ferramenta — ícone, frase útil, ação. O vazio real leva o
+   ícone no verde da marca: nada pendente é um bom lugar para a marca estar. */
+.iw-estado { margin: var(--iw-e-4) 0; }
+.iw-estado[data-estado='carregando'] { display: grid; gap: var(--iw-e-3); }
+.iw-estado-espera { font-size: var(--iw-t-meta); color: var(--iw-texto-3); }
+.iw-esqueleto { display: grid; gap: var(--iw-e-2); animation: iw-esqueleto-surge var(--dur-2) var(--ease-out) 150ms both; }
+.iw-esqueleto-linha {
+  display: block;
+  height: 2.75rem;
+  border-radius: var(--iw-r-controle);
+  background-color: var(--iw-superficie);
+  background-image: linear-gradient(90deg, transparent 0%, var(--iw-hover) 50%, transparent 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: iw-esqueleto-brilho 1.6s ease-in-out infinite;
+}
+.iw-esqueleto-linha:nth-child(2) { width: 88%; }
+.iw-esqueleto-linha:nth-child(3) { width: 74%; }
+@keyframes iw-esqueleto-surge { from { opacity: 0; } to { opacity: 1; } }
+@keyframes iw-esqueleto-brilho { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+.iw-estado-cartao {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--iw-e-3) var(--iw-e-4);
+  padding: var(--iw-e-4);
+  border: 1px dashed var(--hair-2);
+  border-radius: var(--iw-r-cartao);
+  animation: ac-assentar var(--dur-1) var(--ease-out);
+}
+.iw-estado-icone {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-superficie);
+  box-shadow: inset 0 0 0 1px var(--iw-linha);
+  color: var(--iw-texto-2);
+}
+.iw-estado-cartao[data-estado='vazio'] .iw-estado-icone { color: var(--iw-verde-marca-texto); }
+.iw-estado-texto { min-width: 0; }
+.iw-estado-titulo { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; }
+.iw-estado-frase { margin-top: 0.125rem; color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+.iw-estado-acao { justify-self: end; }
+/* Duas saídas lado a lado (F06C); quebram de linha antes de apertar. */
+.iw-estado-acoes { display: flex; flex-wrap: wrap; gap: var(--iw-e-2); }
+/* No celular a ação desce para debaixo da frase, alinhada com ela. */
+@media (max-width: 479.98px) {
+  .iw-estado-cartao { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .iw-estado-acao { grid-column: 2; justify-self: start; }
+}
+.iw-estado-erro { margin: var(--iw-e-4) 0; }
+@media (prefers-reduced-motion: reduce) {
+  .iw-esqueleto, .iw-esqueleto-linha, .iw-estado-cartao { animation: none; }
+}
+
+/* ── NOTIFICAÇÕES — F10 ────────────────────────────────────────────────────
+   Uma LISTA DE LEITURA, como a de uma caixa de e-mail: cada grupo é uma
+   superfície só, e as linhas se separam por fio (antes: um cartão por aviso,
+   borda sobre borda). Cada linha responde, de cima para baixo: O QUE (título =
+   link do destino) e QUANDO (à direita) · POR QUE (a frase) · DE ONDE (origem)
+   · e no rodapé, longe do título, os atalhos à esquerda e MARCAR à direita.
+   Destino e marcar nunca dividem o mesmo alvo.
+   A assinatura é o ponto verde da marca: novo = ponto cheio; visto = anel
+   vazio. A cor do prazo continua na BORDA da esquerda, nunca na letra (F17.37). */
+:root .iw-app .iw-avisos .av-abas { margin-bottom: var(--iw-e-4); }
+.av-painel:focus { outline: none; }
+.av-faixa { margin-bottom: var(--iw-e-3); }
+.av-caixa { display: grid; gap: var(--iw-e-5); }
+.av-grupo { display: grid; gap: var(--iw-e-2); min-width: 0; }
+.av-grupo-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--iw-e-2);
+  margin: 0;
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-meta);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.av-grupo-conta {
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: var(--r-pill);
+  background: var(--iw-hover);
+  color: var(--iw-texto-2);
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-align: center;
+}
+.av-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-cartao);
+  background: var(--iw-superficie);
+  overflow: hidden;
+}
+.av-linha {
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.5rem minmax(0, 1fr);
+  gap: var(--iw-e-3);
+  padding: var(--iw-e-3) var(--iw-e-4) var(--iw-e-3) var(--iw-e-3);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+.av-linha + .av-linha { border-top: 1px solid var(--iw-linha); }
+.av-linha::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: transparent;
+}
+.av-linha[data-aperto='vencido']::before { background: var(--err); }
+.av-linha[data-aperto='hoje']::before { background: var(--warn); }
+.av-linha[data-aperto='proximo']::before { background: var(--luz); }
+.av-ponto {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.375rem;
+  border-radius: 50%;
+  background: var(--iw-verde-marca-texto);
+}
+.av-linha[data-visto='true'] .av-ponto { background: transparent; box-shadow: inset 0 0 0 1px var(--hair-2); }
+/* O corpo é uma grade: título | quando no alto, a frase inteira, e o PÉ — a
+   origem e os atalhos à esquerda, o MARCAR à direita. O botão divide a linha
+   com a origem em vez de ganhar uma linha só dele, e não alarga a coluna da
+   hora (o título usa toda a largura que sobra). */
+.av-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'titulo quando' 'frase frase' 'pe pe';
+  column-gap: var(--iw-e-4);
+  min-width: 0;
+}
+.av-titulo {
+  grid-area: titulo;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--iw-texto);
+  font-size: var(--iw-t-corpo);
+  font-weight: 600;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+.av-titulo:hover { text-decoration: underline; text-underline-offset: 2px; }
+.av-titulo:focus-visible { outline: 2px solid var(--luz); outline-offset: 2px; }
+.av-linha[data-visto='true'] .av-titulo { font-weight: 500; }
+.av-quando { grid-area: quando; align-self: baseline; justify-self: end; color: var(--iw-texto-3); font-size: var(--iw-t-meta); white-space: nowrap; }
+.av-frase { grid-area: frase; margin: 0.125rem 0 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); line-height: 1.4; }
+.av-pe { grid-area: pe; display: flex; align-items: flex-end; justify-content: space-between; gap: var(--iw-e-2) var(--iw-e-4); margin-top: var(--iw-e-1); }
+.av-info { min-width: 0; }
+.av-origem { margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.av-info .av-atalhos { display: flex; flex-wrap: wrap; gap: var(--iw-e-1) var(--iw-e-4); margin: var(--iw-e-2) 0 0; font-size: var(--iw-t-meta); }
+.av-info .av-atalhos a { color: var(--luz-texto); text-decoration: none; border-radius: 4px; }
+.av-info .av-atalhos a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.av-info .av-atalhos a:focus-visible { outline: 2px solid var(--luz); outline-offset: 2px; }
+.av-botao {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  min-height: 1.75rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--iw-r-controle);
+  background: transparent;
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.av-botao:hover { color: var(--iw-texto); background: var(--iw-hover); border-color: var(--hair-3); }
+.av-botao:focus-visible { outline: 2px solid var(--luz); outline-offset: 2px; }
+.av-botao:disabled { opacity: 0.6; cursor: progress; }
+.av-capado { margin: var(--iw-e-3) 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+@media (pointer: coarse) {
+  .av-botao, .av-info .av-atalhos a { min-height: var(--iw-alvo-toque); display: inline-flex; align-items: center; }
+}
+/* Celular: o respiro entre o título e as abas encolhe (pendência F03/F04:
+   ~40 px a 390). O título trunca e a hora fica inteira à direita. */
+@media (max-width: 639.98px) {
+  :root .iw-app .iw-avisos .o-topo { margin-bottom: var(--iw-e-3); }
+  .av-linha { padding-right: var(--iw-e-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .av-linha, .av-botao { transition: none; }
+}
+/* Destino de notificação ausente (F10): mensagem do chat ou comentário da
+   ficha que não está mais lá. Uma linha quieta, sem cor de alarme — a página
+   abriu certo; só o ponto exato sumiu. */
+.ch-alvo-ausente, .c-alvo-ausente {
+  margin: 0;
+  padding: var(--iw-e-2) var(--iw-e-3);
+  border: 1px dashed var(--hair-2);
+  border-radius: var(--iw-r-controle);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+  line-height: 1.4;
+}
+.ch-alvo-ausente { margin: var(--iw-e-2) var(--iw-e-3) 0; }
+.c-alvo-ausente { margin: var(--iw-e-2) 0.9rem 0; }
+
+/* ── QUADRO, PASTA E ESPAÇO — F06A do plano UX ─────────────────────────────
+   O nome do lugar é o título (a marca antes, o cliente e o selo de arquivada
+   depois, na mesma linha); `Nova tarefa` é a ação da página. Embaixo, UMA
+   faixa de ferramentas sem moldura, na altura da busca das outras telas
+   (40 px): buscar → responsável → subtarefas … contagens e esteira na ponta.
+   A descrição longa ocupa uma linha até ser aberta. Tudo isso para as
+   colunas começarem no primeiro quarto da tela (1440 × 900). */
+.o-topo-nome { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-1) var(--iw-e-2); min-width: 0; }
+.o-topo-nome > .o-titulo { min-width: 0; }
+.o-topo-nome > .cu-chip { flex: 0 1 auto; min-width: 0; }
+.o-topo-marca { display: inline-flex; flex: none; color: var(--iw-texto-3); }
+.o-topo-nome > .cu-marca-espaco { flex: none; }
+/* O topo do quadro separa do trabalho por 12 px, e não 24: logo abaixo vem a
+   faixa de ferramentas, que já é o respiro. */
+:root .iw-app .q-conteudo:has(> .q-ferramentas) > .o-topo,
+:root .iw-app .q-conteudo:has(> .q-descricao) > .o-topo,
+:root .iw-app .q-conteudo:has(> .ve-resumo) > .o-topo { margin-bottom: var(--iw-e-3); }
+
+.q-ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-2);
+  margin-bottom: var(--iw-e-3);
+}
+.q-ferramentas > .q-filtro { flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; margin: 0; }
+/* A ponta direita não encolhe: quando não cabe ao lado dos controles, desce
+   inteira para a linha de baixo (medido a 1024 na pasta, onde a frase tem
+   listas e etapas) — nunca é cortada na borda. */
+.q-ferramentas-fim { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--iw-e-3); flex: 0 0 auto; max-width: 100%; margin-left: auto; }
+
+/* A caixa de busca do filtro É a `.iw-busca`: aqui só se tira o que ela
+   carrega de fora (o respiro de baixo) e se fixa a largura na faixa. */
+.q-filtro { gap: var(--iw-e-2); }
+.q-filtro > .iw-busca.q-filtro-caixa {
+  /* `width` além da base: a faixa mede a peça do filtro pelo conteúdo, e
+     sem largura declarada a caixa entrava com a do texto de exemplo cortado. */
+  flex: 0 1 20rem;
+  width: 20rem;
+  min-width: 12rem;
+  margin-bottom: 0;
+  padding-block: 0.125rem;
+  border-radius: var(--iw-r-painel);
+  background: var(--iw-fundo);
+  color: var(--mute);
+}
+.q-filtro > .iw-busca.q-filtro-caixa:focus-within { border-color: var(--iw-foco); }
+.q-filtro .q-filtro-texto { padding: 0.4rem 0; font-size: var(--iw-t-corpo); }
+.q-filtro .q-filtro-texto:focus-visible { outline: 0; box-shadow: none; }
+.q-filtro .q-filtro-texto::placeholder { color: var(--mute); }
+
+/* Os outros controles da faixa na MESMA altura da busca (40 px) e na mesma
+   língua: canto de controle, letra de apoio, fio `--hair-2`. */
+.q-filtro .q-filtro-quem,
+.q-ferramentas .q-interruptor,
+.q-filtro > .o-btn {
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
+  border-color: var(--hair-2);
+  border-radius: var(--iw-r-painel);
+  font-size: var(--iw-t-apoio);
+  font-weight: 500;
+}
+.q-filtro .q-filtro-quem { color: var(--iw-texto-2); }
+.q-filtro .q-filtro-quem[data-cheio='true'] { color: var(--plat); border-color: var(--iw-foco); }
+.q-filtro > .o-btn { background: transparent; color: var(--iw-texto-2); border: 1px solid var(--hair-2); }
+.q-filtro > .o-btn:hover { color: var(--plat); background: var(--iw-hover); }
+.q-filtro-dito { font-size: var(--iw-t-apoio); color: var(--iw-texto-2); white-space: nowrap; }
+.q-ferramentas .q-filtro-dito { margin-left: 0; }
+
+.q-contagem { margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.q-contagem-origem, .q-contagem-parte { white-space: nowrap; }
+.q-contagem [data-aberto='true'] { color: var(--plat); }
+
+/* A esteira: contexto, não ação principal. Sem borda até o ponteiro chegar;
+   o nome dela continua escrito, para quem só quer ler. */
+.q-esteira {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 14rem;
+  min-height: 2.5rem;
+  padding: 0 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--iw-r-painel);
+  background: transparent;
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-meta);
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.q-esteira:hover, .q-esteira[aria-expanded='true'] { color: var(--plat); background: var(--iw-hover); border-color: var(--hair-2); }
+.q-esteira-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-esteira-balao { max-width: 20rem; padding: 0.15rem 0.35rem 0.35rem; }
+.q-esteira-linha { margin: 0 0 0.35rem; color: var(--plat); font-size: var(--iw-t-apoio); }
+.q-esteira-apoio { margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.45; }
+
+/* A descrição: uma linha, e o botão de ler inteira. O texto todo está no
+   HTML (busca da página, cópia e leitor de tela alcançam), só o desenho
+   recolhe. */
+.q-descricao {
+  display: flex;
+  align-items: baseline;
+  gap: var(--iw-e-2);
+  max-width: 72rem;
+  margin: calc(-1 * var(--iw-e-1)) 0 var(--iw-e-3);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+  line-height: 1.45;
+}
+.q-descricao-texto { flex: 1 1 auto; min-width: 0; margin: 0; white-space: pre-line; }
+.q-descricao[data-recolhida='true'] .q-descricao-texto {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.q-descricao-botao {
+  flex: none;
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--iw-r-controle);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--hair-3);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.q-descricao-botao:hover { color: var(--plat); text-decoration-color: currentColor; }
+
+/* O resumo do espaço: a linha do que há nele e o progresso, sem cartão. */
+.ve-resumo { display: flex; align-items: center; gap: var(--iw-e-4); margin-bottom: var(--iw-e-4); padding-right: 0.75rem; }
+.ve-resumo > .ve-progresso { flex: 0 1 22rem; }
+/* F16: a contagem do espaço fala na mesma voz da contagem do quadro
+   (`.q-contagem`: texto corrido, 12 px, tinta 3) — em mono miúdo ela parecia
+   dado técnico ao lado do mesmo tipo de informação na lista. */
+/* Vale para o espaço inteiro (resumo, pasta e linha de lista): o número de
+   progresso é texto com algarismos tabulares, não código. */
+:root .iw-app .ve-quantas,
+:root .iw-app .ve-fracao,
+:root .iw-app .ve-pct { font-family: inherit; font-size: var(--iw-t-meta); font-variant-numeric: tabular-nums; }
+:root .iw-app .ve-quantas { color: var(--iw-texto-3); font-weight: 400; }
+
+@media (max-width: 639.98px) {
+  /* Celular: a busca ganha a linha dela; responsável e subtarefas dividem a
+     de baixo; contagem e esteira a terceira — nada fica fora da tela, e o
+     quadro mantém a rolagem lateral só dentro da região das colunas. */
+  /* A peça do filtro se desfaz na faixa (`contents`): busca na linha dela,
+     e responsável, subtarefas, a frase do filtro e Limpar dividem a de baixo. */
+  .q-ferramentas > .q-filtro { display: contents; }
+  .q-filtro > .iw-busca.q-filtro-caixa { flex: 1 1 100%; min-width: 0; }
+  .q-ferramentas-fim { margin-left: 0; flex: 1 1 100%; justify-content: space-between; }
+  .q-ferramentas-fim > .q-contagem { flex: 1 1 12rem; }
+  .ve-resumo { flex-wrap: wrap; gap: var(--iw-e-2); }
+  .ve-resumo > .ve-progresso { flex: 1 1 100%; }
+  /* Um respiro menor por dentro: a 320 responsável e subtarefas ainda dividem
+     a linha (com 0,85 rem sobrava 0 px e o segundo descia). */
+  .q-filtro .q-filtro-quem, .q-ferramentas .q-interruptor { padding: 0 0.7rem; }
+  /* A trilha para no ancestral quando o `<h1>` logo abaixo já diz o nome:
+     na largura do celular o último degrau (o próprio lugar) só repetia o
+     título e empurrava espaço e pasta para `Cli…`. Na tela larga ele fica —
+     cabe, e a trilha inteira orienta. */
+  .o-topo:has(.o-topo-nome) .tr-trilha li:last-child:has([aria-current='page']) { display: none; }
+}
+@media (pointer: coarse) {
+  .q-descricao-botao { min-height: var(--iw-alvo-toque); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .q-esteira { transition: none; }
+}
+
+/* ── O PAINEL — F11A do plano UX ────────────────────────────────────────────
+   A pergunta da tela é "quem pede ação agora?". A ordem de leitura segue ela:
+   os estados que pedem ação, em número grande e como filtro (atalhos) → a
+   média e de quem ela é média → peças do contrato numa linha → buscar,
+   recortar, ordenar → quantos de quantos, e o recorte por escrito → cartões.
+   Urgência se diz com palavra + ícone; a cor do medidor é da entrega. */
+.pn-resumo {
+  display: grid;
+  grid-template-columns: minmax(0, 2.6fr) minmax(19rem, 1.4fr);
+  gap: var(--iw-e-2);
+  margin-bottom: var(--iw-e-2);
+}
+.pn-atalhos { display: grid; grid-template-columns: minmax(0, 3.4fr) minmax(0, 1fr); gap: var(--iw-e-2); }
+/* A URGÊNCIA É UM GRUPO COM NOME — F11A2 (R03). Os três estados numa peça só,
+   com "Urgência · marcada à mão" na primeira casa: a dimensão fica escrita,
+   e Financeiro, que é outra pergunta, fica fora da peça. */
+/* SEM MOLDURA — F43 Fase 10, no idioma da Fase 5 (a faixa do Controle): os
+   blocos do resumo se separam pelo tom e pelo espaço. Os fios de DENTRO do
+   grupo ficam: eles dividem os três números de uma mesma pergunta. */
+.pn-urgencias {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  border-radius: var(--iw-r-painel);
+  background: var(--iw-superficie);
+}
+.pn-urgencias-rotulo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0 var(--iw-e-3) 0 0.875rem;
+  border-right: 1px solid var(--iw-linha);
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.pn-urgencias-nota { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 400; white-space: nowrap; }
+.pn-urgencias .pn-atalho { border: 0; border-radius: 0; background: transparent; }
+.pn-urgencias .pn-atalho + .pn-atalho { border-left: 1px solid var(--iw-linha); }
+.pn-urgencias .pn-atalho:last-child { border-radius: 0 calc(var(--iw-r-painel) - 1px) calc(var(--iw-r-painel) - 1px) 0; }
+.pn-urgencias .pn-atalho:focus-visible { outline-offset: -3px; }
+.pn-atalho {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'icone n'
+    'texto texto';
+  align-items: center;
+  align-content: space-between;
+  gap: 0.2rem 0.35rem;
+  min-height: 3.75rem;
+  padding: 0.45rem 0.65rem 0.5rem;
+  /* Transparente, e não ausente: o atalho ligado pinta este fio no tom. */
+  border: 1px solid transparent;
+  border-radius: var(--iw-r-painel);
+  background: var(--iw-superficie);
+  color: var(--iw-texto-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.pn-atalho:hover:not(:disabled) { background: var(--iw-hover); }
+.pn-atalho:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); }
+.pn-atalho:disabled { cursor: default; }
+.pn-atalho-rotulo { display: contents; }
+.pn-atalho-icone { grid-area: icone; width: 1rem; height: 1rem; flex: none; }
+.pn-atalho-n {
+  grid-area: n;
+  justify-self: end;
+  font-size: 1.45rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--iw-texto);
+  white-space: nowrap;
+}
+.pn-atalho-texto {
+  grid-area: texto;
+  align-self: start;
+  font-size: var(--iw-t-apoio);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--iw-texto-2);
+  overflow-wrap: anywhere;
+}
+.pn-atalho[data-tom='err'] .pn-atalho-icone,
+.pn-atalho[data-tom='err']:not([data-zero]) .pn-atalho-n { color: var(--err); }
+.pn-atalho[data-tom='warn'] .pn-atalho-icone,
+.pn-atalho[data-tom='warn']:not([data-zero]) .pn-atalho-n { color: var(--warn); }
+.pn-atalho[data-tom='ok'] .pn-atalho-icone { color: var(--ok); }
+/* Zero não pede nada: o número apaga, e o botão continua lá (ligá-lo mostra
+   a carteira vazia com "Limpar filtros", que é resposta honesta). */
+.pn-atalho[data-zero] .pn-atalho-n { color: var(--iw-texto-3); }
+/* LIGADO: o fundo e a borda do tom, e o texto passa a forte — o mesmo aviso
+   que a borda acesa da gaveta dá, na cor do que está filtrando. */
+.pn-atalho[aria-pressed='true'] { color: var(--iw-texto); }
+.pn-atalho[data-tom='err'][aria-pressed='true'] { background: var(--err-soft); border-color: var(--err); }
+.pn-atalho[data-tom='warn'][aria-pressed='true'] { background: var(--warn-soft); border-color: var(--warn); }
+.pn-atalho[data-tom='ok'][aria-pressed='true'] { background: var(--ok-soft); border-color: var(--ok); }
+/* Dentro do grupo não há borda por botão: o ligado ganha o contorno por dentro. */
+.pn-urgencias .pn-atalho[data-tom='err'][aria-pressed='true'] { box-shadow: inset 0 0 0 1px var(--err); }
+.pn-urgencias .pn-atalho[data-tom='warn'][aria-pressed='true'] { box-shadow: inset 0 0 0 1px var(--warn); }
+.pn-urgencias .pn-atalho[data-tom='ok'][aria-pressed='true'] { box-shadow: inset 0 0 0 1px var(--ok); }
+
+.pn-media {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: var(--iw-e-2) 0.875rem;
+  border-radius: var(--iw-r-painel);
+  background: var(--iw-superficie);
+}
+.pn-media-rotulo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; line-height: 1.3; }
+.pn-media-linha { display: flex; align-items: center; gap: var(--iw-e-3); }
+.pn-media-valor { font-size: 1.5rem; font-weight: 650; line-height: 1; letter-spacing: -0.02em; color: var(--iw-texto); }
+.pn-media[data-tom='err'] .pn-media-valor { color: var(--err); }
+.pn-media[data-tom='warn'] .pn-media-valor { color: var(--warn); }
+.pn-media[data-tom='ok'] .pn-media-valor { color: var(--ok); }
+.pn-media-valor { flex: none; }
+.pn-media-universo { min-width: 0; color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.35; text-wrap: pretty; }
+
+/* As peças por tipo: uma régua só, fina. É contagem de peças — a média de
+   cima é outra conta, e as duas não se misturam no mesmo bloco. */
+.pn-tipos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--iw-e-1) 0;
+  margin-bottom: var(--iw-e-4);
+  padding: var(--iw-e-2) 0.875rem;
+  border-radius: var(--iw-r-painel);
+  background: var(--iw-superficie);
+  font-size: var(--iw-t-apoio);
+}
+.pn-tipos-rotulo { margin-right: var(--iw-e-4); color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; white-space: nowrap; }
+.pn-tipos-item { display: inline-flex; align-items: baseline; gap: 0.45rem; padding: 0 var(--iw-e-4); border-left: 1px solid var(--iw-linha); white-space: nowrap; }
+.pn-tipos-nome { display: inline-flex; align-items: center; gap: 0.3rem; align-self: center; color: var(--iw-texto-2); }
+.pn-tipos-conta { color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-apoio); }
+.pn-tipos-conta b { color: var(--iw-texto); font-weight: 600; }
+.pn-tipos-falta { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+
+
+/* Buscar · recortar · ordenar, numa faixa. */
+.pn-ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-2) var(--iw-e-3);
+  margin-bottom: var(--iw-e-3);
+}
+.pn-ferramentas > .iw-busca { flex: 1 1 15rem; min-width: 0; max-width: 24rem; margin-bottom: 0; padding-block: 0.125rem; }
+/* A área "Peças e filtros" — F11A2. No computador ela não existe como caixa:
+   `contents` põe peças e filtros direto na faixa, e a régua das peças sobe
+   para a primeira linha (`order`), acima da busca, como antes. O botão que a
+   abre é só do celular. */
+.pn-mais { display: contents; }
+.pn-mais-botao { display: none; }
+.pn-ferramentas .pn-tipos { order: -1; flex: 1 1 100%; margin-bottom: var(--iw-e-2); }
+.pn-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+.pn-filtro-repetido { display: contents; }
+.pn-ordem { display: flex; align-items: center; gap: 0.375rem; margin-left: auto; }
+.pn-ordem-rotulo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+:root .pn-ordem-campo { width: auto; min-height: 2rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: var(--iw-t-apoio); }
+.pn-sentido { white-space: nowrap; }
+
+/* Quantos de quantos, e o recorte por escrito. */
+.pn-recorte { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-1) var(--iw-e-3); margin-bottom: var(--iw-e-3); }
+.pn-recorte-texto { min-width: 0; color: var(--iw-texto-2); font-size: var(--iw-t-corpo); font-weight: 400; line-height: 1.4; }
+.pn-recorte-texto b { color: var(--iw-texto); font-weight: 650; }
+.pn-recorte-pecas { color: var(--iw-texto); font-weight: 500; }
+.pn-recorte-nota { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+/* O atalho para as renovações, que moram abaixo da carteira com alcance
+   próprio (toda a carteira). Empurra a ordenação para a ponta junto com ele. */
+/* F43 Fase 10: era a letra verde da marca — e verde é só do botão principal
+   e do lugar atual. Fica a letra de apoio sublinhada: o sublinhado e a seta
+   dizem que leva a outro ponto da página. */
+.pn-recorte-atalho { margin-left: auto; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); font-weight: 500; white-space: nowrap; border-radius: var(--r-xs); text-decoration: underline; text-decoration-color: var(--hair-3); text-underline-offset: 3px; }
+.pn-recorte-atalho:hover { color: var(--iw-texto); text-decoration-color: currentColor; }
+.pn-recorte-atalho + .pn-ordem { margin-left: 0; }
+
+/* ── A CARTEIRA EM LINHAS — F43 Fase 10 ─────────────────────────────────────
+   Era uma grade de cartões emoldurados, cada um com um anel colorido e quatro
+   barras de quatro cores: sessenta pontos de cor na primeira dobra, e a
+   pergunta da tela ("quem pede ação?") se perdia entre eles. Agora é uma
+   lista, no idioma da tabela do Planejamento (Fase 2): uma linha por cliente,
+   separadas por um fio, sem moldura e sem fundo próprio; a linha sobe um tom
+   sob o ponteiro, e a cor fica para a urgência e o que pede ação.
+
+   AS COLUNAS SÃO DO CONTEÚDO, NÃO DA JANELA. `pn-lista` é o contêiner: a
+   coluna do conteúdo muda com a barra e a árvore, e uma regra pela janela
+   erraria nos dois sentidos. Três arranjos da MESMA linha, pelas áreas:
+     larga (≥ 60rem)  cliente | situação | entrega | última | lápis, com cabeçalho
+     média (≥ 34rem)  cliente, situação e última à esquerda; entrega à direita
+     estreita         tudo empilhado, o lápis no canto do nome
+   Fora da larga, cada medida leva o próprio nome escrito na linha (`.pn-dim`:
+   "Urgência", "Entrega do mês", "Última entrega"); na larga o nome sobe para
+   o cabeçalho e fica na linha só para o leitor de tela. */
+.pn-lista { container: pn-lista / inline-size; }
+.pn-lista-cabeca { display: none; }
+.pn-carteira { display: grid; grid-template-columns: minmax(0, 1fr); }
+.pn-cartao {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2rem;
+  grid-template-areas:
+    'cliente editar'
+    'situacao situacao'
+    'entrega entrega'
+    'ultima ultima';
+  align-items: start;
+  gap: 0.45rem var(--iw-e-3);
+  padding: var(--iw-e-3) var(--iw-e-2);
+  border-top: 1px solid var(--iw-linha);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+.pn-cartao:last-child { border-bottom: 1px solid var(--iw-linha); }
+.pn-cartao:hover { background: var(--iw-hover); }
+/* O link cobre a linha (F27: botão dentro de `<a>` é HTML inválido); o foco
+   dele desenha a linha inteira. O lápis fica por cima. */
+.pn-cartao-link { position: absolute; inset: 0; z-index: 1; }
+.pn-cartao-link:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: -2px; }
+.pn-editar { grid-area: editar; position: relative; z-index: 2; justify-self: end; }
+/* O lápis aparece no hover da linha e quando o foco entra nela (o `Tab` sai
+   do link e cai nele) — no toque ele já fica à vista (obsidian.css). */
+.pn-cartao:hover > .o-editar-cartao,
+.pn-cartao:focus-within > .o-editar-cartao { opacity: 1; }
+
+.pn-linha-cliente { grid-area: cliente; min-width: 0; }
+.pn-linha-situacao { grid-area: situacao; display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; min-width: 0; }
+.pn-linha-entrega { grid-area: entrega; min-width: 0; }
+.pn-linha-ultima { grid-area: ultima; min-width: 0; }
+.pn-cartao-esboco .pn-linha-cliente,
+.pn-cartao-esboco .pn-linha-entrega { display: flex; flex-direction: column; }
+
+.pn-cartao-nome {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin: 0;
+  overflow: hidden;
+  color: var(--iw-texto);
+  font-size: var(--iw-t-corpo);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  overflow-wrap: anywhere;
+}
+/* O nome da medida dentro da linha. Fora da tela larga, à vista. */
+.pn-dim { color: var(--iw-texto-3); font-weight: 500; }
+
+/* A urgência — a pílula de antes, mais calma: Crítico e Atenção com o fundo
+   do tom (são a exceção); Em dia sem fundo, em letra de apoio, e só o escudo
+   no "ok" — "está tudo bem" não precisa de marca (camada calma, Fase 5). */
+.pn-urgencia { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem; margin: 0; font-size: var(--iw-t-meta); line-height: 1.35; }
+.pn-urgencia-valor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.45rem 0.1rem 0.35rem;
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pn-urgencia[data-tom='err'] .pn-urgencia-valor { color: var(--err); background: var(--err-soft); }
+.pn-urgencia[data-tom='warn'] .pn-urgencia-valor { color: var(--warn); background: var(--warn-soft); }
+.pn-urgencia[data-tom='ok'] .pn-urgencia-valor { padding-inline: 0; color: var(--iw-texto-2); font-weight: 500; }
+.pn-urgencia[data-tom='ok'] .pn-urgencia-valor svg { color: var(--ok); }
+
+/* O que pede ação e se pode conferir — a linha mais legível depois do nome. */
+.pn-situacoes { display: flex; flex-wrap: wrap; gap: 0.2rem 0.875rem; margin: 0; padding: 0; list-style: none; }
+.pn-situacoes li { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 500; line-height: 1.35; }
+.pn-situacoes li[data-tom='err'] svg { color: var(--err); }
+.pn-situacoes li[data-tom='warn'] svg { color: var(--warn); }
+.pn-situacoes li[data-tom='neutro'] { color: var(--iw-texto-2); }
+.pn-situacoes li[data-tom='neutro'] svg { color: var(--iw-texto-3); }
+
+/* A ENTREGA DO MÊS — o número do anel, por escrito, e uma barra fina de uma
+   cor só. Neutra, como a do Planejamento: a barra mede, não acusa. */
+.pn-entrega { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.5rem; margin: 0; line-height: 1.3; }
+.pn-entrega-valor { min-width: 2.6rem; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 650; }
+.pn-entrega[data-motivo] .pn-entrega-valor { min-width: 0; color: var(--iw-texto-3); }
+.pn-entrega-rotulo { font-size: var(--iw-t-meta); white-space: nowrap; }
+.pn-entrega-barra { flex: 1 1 4rem; max-width: 10rem; height: 0.3125rem; overflow: hidden; border-radius: var(--r-pill); background: var(--hair-2); }
+.pn-entrega-barra > i { display: block; height: 100%; border-radius: inherit; background: var(--iw-texto-2); }
+/* As peças por tipo, em texto: só os tipos mostrados, o nome inteiro. */
+.pn-cartao-tipos { display: flex; flex-wrap: wrap; gap: 0.1rem 0.75rem; margin: 0.3rem 0 0; font-size: var(--iw-t-meta); line-height: 1.4; }
+.pn-tipo { white-space: nowrap; }
+.pn-tipo-nome { color: var(--iw-texto-3); }
+.pn-tipo-conta { color: var(--iw-texto-2); font-family: var(--f-mono); }
+/* F16: o "+" do extra era --luz-lives (3,89 no claro). Leva a cor do texto
+   do tipo — o sinal é o próprio "+", e o nome acessível já diz "extra". */
+.pn-tipo-extra { margin-left: 0.15rem; color: var(--iw-texto-2); font-weight: 700; }
+/* Sem medida: o MOTIVO no lugar dos tipos, com o nome curto em negrito — o
+   mesmo nome que a pessoa procura ("Sem cota para medir") e a frase do
+   servidor. Nada de "sem mês" para quem tem o mês aberto. */
+.pn-cartao-motivo { display: flex; align-items: flex-start; gap: 0.4rem; margin: 0.3rem 0 0; color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.4; text-wrap: pretty; }
+.pn-cartao-motivo svg { margin-top: 0.1rem; color: var(--iw-texto-3); }
+.pn-cartao-motivo b { color: var(--iw-texto); font-weight: 600; }
+
+/* F38 — "Última entrega 05/10 · há 1 dia". Texto corrido, e não flex: a data
+   e os dias descem juntos para a linha de baixo em vez de cortar ("há 1 d…"). */
+.pn-ultima { margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.35; overflow-wrap: anywhere; }
+.pn-ultima-valor { font-family: var(--f-mono); white-space: nowrap; }
+.pn-ultima[data-sem] { color: var(--iw-texto-3); }
+
+/* Plano, etiquetas e datas: a linha de apoio sob o nome. A bolinha da
+   etiqueta tem a cor que a agência escolheu (dado, como a cor do plano). */
+.pn-cartao-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 0.1rem var(--iw-e-3); margin: 0.2rem 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.35; }
+.pn-cartao-plano,
+.pn-cartao-etiqueta { display: inline-flex; align-items: center; gap: 0.3rem; min-width: 0; }
+.pn-cartao-etiqueta i { width: 0.45rem; height: 0.45rem; flex: none; border-radius: 50%; }
+.pn-cartao-plano { color: var(--iw-texto-2); font-weight: 500; }
+.pn-cartao-datas { font-family: var(--f-mono); }
+.pn-cartao-datas b { color: var(--iw-texto-2); font-weight: 500; }
+
+/* MÉDIA: a entrega vai para a direita, numa coluna de leitura. */
+@container pn-lista (min-width: 34rem) {
+  .pn-cartao {
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 18.5rem) 2rem;
+    grid-template-areas:
+      'cliente entrega editar'
+      'situacao entrega editar'
+      'ultima entrega editar';
+  }
+}
+
+/* LARGA: as colunas, com cabeçalho. O nome de cada medida sobe para ele e
+   sai da vista na linha — continua lá para o leitor de tela (o cabeçalho é
+   `aria-hidden`). */
+@container pn-lista (min-width: 60rem) {
+  .pn-lista-cabeca,
+  .pn-cartao {
+    grid-template-columns: minmax(12rem, 1.3fr) minmax(11rem, 1fr) minmax(13rem, 1.15fr) minmax(8.5rem, 0.7fr) 2rem;
+    grid-template-areas: 'cliente situacao entrega ultima editar';
+    column-gap: var(--iw-e-4);
+  }
+  .pn-lista-cabeca {
+    display: grid;
+    padding: 0 var(--iw-e-2) var(--iw-e-2);
+    color: var(--iw-texto-3);
+    font-size: var(--iw-t-meta);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pn-cartao { padding-block: var(--iw-e-3); }
+  .pn-cartao .pn-dim {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Renovações e arquivo: a mesma lista, curta — nome e data à esquerda, o
+   prazo à direita. Eram blocos tingidos numa grade (F43 Fase 10). */
+.pn-mini-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); column-gap: var(--iw-e-5); margin: 0; padding: 0; list-style: none; }
+.pn-mini-lista > li { min-width: 0; border-top: 1px solid var(--iw-linha); }
+.pn-mini {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--iw-e-3);
+  min-height: 2.75rem;
+  padding: 0.4rem var(--iw-e-2);
+  color: var(--iw-texto);
+  text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+.pn-mini:hover { background: var(--iw-hover); }
+.pn-mini:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: -2px; }
+.pn-mini-texto { display: flex; flex-direction: column; min-width: 0; }
+.pn-mini-nome { overflow: hidden; color: var(--iw-texto); font-size: var(--iw-t-apoio); text-overflow: ellipsis; white-space: nowrap; }
+.pn-mini-dado { display: flex; flex-wrap: wrap; gap: 0 var(--iw-e-3); color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); }
+/* Cliente antigo recua pela letra, e não por transparência (que baixava o
+   contraste do selo junto). */
+.pn-mini-lista[data-arquivo] .pn-mini-nome { color: var(--iw-texto-2); }
+
+@media (max-width: 1279.98px) {
+  .pn-resumo { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  /* A régua dos tipos vira grade: o nome e o atalho em cima, os quatro tipos
+     embaixo, cada um com a conta e o que falta em duas linhas curtas. */
+  .pn-tipos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--iw-e-1) var(--iw-e-3); }
+  .pn-tipos-rotulo { grid-column: 1 / -1; }
+  .pn-tipos-item { flex-wrap: wrap; gap: 0.1rem 0.4rem; padding: 0; border-left: 0; }
+  .pn-tipos-falta { flex-basis: 100%; }
+}
+
+@media (max-width: 1023.98px) {
+  .pn-atalhos { grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 0.5rem; }
+  .pn-urgencias { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pn-urgencias-rotulo {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem 0.25rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--iw-linha);
+    font-size: var(--iw-t-meta);
+  }
+  .pn-urgencias .pn-atalho + .pn-atalho { border-left: 1px solid var(--iw-linha); }
+  .pn-urgencias .pn-atalho:last-child { border-radius: 0 0 calc(var(--iw-r-painel) - 1px) 0; }
+  .pn-urgencias .pn-atalho:nth-child(2) { border-radius: 0 0 0 calc(var(--iw-r-painel) - 1px); }
+}
+
+/* CELULAR — verificação da F11A. O Wesley usa o painel no telefone: a 390 px
+   o primeiro cliente começava em 83% da altura. Mesmo conteúdo, menos altura:
+   atalhos mais baixos, a média sem folga, e as peças numa régua que rola de
+   lado (as quatro continuam lá; a última cortada na borda diz que há mais). */
+@media (max-width: 639.98px) {
+  .pn-resumo { gap: 0.375rem; margin-bottom: 0.375rem; }
+  .pn-atalhos { gap: 0.375rem; }
+  .pn-urgencias-rotulo {
+    padding: 0.3rem 0.5rem 0.15rem;
+  }
+  .pn-atalho {
+    min-height: 0;
+    padding: 0.35rem 0.5rem 0.45rem;
+    gap: 0.15rem 0.25rem;
+  }
+  .pn-atalho-n { font-size: 1.25rem; }
+  .pn-atalho-texto { font-size: var(--iw-t-meta); }
+  .pn-media { gap: 0.125rem; padding: 0.4rem 0.75rem; }
+  .pn-media-linha { align-items: baseline; gap: var(--iw-e-2); }
+  .pn-media-valor { font-size: 1.25rem; }
+  .pn-ferramentas { gap: var(--iw-e-2); margin-bottom: var(--iw-e-2); }
+  .pn-ferramentas > .iw-busca { flex: 1 1 0; max-width: none; }
+  /* "PEÇAS E FILTROS" — F11A2 (R07). A busca e o botão numa linha; peças,
+     Plano e Etiqueta atrás dele. O número no botão diz quantos filtros de lá
+     estão ligados, e a linha do recorte continua dizendo quais. */
+  .pn-mais-botao {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    font-size: var(--iw-t-apoio);
+  }
+  /* Filtrando lá dentro: o mesmo sinal do botão ligado da Fase 5 (tom mais
+     denso e um fio por dentro), e o número. Era a borda verde da marca —
+     F43 Fase 10: verde só para o botão principal e o lugar atual. */
+  .pn-mais-botao[data-filtrando] { background: color-mix(in srgb, var(--plat) 12%, transparent); box-shadow: inset 0 0 0 1px var(--hair-3); }
+  .pn-mais-n {
+    min-width: 1.25rem;
+    padding: 0 0.3rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--plat) 16%, transparent);
+    color: var(--iw-texto);
+    font-size: var(--iw-t-meta);
+    font-weight: 650;
+    line-height: 1.25rem;
+    text-align: center;
+  }
+  .pn-mais-seta { width: 0.9rem; height: 0.9rem; transform: rotate(90deg); transition: transform var(--dur-1) var(--ease-out); }
+  .pn-mais-botao[aria-expanded='true'] .pn-mais-seta { transform: rotate(-90deg); }
+  .pn-mais { display: none; flex: 1 1 100%; flex-direction: column; gap: var(--iw-e-2); }
+  .pn-mais[data-aberto] { display: flex; }
+  .pn-ferramentas .pn-tipos {
+    order: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem var(--iw-e-3);
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+  }
+  .pn-tipos-rotulo { grid-column: 1 / -1; margin-right: 0; }
+  .pn-tipos-item { flex-wrap: wrap; gap: 0.1rem 0.4rem; padding: 0; border-left: 0; }
+  .pn-tipos-falta { flex-basis: 100%; }
+  /* Os atalhos de cima já são a urgência e o financeiro, com o mesmo estado. */
+  .pn-filtro-repetido { display: none; }
+  /* F11A2 (verificação): sem vão entre a linha da contagem e a das
+     renovações — alguns pixels a mais de cartão na primeira dobra. */
+  .pn-recorte { row-gap: 0; margin-bottom: var(--iw-e-2); }
+  /* A ordenação sobe para a linha da contagem: o sentido fica só na seta
+     (o nome acessível e o `title` dizem crescente/decrescente), e o atalho
+     das renovações desce para a linha de baixo. */
+  .pn-ordem { margin-left: auto; }
+  .pn-sentido { padding-inline: 0.6rem; }
+  .pn-sentido-texto { display: none; }
+  .pn-recorte-atalho { order: 1; margin-left: 0; line-height: 1.25; }
+  /* "Limpar filtros" quebra para a linha de baixo: o texto alinha com o
+     "2 de 12" de cima, e não com o recuo do botão fantasma. */
+  .pn-recorte > .o-btn-fantasma { margin-left: -0.8rem; }
+}
+
+/* ── FICHA DO CLIENTE — F11B ─────────────────────────────────────────────────
+   A operação perto do topo, o cadastro a um clique.
+
+   O TOPO diz quem é e o que muda o cliente inteiro: a urgência com a palavra
+   escrita, os dados do cadastro, o vizinho na carteira (na linha da trilha).
+   O RESUMO é uma faixa de instrumentos em células separadas por fio —
+   entrega · competência · ciclo do mês · financeiro —, cada uma com o nome em
+   cima. O fio é o `gap` de 1 px sobre o fundo da linha: quando a faixa quebra
+   em duas linhas (1024, celular), as divisórias acompanham sozinhas.
+   A urgência escolhida acende no tom dela; é a única cor do topo que não é
+   dado de entrega. */
+:root .iw-app .o-topo.cl-topo { margin-bottom: var(--iw-e-3); row-gap: var(--iw-e-2); }
+.cl-rotulo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; line-height: 1.3; white-space: nowrap; }
+
+/* Os vizinhos logo depois do nome na trilha; no celular, na ponta (o polegar). */
+.cl-trilha { display: flex; align-items: center; gap: var(--iw-e-2); min-width: 0; }
+:root .cl-trilha > .flex-1 { flex: 0 1 auto; }
+.cl-vizinhos { display: flex; flex: none; align-items: center; gap: 0.125rem; margin-block: -0.25rem; }
+:root .cl-vizinhos .o-btn-icone { width: 1.75rem; height: 1.75rem; }
+
+.cl-urgencia { display: flex; align-items: center; gap: 0.5rem; }
+:root .cl-urgencia .iw-segmentos { padding: 2px; }
+:root .cl-urgencia .iw-segmento { min-height: 1.75rem; padding: 0 0.6rem; gap: 0.3rem; }
+:root .cl-urgencia .iw-segmento[aria-pressed='true'][data-tom='err'] { color: var(--err); background: var(--err-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--err) 35%, transparent); }
+:root .cl-urgencia .iw-segmento[aria-pressed='true'][data-tom='warn'] { color: var(--warn); background: var(--warn-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 35%, transparent); }
+:root .cl-urgencia .iw-segmento[aria-pressed='true'][data-tom='ok'] { color: var(--ok); background: var(--ok-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 35%, transparent); }
+:root .cl-urgencia-lista { display: none; width: auto; min-height: 2rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: var(--iw-t-apoio); font-weight: 600; }
+.cl-urgencia[data-tom='err'] .cl-urgencia-lista { color: var(--err); background-color: var(--err-soft); }
+.cl-urgencia[data-tom='warn'] .cl-urgencia-lista { color: var(--warn); background-color: var(--warn-soft); }
+.cl-urgencia[data-tom='ok'] .cl-urgencia-lista { color: var(--ok); background-color: var(--ok-soft); }
+:root .cl-dados-botao { display: none; }
+
+.cl-resumo {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-auto-flow: row dense;
+  gap: 1px;
+  margin-bottom: var(--iw-e-2);
+  overflow: hidden;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-painel);
+  background: var(--iw-linha);
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+.cl-resumo > * {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.6rem 1rem;
+  background: var(--iw-superficie);
+}
+.cl-resumo[data-atualizando], .cl-area[data-atualizando] { opacity: 0.6; }
+
+.cl-entrega { flex-direction: row; align-items: center; gap: 0.75rem; }
+.cl-entrega-detalhe { margin: 0; color: var(--iw-texto-2); font-family: var(--f-mono); font-size: var(--iw-t-meta); }
+.cl-entrega-sem { display: flex; align-items: center; gap: 0.25rem; max-width: 22rem; font-family: var(--f-body); line-height: 1.35; }
+
+.cl-mes { display: flex; align-items: center; gap: 0.125rem; margin-left: -0.4rem; }
+:root .cl-mes .o-btn-icone { width: 1.75rem; height: 1.75rem; }
+.cl-mes-nome { min-width: 8.75rem; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; text-align: center; }
+
+.cl-ritual-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+.cl-curto { display: none; }
+.cl-ritual > .cl-rotulo { overflow: hidden; text-overflow: ellipsis; }
+.cl-ritual-estado { color: var(--iw-texto-2); }
+/* F43, Fase 3: o porquê dos botões desligados, para quem não administra. Só
+   existe para essa pessoa — a ficha do administrador não muda. */
+.cl-ritual-motivo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+
+.cl-estado { align-items: flex-start; }
+.cl-financeiro { display: flex; align-items: center; gap: 0.4rem; min-height: 1.75rem; white-space: nowrap; }
+.cl-financeiro-estado { padding: 0.05rem 0.45rem; border-radius: var(--r-pill); background: var(--warn-soft); color: var(--warn); font-size: var(--iw-t-meta); font-weight: 600; }
+
+/* Dados do cliente: uma linha que se abre. Fechada, diz o essencial. */
+.cl-dados { margin-bottom: var(--iw-e-3); }
+.cl-dados-alternar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  border-radius: var(--iw-r-controle);
+  background: transparent;
+  color: var(--iw-texto-2);
+  font-size: var(--iw-t-apoio);
+  text-align: left;
+  cursor: pointer;
+}
+.cl-dados-alternar:hover { background: var(--iw-hover); }
+.cl-dados-alternar:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); }
+.cl-dados-seta { width: 0.75rem; height: 0.75rem; flex: none; color: var(--iw-texto-3); transition: transform var(--dur-1) var(--ease-out); }
+.cl-dados-alternar[aria-expanded='true'] .cl-dados-seta { transform: rotate(90deg); }
+.cl-dados-titulo { flex: none; color: var(--iw-texto); font-weight: 600; }
+/* O que não cabe some num esmaecido na ponta, e não num corte seco. */
+.cl-dados-resumo {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--iw-texto-3);
+  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+.cl-dados-resumo > span { flex: none; }
+.cl-dados-resumo > span::before { content: '·'; margin: 0 0.45rem; color: var(--iw-texto-3); }
+.cl-dados-resumo > span[data-tom='warn'] { color: var(--warn); }
+.cl-dados-resumo > span[data-tom='err'] { color: var(--err); }
+.cl-dados-painel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--iw-e-3); margin-top: var(--iw-e-2); }
+.cl-dados-painel[hidden] { display: none; }
+.cl-dados-largo { grid-column: 1 / -1; }
+.cl-observacoes { overflow-wrap: anywhere; }
+.cl-observacoes[data-recolhida] { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.cl-meta-bloco { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.75rem; padding-bottom: 0.6rem; }
+.cl-meta-vazio { min-width: 0; color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.45; }
+
+/* As sete áreas: logo abaixo do resumo. Uma linha só; se não couber, rola de
+   lado dentro do trilho (a aba cortada na borda diz que há mais). */
+:root .cl-areas { display: flex; flex-wrap: nowrap; width: fit-content; max-width: 100%; margin-bottom: var(--iw-e-3); overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.cl-areas::-webkit-scrollbar { display: none; }
+:root .cl-areas .iw-segmento { flex: none; }
+
+/* O contratado do mês, numa régua baixa. */
+.cl-tipos {
+  display: grid;
+  grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  align-items: center;
+  gap: var(--iw-e-2) var(--iw-e-4);
+  margin-bottom: var(--iw-e-3);
+  padding: 0.55rem 0.875rem;
+  border: 1px solid var(--iw-linha);
+  border-radius: var(--iw-r-painel);
+}
+.cl-tipos-rotulo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; white-space: nowrap; }
+.cl-tipo { min-width: 0; }
+.cl-tipo-linha { display: flex; align-items: baseline; justify-content: space-between; gap: 0.35rem; margin-bottom: 0.3rem; font-size: var(--iw-t-apoio); }
+.cl-tipo-nome { display: inline-flex; align-items: center; gap: 0.35rem; min-width: 0; overflow: hidden; color: var(--iw-texto-2); text-overflow: ellipsis; white-space: nowrap; }
+.cl-tipo-conta { color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); white-space: nowrap; }
+.cl-tipo-conta b { color: var(--iw-texto); font-weight: 600; }
+
+.cl-barra-da-area { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--iw-e-2) var(--iw-e-3); }
+.cl-area-titulo { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; }
+.cl-periodo { display: flex; align-items: center; gap: 0.4rem; }
+
+@media (max-width: 1279.98px) {
+  .cl-dados-painel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cl-notas { grid-column: 1 / -1; }
+}
+/* Faixa em duas linhas: entrega · competência · financeiro em cima; o ciclo
+   do mês embaixo, na largura toda (os dois botões dele são largos). */
+@media (max-width: 1099.98px) {
+  .cl-resumo { grid-template-columns: auto auto minmax(0, 1fr); }
+  .cl-ritual { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: flex-start; gap: var(--iw-e-3); }
+  /* Com o porquê (só para quem não administra), ele desce para a linha de baixo. */
+  .cl-ritual:has(> .cl-ritual-motivo) { flex-wrap: wrap; row-gap: 0.15rem; }
+  .cl-ritual > .cl-ritual-motivo { flex-basis: 100%; }
+  .cl-tipos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cl-tipos-rotulo { grid-column: 1 / -1; }
+}
+/* CELULAR. A medida da F11B: as áreas antes de 35% de 844 px. A urgência vira
+   lista com o nome escrito, "Dados" sobe para o cabeçalho, o editar fica só
+   com o lápis (o nome continua no leitor e na dica), e o ciclo do mês usa
+   rótulos curtos — o nome inteiro segue no `aria-label`. */
+@media (max-width: 639.98px) {
+  :root .cl-trilha > .flex-1 { flex: 1 1 auto; }
+  :root .cl-urgencia-botoes { display: none; }
+  :root .cl-urgencia-lista { display: block; }
+  :root .cl-dados-botao { display: inline-flex; }
+  .cl-dados-alternar { display: none; }
+  .cl-dados { margin-bottom: 0; }
+  .cl-dados-painel { margin-top: 0; margin-bottom: var(--iw-e-3); }
+  .cl-editar-texto { display: none; }
+  /* Duas linhas que se medem cada uma por si (flex, e não grade): a coluna
+     da competência não pode ditar a largura do financeiro embaixo. O fio
+     continua sendo o `gap` de 1 px. */
+  .cl-resumo { display: flex; flex-wrap: wrap; }
+  /* Folga para um nome de duas linhas (verificação da F11B): a célula da
+     entrega em DUAS linhas (rótulo inteiro numa só) e células mais baixas. */
+  :root .iw-app .o-topo.cl-topo { margin-bottom: var(--iw-e-2); }
+  .cl-resumo > * { padding: 0.3rem 0.5rem; }
+  .cl-entrega, .cl-ritual { flex: 1 1 9rem; }
+  .cl-competencia, .cl-estado { flex: 0 0 auto; }
+  .cl-entrega { gap: 0.4rem; }
+  .cl-entrega > .relative { zoom: 0.72; }
+  /* Sem medida, o anel só repete o travessão: no celular a frase fica sozinha. */
+  .cl-entrega[data-sem-medida] > .relative { display: none; }
+  :root .cl-mes .o-btn-icone { width: 1.5rem; height: 1.5rem; }
+  /* O ciclo e o financeiro dividem a segunda linha: botões e rótulo um
+     degrau menores, para os dois passos do mês caberem lado a lado. */
+  :root .cl-ritual .o-btn-sm { min-height: 2rem; padding: 0 0.55rem; font-size: var(--iw-t-meta); }
+  .cl-ritual-linha { flex-wrap: nowrap; gap: 0.3rem; }
+  .cl-financeiro .o-chave > span:last-child { font-size: var(--iw-t-meta); }
+  .cl-mes-nome { min-width: 0; font-size: var(--iw-t-apoio); }
+  .cl-ritual { gap: 0.5rem; }
+  .cl-ritual > .cl-rotulo { display: none; }
+  .cl-competencia .cl-rotulo { font-size: 0.6875rem; }
+  .cl-longo { display: none; }
+  .cl-curto { display: inline; }
+  /* Financeiro OK e Ativo empilhados na mesma célula: cada linha na altura do
+     alvo de toque (24 px), não dos 28 px do topo largo — senão a célula
+     empurra as áreas para além dos 35% com nome de duas linhas (CX1). */
+  .cl-estado { justify-content: center; gap: 0; padding-block: 0.15rem; }
+  .cl-financeiro { min-height: 1.5rem; }
+  .cl-financeiro-estado { display: none; }
+  .cl-financeiro[data-pendente] .o-chave > span:last-child { color: var(--warn); font-weight: 600; }
+  .cl-dados-painel { grid-template-columns: minmax(0, 1fr); }
+  .cl-tipos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--iw-e-2) var(--iw-e-3); padding: 0.5rem 0.75rem; }
+  .cl-barra-da-area { gap: var(--iw-e-2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cl-resumo, .cl-dados-seta { transition: none; }
+}
+
+/* ══ AS ÁREAS INTERNAS DO CLIENTE — F11C ══════════════════════════════════════
+   Uma gramática para as seis áreas (o Calendário é da F12):
+     cabeça   título da área · resumo em linha (números com nome) · ação principal
+     lista    um cartão só, linhas separadas por fio — não um cartão por item
+     linha    [controle] [coluna do dia] [corpo] [ações]; a COLUNA DO DIA é a
+              espinha comum: Conteúdos, Captação e Histórico se leem de cima a
+              baixo pela data, na mesma família tabular e na mesma largura.
+   O resumo não é mais uma fileira de cartões de métrica: no celular os quatro
+   cartões do Checklist empilhavam ~180 px antes da primeira demanda. */
+.cl-cabeca { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-4); margin-bottom: var(--iw-e-3); }
+.cl-cabeca .cl-area-titulo { margin: 0; }
+.cl-cabeca-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2); margin-left: auto; }
+.cl-resumo-area { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.9rem; margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.cl-resumo-area > span { white-space: nowrap; }
+/* O "?" do resumo (F43 Fase 10, no lugar da dica do Mural) alinha com o
+   número, e não com a base da letra. */
+.cl-resumo-area > .cu-ajuda { align-self: center; }
+.cl-resumo-area b { color: var(--iw-texto); font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+.cl-resumo-area [data-tom='err'] b, .cl-resumo-area [data-tom='err'] { color: var(--err); }
+.cl-resumo-area [data-tom='warn'] b, .cl-resumo-area [data-tom='warn'] { color: var(--warn); }
+.cl-resumo-area [data-tom='ok'] b { color: var(--ok); }
+
+.cl-grupo + .cl-grupo, .cl-lista + .cl-grupo { margin-top: var(--iw-e-5); }
+.cl-grupo-titulo { display: flex; align-items: baseline; gap: 0.4rem; margin: 0 0 var(--iw-e-2); color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 600; letter-spacing: 0.02em; }
+.cl-grupo-titulo .tnum { color: var(--iw-texto-2); font-family: var(--f-mono); font-weight: 500; }
+.cl-grupo-nota { color: var(--iw-texto-3); font-weight: 400; letter-spacing: 0; }
+
+.cl-lista { margin: 0; padding: 0; overflow: hidden; list-style: none; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-fundo); }
+.cl-lista > li + li { border-top: 1px solid var(--iw-linha); }
+.cl-lista-vazia { padding: 0.75rem 0.875rem; color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+.cl-lista-vazia .o-btn { margin-left: 0.5rem; }
+
+.cl-linha { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 0.2rem 0.75rem; padding: 0.625rem 0.875rem; }
+.cl-linha[data-tom='err'] { box-shadow: inset 3px 0 0 var(--err); }
+.cl-linha-corpo { min-width: 0; }
+.cl-linha-titulo { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 500; line-height: var(--iw-lh-denso); overflow-wrap: anywhere; }
+.cl-linha[data-feito] .cl-linha-titulo { color: var(--iw-texto-3); text-decoration: line-through; }
+.cl-linha-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.6rem; margin-top: 0.3rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cl-linha-meta .o-etiqueta { font-size: var(--iw-t-meta); }
+.cl-linha-texto { margin-top: 0.35rem; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); line-height: var(--iw-lh-corpo); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cl-linha-texto[data-apoio] { color: var(--iw-texto-3); }
+.cl-marca { width: 1rem; height: 1rem; margin-top: 0.1rem; accent-color: var(--luz); cursor: pointer; }
+.cl-acoes { display: flex; align-items: center; gap: 0.125rem; margin: -0.25rem -0.4rem -0.25rem 0; }
+:root .cl-acoes .o-btn-icone { width: 2rem; height: 2rem; color: var(--iw-texto-3); }
+:root .cl-acoes .o-btn-icone:hover { color: var(--iw-texto); }
+/* R05: o alcance do Checklist, o grupo que recolhe e a descrição sob pedido. */
+.cl-alcance { margin: calc(-1 * var(--iw-e-2)) 0 var(--iw-e-3); color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cl-grupo-alternar, .cl-detalhes { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0; border: 0; border-radius: 4px; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
+.cl-detalhes { gap: 0.25rem; color: var(--iw-texto-2); }
+.cl-grupo-alternar:hover, .cl-detalhes:hover { color: var(--iw-texto); }
+.cl-grupo-alternar:focus-visible, .cl-detalhes:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); }
+.cl-grupo-alternar svg, .cl-detalhes svg { flex: none; transition: transform 120ms ease; }
+.cl-grupo-alternar[aria-expanded='true'] svg, .cl-detalhes[aria-expanded='true'] svg { transform: rotate(90deg); }
+.cl-linha-md { white-space: normal; }
+.cl-linha-md .md { color: inherit; font-size: inherit; line-height: inherit; }
+@media (prefers-reduced-motion: reduce) { .cl-grupo-alternar svg, .cl-detalhes svg { transition: none; } }
+.cl-linha-form { padding: 0.75rem; background: var(--iw-superficie); }
+.cl-form-novo { margin-bottom: var(--iw-e-3); }
+
+/* A coluna do dia. Largura fixa: as datas alinham de uma linha para outra. */
+.cl-dia { display: flex; flex-direction: column; min-width: 3.25rem; color: var(--iw-texto); font-family: var(--f-mono); font-size: var(--iw-t-apoio); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.cl-dia > small { color: var(--iw-texto-3); font-family: var(--f-body); font-size: var(--iw-t-meta); }
+.cl-dia[data-sem] { color: var(--iw-texto-3); font-family: var(--f-body); font-size: var(--iw-t-meta); white-space: nowrap; }
+
+/* ── Conteúdos: a linha inteira é o rótulo da caixa (alvo grande no toque) ── */
+.cl-conteudo { display: grid; grid-template-columns: auto 5.25rem 5rem minmax(0, 1fr) auto; align-items: center; gap: 0.2rem 0.75rem; padding: 0.5rem 0.875rem; cursor: pointer; }
+.cl-conteudo:hover { background: var(--iw-hover); }
+.cl-conteudo .cl-marca { margin-top: 0; }
+/* Na linha de Conteúdos o dia da semana vai AO LADO da data: uma linha só,
+   ~36 px por item em vez de 47 — a lista do mês cabe numa tela. */
+.cl-conteudo .cl-dia { flex-direction: row; align-items: baseline; gap: 0.35rem; white-space: nowrap; }
+.cl-conteudo-tipo { display: inline-flex; align-items: center; gap: 0.35rem; font-size: var(--iw-t-meta); font-weight: 600; white-space: nowrap; }
+.cl-conteudo-titulo { min-width: 0; overflow: hidden; color: var(--iw-texto); font-size: var(--iw-t-corpo); text-overflow: ellipsis; white-space: nowrap; }
+.cl-conteudo-titulo[data-sem] { color: var(--iw-texto-3); font-style: italic; }
+.cl-conteudo[data-feito] .cl-conteudo-titulo { color: var(--iw-texto-3); text-decoration: line-through; }
+.cl-conteudo-fim { display: flex; align-items: center; gap: 0.4rem; }
+.cl-extras { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2); margin-top: var(--iw-e-3); }
+.cl-extras > .cl-rotulo { margin-right: 0.15rem; }
+
+/* ── Semanal: atalhos para cada semana e para o que não tem dia ── */
+.cl-semanas { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: var(--iw-e-3) 0 0; padding: 0; list-style: none; }
+.cl-semana-atalho { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2rem; padding: 0 0.6rem; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); background: transparent; color: var(--iw-texto-2); font-size: var(--iw-t-meta); cursor: pointer; }
+.cl-semana-atalho:hover { background: var(--iw-hover); color: var(--iw-texto); }
+.cl-semana-atalho:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); }
+.cl-semana-atalho b { color: var(--iw-texto); font-weight: 600; }
+.cl-semana-atalho .tnum { font-family: var(--f-mono); }
+.cl-semana-atalho[data-atual] { border-color: var(--iw-verde-marca-texto); }
+.cl-semana-atalho [data-tom='warn'] { color: var(--warn); font-weight: 600; }
+.cl-semana-atalho [data-tom='ok'] { color: var(--ok); }
+.cl-semana { scroll-margin-top: 5rem; }
+.cl-semana[data-atual] { box-shadow: inset 3px 0 0 var(--iw-verde-marca-texto); }
+.cl-semana:focus { outline: none; }
+.cl-semana:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); }
+/* O "agora" da semana — par `--ok` / `--ok-soft`, e não o verde da arte sobre uma
+   névoa dele: 4,3:1 no claro. O par do "ok" é medido sobre o próprio soft nos
+   dois temas (`test/contraste-legivel.test.ts`). */
+.cl-agora { padding: 0 0.4rem; border-radius: var(--r-pill); background: var(--ok-soft); color: var(--ok); font-size: 0.6875rem; font-weight: 600; }
+:root .cl-pastilha-dia[aria-pressed='true'] { font-weight: 600; }
+
+/* ── Mural: o quadro rola dentro de si; a lista é a forma de ler e editar ── */
+.cl-mural-quadro { overflow: auto; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-superficie); overscroll-behavior: contain; }
+.cl-mural-plano { position: relative; }
+.cl-nota-alca { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; flex: none; border: 0; border-radius: 4px; background: transparent; color: var(--iw-texto-3); cursor: grab; touch-action: none; }
+.cl-nota-alca:hover { color: var(--iw-texto); background: var(--iw-hover); }
+.cl-nota-alca:focus-visible, .cl-nota-cor:focus-visible, .cl-nota-apagar:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: 1px; }
+.cl-nota-cores { display: flex; flex: none; align-items: center; gap: 0.125rem; }
+.cl-nota-cor { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; padding: 0; border: 0; border-radius: 999px; background: transparent; cursor: pointer; }
+.cl-nota-cor > span { width: 0.7rem; height: 0.7rem; border: 1px solid transparent; border-radius: 999px; opacity: 0.55; }
+.cl-nota-cor[aria-pressed='true'] > span { border-color: var(--plat); opacity: 1; box-shadow: 0 0 0 1px var(--iw-fundo); }
+.cl-nota-apagar { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; border: 0; border-radius: 4px; background: transparent; color: var(--iw-texto-3); cursor: pointer; }
+.cl-nota-apagar:hover { color: var(--err); }
+.cl-nota-campo { width: 100%; border: 0; outline: none; background: transparent; resize: none; }
+.cl-nota-campo:focus-visible { box-shadow: 0 0 0 1px var(--iw-foco); border-radius: 3px; }
+.cl-mural-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: var(--iw-e-3); margin: 0; padding: 0; list-style: none; }
+.cl-nota-cartao { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; padding: 0.625rem 0.75rem; border: 1px solid var(--iw-linha); border-left-width: 4px; border-radius: var(--iw-r-cartao); }
+.cl-nota-cartao .cl-nota-titulo { font-size: var(--iw-t-apoio); font-weight: 600; }
+.cl-nota-cartao .cl-nota-texto { min-height: 4.5rem; color: var(--iw-texto); font-size: var(--iw-t-corpo); line-height: var(--iw-lh-corpo); field-sizing: content; }
+.cl-mural-aviso { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-3); margin: 0 0 var(--iw-e-3); padding: 0.5rem 0.75rem; border: 1px solid var(--iw-linha); border-left: 3px solid var(--warn); border-radius: var(--iw-r-cartao); background: var(--iw-superficie); color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.cl-mural-aviso b { color: var(--iw-texto); font-family: var(--f-mono); font-weight: 600; }
+.cl-mural-vazio { display: grid; place-items: center; min-height: 12rem; padding: var(--iw-e-5); color: var(--iw-texto-3); font-size: var(--iw-t-apoio); text-align: center; }
+
+/* ── Histórico: a coluna do dia à esquerda, o relato à direita ── */
+.cl-linha-do-tempo { margin: 0; padding: 0; list-style: none; }
+.cl-evento { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--iw-e-3); padding: 0.75rem 0; }
+.cl-evento + .cl-evento { border-top: 1px solid var(--iw-linha); }
+.cl-evento-data { color: var(--iw-texto); font-family: var(--f-mono); font-size: var(--iw-t-apoio); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.cl-evento-data small { display: block; color: var(--iw-texto-3); font-family: var(--f-body); font-size: var(--iw-t-meta); }
+.cl-evento-cabeca { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--iw-e-2); }
+.cl-evento-titulo { margin: 0; color: var(--iw-texto); font-size: var(--iw-t-secao); font-weight: 600; line-height: var(--iw-lh-denso); overflow-wrap: anywhere; }
+.cl-evento-sub { margin: 0.15rem 0 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.cl-docs { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.cl-doc { display: inline-flex; align-items: center; gap: 0.4rem; max-width: 100%; min-height: 2rem; padding: 0 0.6rem; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); background: var(--iw-superficie); color: var(--iw-texto); font-size: var(--iw-t-apoio); cursor: pointer; }
+.cl-doc:hover { background: var(--iw-hover); }
+.cl-doc:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); }
+.cl-doc:disabled { cursor: progress; opacity: 0.75; }
+.cl-doc-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-doc small { color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); }
+.cl-doc-falha { margin-top: 0.5rem; }
+
+@media (pointer: coarse) {
+  :root .cl-acoes .o-btn-icone, .cl-nota-cartao .cl-nota-cor, .cl-nota-cartao .cl-nota-apagar { width: var(--iw-alvo-toque); height: var(--iw-alvo-toque); }
+  /* No quadro a nota tem 220 px: seis alvos de 44 px não cabem. O toque tem
+     a lista, que é a forma padrão no celular. */
+  .cl-conteudo, .cl-semana-atalho, .cl-doc, .cl-grupo-alternar, .cl-detalhes { min-height: var(--iw-alvo-toque); }
+}
+@media (max-width: 639.98px) {
+  .cl-cabeca-acoes { margin-left: 0; }
+  :root .cl-cabeca-acoes .iw-segmentos { width: auto; }
+  .cl-cabeca { gap: var(--iw-e-2) var(--iw-e-3); }
+  .cl-linha { padding: 0.625rem 0.75rem; gap: 0.2rem 0.6rem; }
+  /* Conteúdos: dia e tipo numa linha, o título na de baixo. */
+  .cl-conteudo { grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-areas: 'marca dia tipo fim' 'marca titulo titulo titulo'; padding: 0.5rem 0.75rem; row-gap: 0.1rem; }
+  .cl-conteudo > .cl-marca { grid-area: marca; align-self: start; margin-top: 0.15rem; }
+  .cl-conteudo > .cl-dia { grid-area: dia; }
+  .cl-conteudo > .cl-conteudo-tipo { grid-area: tipo; }
+  .cl-conteudo > .cl-conteudo-titulo { grid-area: titulo; white-space: normal; }
+  .cl-conteudo > .cl-conteudo-fim { grid-area: fim; }
+  .cl-evento { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
+  .cl-evento-data small { display: inline; margin-left: 0.4rem; }
+  .cl-mural-lista { grid-template-columns: minmax(0, 1fr); }
+  /* Os atalhos das semanas numa faixa que rola de lado: cinco linhas
+     empilhadas empurravam a primeira semana ~190 px para baixo. */
+  .cl-semanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .cl-semanas::-webkit-scrollbar { display: none; }
+  .cl-semanas > li { flex: none; }
+}
+
+/* ═══ F02B — recolher o menu e as listas, uma coluna de cada vez (R08) ═══
+   A linha que reabre as listas mora onde a árvore morava, com o desenho de
+   `.bl-item`; o » no fim diz "abre ao lado". No rail, o ícone da árvore com a
+   coluna à vista fica na tinta da marca — o mesmo sinal do botão de encaixar
+   ligado (`.bl-soltar-arvore[aria-pressed='true']`), e não o fundo do item
+   atual: ele é um interruptor, não a tela onde a pessoa está. */
+:root .iw-app .bl-mostrar-listas { width: 100%; }
+:root .iw-app .bl-mostrar-listas .bl-item-nome { flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root .iw-app .bl-mostrar-listas-seta { flex: none; width: 0.875rem; height: 0.875rem; color: var(--mute); }
+:root .iw-app .bl-mostrar-listas:hover .bl-mostrar-listas-seta { color: var(--iw-texto-2); }
+:root .iw-app .bl-item-arvore[aria-expanded='true'] { color: var(--luz-texto); }
+
+/* ── CALENDÁRIO: BARRA, GRADE E AGENDA — F12 do plano UX (R06) ─────────────
+   A barra junta mês, Hoje, período e forma de ver numa linha; no celular o
+   mês ganha a linha inteira e a forma de ver vira trilho de largura toda.
+   A grade tem casas de altura igual (teto de itens + "+N"), pastilhas de
+   12 px com ícone do tipo, e concluído com visto e letra um degrau
+   abaixo — nunca riscado. Hoje é o único lugar do calendário com o verde da
+   marca como fundo.
+
+   F43 FASE 5 — A PASTILHA FICOU NEUTRA. Ela tinha fio de 3px na cor do tipo e
+   fundo tingido a 12%: com 117 conteúdos no mês, a grade era um mosaico de
+   quatro cores e ninguém achava o dia. Agora a pastilha é um tom só (a tinta
+   do tema diluída, que aparece na casa do período e na de fora), o nome fica
+   na cor do texto e a cor do tipo mora no ÍCONE — `--cal-cor`, que a
+   `GradeDoMes` põe em cada entrada. O visto do concluído é o `--ok` calmo.
+   A legenda mostra o mesmo ícone, na mesma cor. */
+.cal-barra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2); margin-bottom: var(--iw-e-3); }
+.cal-mes-nav { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); background: var(--iw-superficie); }
+.cal-nav-botao { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: calc(var(--iw-r-controle) - 2px); color: var(--iw-texto-2); }
+.cal-nav-botao:hover { background: var(--iw-hover); color: var(--iw-texto); }
+.cal-mes-campo { height: 2rem; min-width: 10.5rem; padding: 0 0.5rem; border: 0; border-radius: calc(var(--iw-r-controle) - 2px); background: transparent; color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 600; text-align: center; }
+.cal-mes-campo:hover { background: var(--iw-hover); }
+.cal-hoje { min-height: 2.25rem; }
+.cal-forma { margin-left: auto; }
+:root .iw-segmentos.cal-forma { flex-wrap: nowrap; }
+
+.cal-resumo-linha { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--iw-e-2) var(--iw-e-4); margin-bottom: var(--iw-e-2); }
+.cal-contagem { margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.cal-legenda { display: flex; flex-wrap: wrap; gap: var(--iw-e-1) var(--iw-e-3); margin: 0; padding: 0; list-style: none; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cal-legenda li { display: inline-flex; align-items: center; gap: 0.35rem; }
+/* O visto da legenda tem a cor do visto da pastilha; o `+` do extra, não. */
+.cal-legenda-visto { color: var(--iw-texto-2); font-weight: 700; }
+.cal-legenda-visto[data-ok] { color: var(--ok); }
+.cal-nota { max-width: 62ch; margin-top: var(--iw-e-5); color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.5; }
+
+/* A grade. O vão de 1px com o fundo da linha desenha as divisórias. */
+.cal-semana,
+.cal-grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-semana-dia { padding: 0 0.5rem 0.375rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+.cal-semana-curto { display: none; }
+.cal-grade { gap: 1px; overflow: hidden; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-linha); }
+.cal-casa { display: flex; min-width: 0; min-height: 9.25rem; flex-direction: column; gap: 0.25rem; padding: 0.375rem; background: var(--iw-fundo); }
+.cal-casa[data-fora],
+.cal-casa[data-vazia] { background: var(--iw-superficie); }
+.cal-casa[data-hoje] { box-shadow: inset 0 2px 0 var(--iw-verde-marca); }
+.cal-casa-topo { display: flex; align-items: center; gap: 0.375rem; min-height: 1.5rem; }
+.cal-numero { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding: 0 0.25rem; border-radius: var(--r-pill); color: var(--iw-texto-2); font-size: var(--iw-t-apoio); font-weight: 600; }
+.cal-casa[data-fora] .cal-numero { color: var(--iw-texto-3); font-weight: 500; }
+.cal-casa[data-hoje] .cal-numero,
+.cal-agenda-dia[data-hoje] .cal-agenda-num { background: var(--iw-verde-marca); color: var(--iw-verde-marca-tinta); }
+.cal-hoje-rotulo { color: var(--iw-verde-marca-texto); font-size: var(--iw-t-meta); font-weight: 600; }
+.cal-marcar { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-left: auto; border-radius: 6px; color: var(--iw-texto-3); font-size: 1rem; line-height: 1; }
+.cal-marcar:hover { background: var(--iw-hover); color: var(--iw-texto); }
+
+.cal-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.cal-lista > li { min-width: 0; }
+/* Pastilha neutra (F43 Fase 5): a tinta do tema a 6% sobre o que estiver
+   atrás — clareia no escuro, escurece no claro, e funciona na casa do período
+   e na de fora sem regra para cada uma. A largura é a de antes: os 3px do fio
+   viraram recheio à esquerda. */
+.cal-pastilha {
+  display: flex; align-items: center; gap: 0.3rem; width: 100%; min-width: 0; min-height: 1.5rem;
+  padding: 0.125rem 0.375rem 0.125rem calc(0.3rem + 3px);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--plat) 6%, transparent);
+  color: var(--iw-texto); font-size: var(--iw-t-meta); font-weight: 500; line-height: 1.25; text-align: left; text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+button.cal-pastilha:hover,
+a.cal-pastilha:hover { background: color-mix(in srgb, var(--plat) 12%, transparent); }
+.cal-pastilha:focus-visible,
+.cal-linha:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: -2px; }
+/* Concluído recua: sem fundo, letra um degrau abaixo, ícone sem a cor do
+   tipo (a forma continua dizendo qual é). Quem fica colorido é o visto. */
+.cal-pastilha[data-estado='concluido'] {
+  background: transparent;
+  color: var(--iw-texto-3); font-weight: 400;
+}
+button.cal-pastilha[data-estado='concluido']:hover { background: var(--iw-hover); }
+/* A cor do tipo mora aqui. Sem `--cal-cor` (um tipo que o sistema não
+   conhece), o ícone fica na tinta secundária. */
+.cal-icone { flex: none; width: 0.8rem; height: 0.8rem; color: var(--cal-cor, var(--iw-texto-2)); }
+.cal-pastilha[data-estado='concluido'] .cal-icone,
+.cal-linha[data-estado='concluido'] .cal-icone { color: var(--iw-texto-3); }
+.cal-pastilha-nome { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-hora { flex: none; color: var(--iw-texto-2); }
+.cal-extra { flex: none; color: var(--iw-texto-2); font-weight: 700; }
+.cal-visto { flex: none; color: var(--ok); }
+.cal-mais { align-self: flex-start; min-height: 1.5rem; padding: 0.125rem 0.375rem; border-radius: 6px; color: var(--iw-texto-2); font-size: var(--iw-t-meta); font-weight: 600; }
+.cal-mais:hover { background: var(--iw-hover); color: var(--iw-texto); }
+.cal-resumo { display: none; }
+.cal-ponto { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--cal-cor); }
+.cal-ponto[data-estado='concluido'] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--cal-cor); }
+
+/* A agenda: o dia à esquerda, as linhas inteiras à direita. */
+.cal-agenda { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--iw-linha); }
+.cal-agenda-dia { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--iw-e-3); padding: var(--iw-e-3) 0; border-bottom: 1px solid var(--iw-linha); scroll-margin-top: var(--iw-e-4); }
+.cal-agenda-data { display: flex; flex-direction: column; align-items: center; gap: 0.125rem; padding-top: 0.125rem; }
+.cal-agenda-dow { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cal-agenda-num { display: grid; place-items: center; min-width: 2.25rem; height: 2.25rem; border-radius: var(--r-pill); color: var(--iw-texto); font-size: 1.25rem; font-weight: 650; letter-spacing: -0.02em; }
+.cal-agenda-corpo { min-width: 0; }
+.cal-agenda-cabeca { display: flex; align-items: center; gap: var(--iw-e-2); min-height: 2rem; }
+.cal-agenda-titulo { display: inline-flex; align-items: baseline; gap: var(--iw-e-2); margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); font-weight: 600; }
+.cal-agenda-titulo::first-letter { text-transform: uppercase; }
+.cal-agenda-titulo:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: 2px; border-radius: 4px; }
+.cal-agenda-conta { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cal-agenda-cabeca .cal-marcar { width: 2rem; height: 2rem; }
+.cal-agenda-nada { margin: 0.25rem 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+.cal-agenda-lista { display: grid; gap: 0.3rem; margin: 0.25rem 0 0; padding: 0; list-style: none; }
+.cal-linha {
+  display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; align-items: center; gap: var(--iw-e-3);
+  width: 100%; min-height: 2.75rem; padding: 0.45rem 0.75rem 0.45rem calc(0.65rem + 3px);
+  border-radius: var(--iw-r-controle);
+  background: color-mix(in srgb, var(--plat) 4%, transparent);
+  color: var(--iw-texto); text-align: left; text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+button.cal-linha:hover,
+a.cal-linha:hover { background: color-mix(in srgb, var(--plat) 9%, transparent); }
+.cal-linha[data-estado='concluido'] { background: transparent; }
+button.cal-linha[data-estado='concluido']:hover { background: var(--iw-hover); }
+.cal-linha-tipo { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--iw-texto-2); font-size: var(--iw-t-meta); font-weight: 600; }
+.cal-linha-tipo .cal-icone { width: 0.95rem; height: 0.95rem; }
+.cal-linha-texto { display: flex; min-width: 0; flex-direction: column; }
+.cal-linha-nome { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 500; overflow-wrap: anywhere; }
+.cal-linha[data-estado='concluido'] .cal-linha-nome { color: var(--iw-texto-2); }
+.cal-linha-titulo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); overflow-wrap: anywhere; }
+.cal-linha-titulo:empty { display: none; }
+.cal-linha-meta { display: inline-flex; align-items: center; gap: var(--iw-e-2); color: var(--iw-texto-2); font-size: var(--iw-t-meta); white-space: nowrap; }
+.cal-linha-extra { padding: 0 0.4rem; border-radius: var(--r-pill); background: var(--iw-hover); font-weight: 600; }
+.cal-linha-estado { display: inline-flex; align-items: center; gap: 0.25rem; }
+.cal-linha-estado:empty { display: none; }
+
+/* Coluna estreita (tablet, ou desktop com as duas barras abertas): o nome
+   pode ocupar duas linhas em vez de virar "Casa d…". O ícone do tipo FICA
+   (F16): sem ele, Arte e Foto só se distinguiam pelos dois verdes do fio —
+   cor como único sinal. Desde a F43 ele é também o único lugar da cor, e a
+   arte deixou de ser verde. Ele encolhe e alinha à primeira linha do nome. */
+@media (max-width: 1279.98px) {
+  .cal-pastilha .cal-icone { width: 0.7rem; height: 0.7rem; margin-top: 0.15rem; }
+  .cal-pastilha { flex-wrap: wrap; align-items: flex-start; padding-block: 0.2rem; }
+  .cal-pastilha-nome { display: -webkit-box; flex-basis: 0; overflow: hidden; white-space: normal; overflow-wrap: break-word; hyphens: auto; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  /* A hora do compromisso fica na primeira linha, e o nome desce inteiro. */
+  .cal-hora + .cal-pastilha-nome { flex-basis: 100%; }
+  .cal-pastilha .cal-visto { margin-top: 0.1rem; }
+}
+@media (max-width: 1023.98px) {
+  .cal-casa { min-height: 8.875rem; padding: 0.25rem; }
+  .cal-semana-dia { padding-inline: 0.25rem; }
+}
+@media (max-width: 639.98px) {
+  .cal-mes-nav { flex: 1 1 auto; }
+  .cal-mes-campo { flex: 1 1 auto; min-width: 0; }
+  :root .iw-segmentos.cal-forma { width: auto; flex: 1 1 auto; margin-left: 0; }
+  .cal-semana-longo { display: none; }
+  .cal-semana-curto { display: inline; }
+  .cal-semana-dia { padding: 0 0 0.25rem; text-align: center; }
+  /* A grade no celular: número e resumo por casa; tocar leva à agenda. */
+  .cal-mes[data-resumo-no-celular] .cal-casa { min-height: 3.75rem; align-items: center; gap: 0.125rem; padding: 0.25rem 0.125rem; }
+  .cal-mes[data-resumo-no-celular] .cal-casa-topo { justify-content: center; }
+  .cal-mes[data-resumo-no-celular] .cal-lista,
+  .cal-mes[data-resumo-no-celular] .cal-mais,
+  .cal-mes[data-resumo-no-celular] .cal-marcar,
+  .cal-mes[data-resumo-no-celular] .cal-hoje-rotulo { display: none; }
+  .cal-mes[data-resumo-no-celular] .cal-resumo { display: flex; width: 100%; min-height: 2rem; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 6px; }
+  .cal-mes[data-resumo-no-celular] .cal-resumo:active { background: var(--iw-hover); }
+  .cal-resumo-pontos { display: flex; gap: 2px; }
+  .cal-resumo-n { color: var(--iw-texto-2); font-size: var(--iw-t-meta); font-weight: 600; line-height: 1; }
+  .cal-agenda-dia { grid-template-columns: 2.75rem minmax(0, 1fr); gap: var(--iw-e-2); }
+  .cal-linha { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'tipo meta' 'texto texto'; row-gap: 0.2rem; padding-inline: 0.6rem; }
+  .cal-linha-tipo { grid-area: tipo; }
+  .cal-linha-meta { grid-area: meta; }
+  .cal-linha-texto { grid-area: texto; }
+}
+@media (pointer: coarse) {
+  .cal-agenda-cabeca .cal-marcar,
+  .cal-nav-botao { width: 2.75rem; height: 2.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cal-pastilha,
+  .cal-linha { transition: none; }
+}
+
+/* ── PLANEJAMENTO — F12 do plano UX; a lista do ritual saiu na F43 (Fase 2) ──
+   A faixa de resumo e a lista com as chaves do ritual deram lugar à visão
+   Contrato, que tem folha própria (`ui/planejamento.css`, importada pelos
+   componentes). As chaves moram no painel do cliente desde a Fase 3
+   (`PainelDoCliente`, mesma folha). */
+
+/* ── PLANEJAMENTO POR SEMANA — F35 ──────────────────────────────────────────
+   A aba Semana: um cliente por linha (uma sublinha por tipo), semanas nas
+   colunas, agrupado por responsável. A coluna dos nomes fica presa na rolagem
+   lateral — no celular as semanas correm por baixo dela. As cores de estado são
+   as de status do sistema: aviso para "em risco", erro para "abaixo", ok para o
+   que bateu; meta 0, semana futura e cliente sem cota ficam neutros. */
+.pls-total { margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.pls-total [data-tom='warn'], .pls-grupo-titulo [data-tom='warn'] { color: var(--warn); font-weight: 600; }
+.pls-total [data-tom='err'] { color: var(--err); font-weight: 600; }
+.pls-legenda { display: flex; flex-wrap: wrap; gap: var(--iw-e-1) var(--iw-e-4); margin: var(--iw-e-2) 0 0; padding: 0; list-style: none; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.pls-legenda li { display: inline-flex; align-items: center; gap: 0.3rem; }
+.pls-rolagem { position: relative; margin-top: var(--iw-e-3); overflow-x: auto; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-fundo); overscroll-behavior-x: contain; }
+.pls-tabela { width: 100%; min-width: 46rem; border-collapse: separate; border-spacing: 0; font-size: var(--iw-t-apoio); }
+.pls-tabela th, .pls-tabela td { padding: 0.4rem 0.6rem; text-align: left; vertical-align: middle; font-weight: 400; }
+.pls-tabela thead th { border-bottom: 1px solid var(--iw-linha); }
+.pls-cabeca { background: var(--iw-superficie); color: var(--iw-texto-2); font-size: var(--iw-t-meta); white-space: nowrap; }
+.pls-semana { min-width: 7.5rem; text-align: right; }
+.pls-semana-n { display: block; color: var(--iw-texto); font-weight: 600; }
+.pls-semana-dias { font-family: var(--f-mono); color: var(--iw-texto-3); }
+.pls-semana .cl-agora { margin-left: 0.35rem; }
+/* A semana atual com contorno: as bordas laterais correm a coluna inteira, e o
+   cabeçalho fecha em cima — o mesmo verde da semana "agora" da ficha. */
+.pls-tabela [data-atual] { box-shadow: inset 2px 0 0 var(--iw-verde-marca-texto), inset -2px 0 0 var(--iw-verde-marca-texto); }
+.pls-tabela th[data-atual] { box-shadow: inset 2px 0 0 var(--iw-verde-marca-texto), inset -2px 0 0 var(--iw-verde-marca-texto), inset 0 2px 0 var(--iw-verde-marca-texto); }
+/* A coluna presa: fundo opaco, senão as semanas aparecem por baixo dos nomes. */
+.pls-rolagem { scroll-padding-left: 13.25rem; } /* a coluna do nome (abaixo) é fixa: o foco que rola de lado não pode parar por baixo dela — WCAG 2.4.11 */
+.pls-quem { position: sticky; left: 0; z-index: 1; width: 13rem; min-width: 11rem; max-width: 15rem; background: var(--iw-fundo); box-shadow: 1px 0 0 var(--iw-linha); }
+.pls-cabeca.pls-quem { background: var(--iw-superficie); }
+.pls-quem-linha { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 0.1rem 0.4rem; margin-bottom: 0.25rem; }
+.pls-nome { display: block; min-width: 0; overflow: hidden; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.pls-nome:hover { text-decoration: underline; }
+.pls-linha[data-sem-cota] .pls-nome { margin-bottom: 0.25rem; }
+.pls-tipo { display: inline-flex; align-items: center; min-height: 1.25rem; margin-right: 0.4rem; color: var(--iw-texto-2); font-size: var(--iw-t-meta); line-height: 1.25rem; }
+.pls-sem-cota { color: var(--iw-texto-3); font-style: italic; }
+.pls-selo { display: inline-block; flex: none; padding: 0 0.4rem; border-radius: var(--r-pill); font-size: 0.6875rem; font-weight: 600; }
+.pls-selo[data-tom='warn'] { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+.pls-selo[data-tom='err'] { background: color-mix(in srgb, var(--err) 16%, transparent); color: var(--err); }
+/* A linha divide CLIENTES; a divisória mais fina (--hair) separa os tipos (ex.: vídeo e foto/arte) do mesmo cliente. */
+.pls-linha[data-primeira] > *, .pls-linha[data-sem-cota] > * { border-top: 1px solid var(--iw-linha); padding-top: 0.5rem; }
+.pls-linha:not([data-primeira]):not([data-sem-cota]) > * { border-top: 1px solid var(--hair); }
+.pls-linha th, .pls-linha td { vertical-align: bottom; }
+.pls-celula { text-align: right; }
+.pls-grupo-cabeca th { padding: 0.55rem 0.6rem 0.35rem; background: var(--iw-superficie); color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 600; }
+.pls-grupo-titulo { position: sticky; left: 0.6rem; }
+/* SEM QUEBRA — Fase 5. Com `wrap`, a 390px o `+` caía para uma segunda linha
+   embaixo de "· · 0/2". Nem os sinais quebram (`.pls-sinais`): deixá-los
+   quebrar empilhava "·" sobre "·". Sinais, placar e `+` ficam numa linha, e a
+   célula cresce dentro da rolagem lateral da grade — nunca a página.
+   ALINHADO À DIREITA: sinais, números e o botão + encostam à direita da célula,
+   alinhando perfeitamente todos os números em colunas verticais uniformes. */
+.pls-celula-dentro { display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: 0.15rem 0.4rem; min-height: 1.25rem; }
+.pls-celula[data-estado='bateu'] { background: color-mix(in srgb, var(--ok) 9%, transparent); }
+.pls-celula[data-estado='risco'] { background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.pls-celula[data-estado='abaixo'] { background: color-mix(in srgb, var(--err) 10%, transparent); }
+.pls-celula[data-estado='bateu'] .pls-placar { color: var(--ok); }
+.pls-celula[data-estado='risco'] .pls-placar { color: var(--warn); font-weight: 600; }
+.pls-celula[data-estado='abaixo'] .pls-placar { color: var(--err); font-weight: 600; }
+.pls-sinais { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 0.1rem; }
+.pls-sinal { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--iw-texto-2); font-size: 0.8125rem; line-height: 1; }
+button.pls-sinal { cursor: pointer; }
+button.pls-sinal:hover { background: var(--iw-hover); }
+button.pls-sinal:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: 1px; }
+.pls-sinal[data-sinal='feita'] { color: var(--ok); }
+.pls-sinal[data-sinal='agendada'] { color: var(--iw-texto); }
+.pls-sinal[data-sinal='atrasada'] { color: var(--err); font-weight: 700; }
+.pls-sinal[data-sinal='vaga'] { color: var(--iw-texto-3); }
+.pls-placar { color: var(--iw-texto-2); font-family: var(--f-mono); font-size: var(--iw-t-meta); white-space: nowrap; }
+.pls-mes { min-width: 6.5rem; white-space: nowrap; text-align: right; }
+.pls-mes .pls-placar { color: var(--iw-texto); min-height: 1.25rem; display: inline-flex; align-items: center; }
+.pls-sem-dia { display: inline-block; margin-left: 0.35rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); vertical-align: middle; }
+/* O `+` DA CÉLULA — F35, Fase 4. Encostado à direita da célula junto aos números. Com ponteiro
+   fino ele só aparece sob o ponteiro (ou no foco do teclado, que continua
+   chegando nele); no toque não há "passar", então fica sempre à vista — senão
+   seria um alvo invisível. Transparente, e não `display: none`, para o Tab
+   ainda o alcançar e a célula não mudar de largura quando ele aparece. */
+.pls-mais { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; flex: none; padding: 0; border: 1px solid var(--iw-linha); border-radius: 4px; background: transparent; color: var(--iw-texto-2); font-size: 0.875rem; line-height: 1; cursor: pointer; }
+.pls-mais:hover { background: var(--iw-hover); color: var(--iw-texto); }
+.pls-mais:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: 1px; }
+.pls-mais:disabled { cursor: default; opacity: 0.5; }
+@media (hover: hover) and (pointer: fine) {
+  .pls-mais { opacity: 0; }
+  .pls-celula:hover .pls-mais, .pls-mais:focus-visible { opacity: 1; }
+  .pls-celula:hover .pls-mais:disabled { opacity: 0.5; }
+}
+/* OS `?` DA ABA — F35, Fase 5. O botão é o `?` de sempre (`.cu-ajuda`); o
+   invólucro `.pls-ajuda` é desta aba só, para o resto do app não mudar.
+   Escondido por padrão e mostrado SÓ com ponteiro fino: no toque não há onde
+   "passar para entender", e a grade a 390px não tem sobra para cinco círculos
+   que não se abrem com o dedo sem disputar com o `+` e os sinais. */
+.pls-ajuda { display: none; }
+.pls-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+/* No cabeçalho não há `gap`: a folga vem da margem. */
+.pls-cabeca .pls-ajuda { margin-left: 0.3rem; }
+@media (hover: hover) and (pointer: fine) {
+  .pls-ajuda { display: inline-flex; vertical-align: middle; }
+}
+@media (max-width: 639.98px) {
+  .pls-quem { width: 8.5rem; min-width: 8.5rem; max-width: 8.5rem; }
+  .pls-rolagem { scroll-padding-left: 8.75rem; }
+  .pls-tabela { min-width: 40rem; }
+  .pls-tabela th, .pls-tabela td { padding: 0.35rem 0.45rem; }
+}
+@media (pointer: coarse) {
+  .pls-sinal { min-width: 1.75rem; height: 1.75rem; }
+  .pls-mais { width: 1.75rem; height: 1.75rem; }
+}
+
+/* ═══ F18C — Lista | Kanban nas listas da ficha do cliente (R09) ═══
+   `QuadroDeEstados`: as colunas do quadro (`ui/quadro.css`) com os estados que
+   o modelo tem. O cartão reaproveita a linha da Lista em duas linhas. */
+.cl-barra-da-area .cl-periodo { margin-left: auto; }
+.cl-estados { margin-top: var(--iw-e-2); }
+.cl-cartao { padding: 0.5rem 0.6rem; }
+.cl-cartao .cl-linha { grid-template-columns: auto minmax(0, 1fr); padding: 0; gap: 0.2rem 0.55rem; }
+.cl-cartao .cl-linha[data-tom='err'] { box-shadow: none; }
+.cl-cartao:has(.cl-linha[data-tom='err']) { box-shadow: inset 3px 0 0 var(--err); }
+.cl-cartao .cl-acoes { grid-column: 1 / -1; justify-content: flex-end; margin: 0.1rem -0.35rem -0.3rem 0; }
+.cl-cartao .cl-conteudo { grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-areas: 'marca dia tipo fim' 'marca titulo titulo titulo'; padding: 0; row-gap: 0.1rem; cursor: inherit; }
+.cl-cartao .cl-conteudo:hover { background: transparent; }
+.cl-cartao .cl-conteudo > .cl-marca { grid-area: marca; align-self: start; margin-top: 0.15rem; }
+.cl-cartao .cl-conteudo > .cl-dia { grid-area: dia; }
+.cl-cartao .cl-conteudo > .cl-conteudo-tipo { grid-area: tipo; }
+.cl-cartao .cl-conteudo > .cl-conteudo-titulo { grid-area: titulo; white-space: normal; }
+.cl-cartao .cl-conteudo > .cl-conteudo-fim { grid-area: fim; }
+.cl-estado-vazio { padding: 0.75rem 0.5rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); text-align: center; list-style: none; }
+/* No topo, quando o seletor divide a linha com outra ação (a lista: `Lista |
+   Kanban` + `Nova tarefa`), ele recolhe para os ícones no celular e os dois
+   cabem numa linha só — em vez de o seletor ocupar a largura e a ação descer. */
+@media (max-width: 479.98px) {
+  :root .iw-app .o-topo-acoes > .iw-forma:not(:only-child) { display: inline-flex; width: auto; }
+  :root .iw-app .o-topo-acoes > .iw-forma:not(:only-child) .iw-segmento { flex: 0 0 auto; width: 2.75rem; padding: 0; }
+  :root .iw-app .o-topo-acoes > .iw-forma:not(:only-child) + .o-btn { margin-left: auto; }
+}
+/* A frase depois de mover um conteúdo no Kanban (com "Desfazer") ou da recusa. */
+.cl-kanban-aviso:not(:empty) { margin-bottom: var(--iw-e-2); }
+
+/* ═══ F13 — Administração: Pessoas, Convidar, Catálogos, Agentes de IA ═══
+   Uma gramática só para as quatro telas: seção com cabeçalho (título, número,
+   `?` e a AÇÃO LOCAL na ponta), lista com fios, resumo de números numa faixa, e
+   o resultado de cada gesto dito numa linha (`.ad-recado`). O fio de cor na
+   borda esquerda marca o que pede atenção (sem alcance, código vencido). */
+.ad-secao { margin-top: var(--iw-e-5); container-type: inline-size; }
+.ad-secao-cabeca { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-1) var(--iw-e-2); min-height: 2rem; margin-bottom: var(--iw-e-2); }
+.ad-secao-titulo { display: flex; align-items: baseline; gap: 0.4rem; margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); font-weight: 600; }
+.ad-secao-titulo .tnum { color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); font-weight: 500; }
+.ad-secao-acoes { display: flex; gap: var(--iw-e-2); margin-left: auto; }
+
+.ad-aviso { margin-top: var(--iw-e-3); }
+.ad-recado { display: flex; align-items: baseline; gap: 0.55rem; margin: var(--iw-e-3) 0 0; padding: 0.5rem 0.75rem; border: 1px solid color-mix(in srgb, var(--ok) 32%, var(--iw-linha)); border-radius: var(--iw-r-controle); background: color-mix(in srgb, var(--ok) 7%, var(--iw-superficie)); color: var(--iw-texto); font-size: var(--iw-t-apoio); line-height: 1.4; }
+.ad-recado::before { content: ''; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--ok); transform: translateY(-1px); }
+
+/* O resumo: uma faixa, e não quatro cartões — o número é apoio da lista. */
+.ad-numeros { display: flex; flex-wrap: wrap; gap: 1px; margin: var(--iw-e-3) 0 0; overflow: hidden; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-linha); }
+.ad-numero { display: flex; flex: 1 1 9rem; flex-wrap: wrap; align-items: baseline; gap: 0.1rem 0.55rem; min-width: 0; padding: 0.625rem 0.875rem; background: var(--iw-superficie); }
+.ad-numero dt { flex-basis: 100%; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+.ad-numero dd { margin: 0; }
+.ad-numero-valor { color: var(--iw-texto); font-size: 1.375rem; font-weight: 650; line-height: 1.15; letter-spacing: -0.01em; }
+.ad-numero-nota { min-width: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.3; }
+.ad-numero[data-tom='warn'] .ad-numero-valor, .ad-numero[data-tom='warn'] .ad-numero-nota { color: var(--warn); }
+
+.ad-ferramentas { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-3); margin-bottom: var(--iw-e-3); }
+.ad-ferramentas > .iw-busca { flex: 1 1 16rem; min-width: 0; max-width: 28rem; margin-bottom: 0; padding-block: 0.125rem; }
+.ad-contagem { margin-left: auto; color: var(--iw-texto-3); font-size: var(--iw-t-meta); white-space: nowrap; }
+
+.ad-lista { margin: 0; padding: 0; overflow: hidden; list-style: none; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-fundo); }
+.ad-lista > li + li { border-top: 1px solid var(--iw-linha); }
+.ad-lista > li[aria-busy='true'] { opacity: 0.72; transition: opacity var(--dur-1) var(--ease-out); }
+.ad-vazio { margin: 0; padding: 0.75rem 0.875rem; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+
+/* ── Pessoas: quem · o que alcança · o que se muda — e as telas embaixo ── */
+.ad-pessoa { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(10rem, 0.9fr) auto; grid-template-areas: 'quem alcance acoes' 'telas telas estado'; align-items: center; gap: var(--iw-e-2) var(--iw-e-4); padding: 0.75rem 0.875rem; }
+.ad-pessoa[data-tom='warn'] { box-shadow: inset 3px 0 0 var(--warn); }
+.ad-pessoa-quem { grid-area: quem; min-width: 0; }
+.ad-pessoa-nome { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+.ad-pessoa-texto { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 550; overflow-wrap: anywhere; }
+.ad-pessoa[data-ativa='false'] .ad-pessoa-texto { color: var(--iw-texto-3); }
+.ad-pessoa-email { margin: 0.125rem 0 0; color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); overflow-wrap: anywhere; }
+.ad-pessoa-alcance { grid-area: alcance; display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); line-height: 1.35; }
+.ad-ponto { flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--iw-texto-3); transform: translateY(-1px); }
+.ad-pessoa-alcance[data-tom='ok'] .ad-ponto { background: var(--ok); }
+.ad-pessoa-alcance[data-tom='warn'] { color: var(--warn); }
+.ad-pessoa-alcance[data-tom='warn'] .ad-ponto { background: var(--warn); }
+.ad-pessoa-acoes { grid-area: acoes; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.375rem; }
+.ad-papel-fixo { cursor: default; }
+.ad-pessoa-estado { grid-area: estado; display: flex; align-items: center; justify-content: flex-end; gap: var(--iw-e-2); padding-top: 0.5rem; border-top: 1px solid var(--iw-linha); }
+.ad-chaves { display: inline-flex; align-items: center; gap: var(--iw-e-3); padding-inline: 0.25rem; }
+.ad-telas { grid-area: telas; display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; padding-top: 0.5rem; border-top: 1px solid var(--iw-linha); }
+.ad-telas:has(+ .ad-pessoa-estado) { margin-right: calc(-1 * var(--iw-e-4)); padding-right: var(--iw-e-4); }
+.ad-pessoa:not(:has(.ad-pessoa-estado)) .ad-telas { grid-column: 1 / -1; }
+.ad-telas-rotulo { margin-right: 0.375rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 600; }
+.ad-telas-nota { margin-left: auto; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+@container (max-width: 62rem) {
+  .ad-pessoa { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'quem' 'alcance' 'acoes' 'telas' 'estado'; }
+  .ad-pessoa-acoes { justify-content: flex-start; }
+  .ad-pessoa-estado { justify-content: flex-start; padding-top: 0; border-top: 0; }
+  :root .ad-telas:has(+ .ad-pessoa-estado) { margin-right: 0; padding-right: 0; }
+}
+
+/* ── Os códigos em aberto ── */
+.ad-convite { display: grid; grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr) auto; grid-template-areas: 'email selos meta acao'; align-items: center; gap: 0.375rem var(--iw-e-4); padding: 0.5rem 0.875rem; }
+.ad-convite[data-tom='warn'] { box-shadow: inset 3px 0 0 var(--warn); }
+.ad-convite-email { grid-area: email; min-width: 0; color: var(--iw-texto); font-family: var(--f-mono); font-size: var(--iw-t-apoio); overflow-wrap: anywhere; }
+.ad-convite-selos { grid-area: selos; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.ad-convite-meta { grid-area: meta; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.ad-convite-meta [data-tom='warn'] { color: var(--warn); }
+.ad-convite-acao { grid-area: acao; justify-self: end; }
+@container (max-width: 44rem) {
+  .ad-convite { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'email acao' 'selos selos' 'meta meta'; }
+}
+
+/* ── Convidar: três perguntas em grupos, e o resultado com foco ── */
+.ad-convidar { display: grid; gap: var(--iw-e-4); max-width: 36rem; margin-top: var(--iw-e-3); }
+.ad-form { overflow: hidden; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-superficie); }
+.ad-grupo { min-width: 0; margin: 0; padding: var(--iw-e-4); border: 0; }
+.ad-grupo + .ad-grupo { border-top: 1px solid var(--iw-linha); }
+/* `float` tira a legenda da borda do fieldset: ela passa a respeitar o padding. */
+.ad-grupo-titulo { float: left; width: 100%; margin-bottom: var(--iw-e-3); padding: 0; color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 600; }
+.ad-grupo-titulo + * { clear: both; }
+.ad-grupo-nota { margin: var(--iw-e-2) 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.4; }
+.ad-form-fim { display: grid; justify-items: start; gap: var(--iw-e-3); padding: var(--iw-e-4); border-top: 1px solid var(--iw-linha); background: var(--iw-fundo); }
+.ad-form-fim > [role='alert'] { justify-self: stretch; }
+.ad-resultado { display: grid; gap: var(--iw-e-3); padding: var(--iw-e-4); border: 1px solid color-mix(in srgb, var(--luz) 38%, var(--iw-linha)); border-radius: var(--iw-r-painel); background: var(--iw-superficie); }
+.ad-resultado-titulo { margin: 0; color: var(--iw-texto); font-size: var(--iw-t-secao); font-weight: 600; overflow-wrap: anywhere; }
+.ad-resultado-titulo:focus { outline: none; }
+.ad-resultado-titulo:focus-visible { outline: 2px solid var(--iw-foco); outline-offset: 3px; border-radius: 4px; }
+.ad-resultado-quem { margin: calc(-1 * var(--iw-e-2)) 0 0; color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); overflow-wrap: anywhere; }
+
+/* ── Catálogos: linha com nome · uso · ações locais ── */
+.ad-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.375rem var(--iw-e-4); min-height: 3rem; padding: 0.4rem 0.625rem 0.4rem 0.875rem; }
+.ad-item-nome { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; min-width: 0; }
+.ad-item-texto { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 500; overflow-wrap: anywhere; }
+/* O inativo já diz "inativo" ao lado; o apagado é só reforço. A 0,55 a letra do
+   selo (cor que vem do cadastro) caía a 3,9:1 — a 0,75 passa de 4,5 nos pares do
+   catálogo de hoje. */
+.ad-item[data-inativo] .ad-item-nome > .o-selo:first-child { opacity: 0.75; }
+.ad-uso { color: var(--iw-texto-2); font-family: var(--f-mono); font-size: var(--iw-t-meta); white-space: nowrap; }
+.ad-uso[data-zero] { color: var(--iw-texto-3); }
+.ad-item-acoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.25rem; }
+:root .ad-item-acoes .o-btn-icone { width: 2rem; height: 2rem; color: var(--iw-texto-3); }
+:root .ad-item-acoes .o-btn-icone:hover:not(:disabled) { color: var(--iw-texto); }
+@container (max-width: 30rem) {
+  .ad-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .ad-item > .ad-uso { grid-row: 2; grid-column: 1; }
+  .ad-item > .ad-item-acoes { grid-row: 1 / span 2; grid-column: 2; }
+}
+/* As etiquetas em grade: o fio sai da sombra de cada célula, e as casas que
+   sobram na última linha ficam no fundo, sem bloco cinza. */
+.ad-etiquetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1px; }
+.ad-lista.ad-etiquetas > li + li { border-top: 0; }
+.ad-etiqueta { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; min-height: 2.75rem; padding: 0.25rem 0.375rem 0.25rem 0.75rem; box-shadow: 0 0 0 1px var(--iw-linha); }
+.ad-etiqueta[data-escolhida] { background: var(--iw-selecionado); }
+.ad-etiqueta-cor { width: 0.625rem; height: 0.625rem; border-radius: 50%; }
+.ad-etiqueta-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.ad-etiqueta-nome { color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 500; overflow-wrap: break-word; }
+.ad-etiqueta .ad-item-acoes { flex-wrap: nowrap; gap: 0; }
+
+.ad-form-inline, .ad-fusao { margin-top: var(--iw-e-3); padding: var(--iw-e-4); border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-superficie); }
+.ad-form-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-4); }
+.ad-efeito { flex: 1 1 16rem; margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); line-height: 1.45; }
+.o-modal .ad-efeito { margin-top: var(--iw-e-3); }
+.ad-form-botoes { display: flex; gap: var(--iw-e-2); margin-left: auto; }
+.ad-fusao-pergunta { margin: 0 0 var(--iw-e-2); color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.ad-fusao-pergunta b { color: var(--iw-texto); font-weight: 600; }
+.ad-fusao-opcoes { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: var(--iw-e-3); }
+
+/* ── Agentes de IA: estado no cabeçalho, fatos em colunas, perigo à direita ── */
+.ad-conexoes { display: grid; gap: var(--iw-e-3); margin: var(--iw-e-4) 0 0; padding: 0; list-style: none; container-type: inline-size; }
+.ad-conexao { padding: var(--iw-e-4); border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-superficie); }
+.ad-conexao[data-estado='revogada'], .ad-conexao[data-estado='vencida'] { background: var(--iw-fundo); }
+.ad-conexao[data-estado='revogada'] .ad-conexao-nome, .ad-conexao[data-estado='vencida'] .ad-conexao-nome { color: var(--iw-texto-2); }
+.ad-conexao[aria-busy='true'] { opacity: 0.72; }
+.ad-conexao-cabeca { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2); }
+.ad-conexao-nome { min-width: 0; margin: 0; color: var(--iw-texto); font-size: var(--iw-t-secao); font-weight: 600; overflow-wrap: anywhere; }
+.ad-fatos { display: grid; grid-template-columns: minmax(9rem, 0.8fr) minmax(7rem, 0.6fr) minmax(14rem, 1.4fr) minmax(14rem, 1.4fr); gap: var(--iw-e-3) var(--iw-e-5); margin: var(--iw-e-3) 0 0; }
+.ad-fatos > div { min-width: 0; }
+.ad-fatos dt { margin-bottom: 0.15rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+.ad-fatos dd { margin: 0; color: var(--iw-texto); font-size: var(--iw-t-apoio); line-height: 1.45; overflow-wrap: anywhere; }
+.ad-fatos-apoio { color: var(--iw-texto-3); }
+.ad-fatos-permissoes { display: flex; align-items: baseline; gap: var(--iw-e-2); margin-top: var(--iw-e-3); }
+.ad-fatos-permissoes > div { margin-top: 0; }
+.ad-fatos-rotulo { flex: none; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+.ad-conexao-acoes { display: flex; flex-wrap: wrap; gap: var(--iw-e-2); margin-top: var(--iw-e-3); padding-top: var(--iw-e-3); border-top: 1px solid var(--iw-linha); }
+.ad-conexao-perigo { display: flex; flex-wrap: wrap; gap: var(--iw-e-2); margin-left: auto; }
+@container (max-width: 62rem) { .ad-fatos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 30rem) {
+  .ad-fatos { grid-template-columns: minmax(0, 1fr); }
+  .ad-conexao-perigo { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .ad-lista > li[aria-busy='true'] { transition: none; } }
+
+/* ═══ F14 — Meta: contas, relatório e ranking ═══════════════════════════════
+   Uma gramática para as três telas: a FAIXA DE CONTEXTO logo abaixo do título
+   (de quem, de onde, de quando — antes de qualquer número), os números em
+   GRUPOS com título, a CHAVE DE LEITURA (— · 0 · sem coleta) perto deles, e o
+   CRITÉRIO do ranking escrito com o fio da cor ativa à esquerda. Tabelas
+   largas rolam dentro da própria caixa; listas usam container query para
+   descer colunas sem sair da página a 390 px. */
+
+/* ── A faixa de contexto ── */
+.mm-contexto { display: flex; flex-wrap: wrap; gap: var(--iw-e-2) var(--iw-e-5); margin: 0 0 var(--iw-e-1); padding: var(--iw-e-1) 0 var(--iw-e-3); border-bottom: 1px solid var(--iw-linha); }
+.mm-contexto-item { display: grid; gap: 0.125rem; min-width: 0; }
+.mm-contexto dt { color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+.mm-contexto dd { margin: 0; min-width: 0; color: var(--iw-texto); font-size: var(--iw-t-apoio); line-height: 1.35; overflow-wrap: anywhere; }
+.mm-contexto-link { color: var(--luz-texto); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--luz-texto) 45%, transparent); text-underline-offset: 3px; }
+.mm-contexto-link:hover { text-decoration-color: currentColor; }
+.mm-contexto-acao { margin-left: 0.25rem; font-size: var(--iw-t-meta); white-space: nowrap; }
+.mm-contexto-fraco { color: var(--iw-texto-3); }
+.mm-contexto-falha { color: var(--err); }
+@media (max-width: 479.98px) {
+  .mm-contexto { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--iw-e-2) var(--iw-e-3); }
+}
+
+/* ── Cobertura do período e chave dos sinais ── */
+.mm-leitura { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--iw-e-2) var(--iw-e-4); margin-top: var(--iw-e-4); }
+.mm-cobertura { display: flex; align-items: baseline; gap: 0.5rem; margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.mm-cobertura::before { content: ''; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--ok); transform: translateY(-1px); }
+.mm-cobertura[data-incompleto]::before { background: var(--warn); }
+.mm-chave { display: flex; flex-wrap: wrap; gap: 0.25rem var(--iw-e-4); margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.mm-chave-item { display: inline-flex; align-items: baseline; gap: 0.375rem; white-space: nowrap; }
+.mm-chave-sinal { display: inline-grid; place-items: center; min-width: 1.5rem; padding: 0 0.3rem; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); color: var(--iw-texto-2); font-family: var(--f-mono); font-size: var(--iw-t-meta); line-height: 1.25rem; }
+.mm-chave-palavra { font-family: var(--f-body); color: var(--iw-texto-3); }
+
+/* ── Grupos de números ── */
+.mm-grupo { margin-top: var(--iw-e-5); min-width: 0; }
+.mm-grupo-cabeca { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.125rem var(--iw-e-3); margin-bottom: var(--iw-e-2); }
+/* O "?" logo depois do título (F43 Fase 10): ele trouxe a nota do fim da
+   tabela. Sem folga do `gap` largo, para ler como parte do título. */
+.mm-grupo-cabeca > .mm-grupo-titulo + .cu-ajuda { align-self: center; margin-left: calc(-1 * var(--iw-e-3) + 0.4rem); }
+.mm-grupo-titulo { display: flex; align-items: baseline; gap: 0.45rem; margin: 0; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; }
+.mm-grupo-titulo-lista { margin-bottom: var(--iw-e-2); color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.mm-grupo-conta { color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); font-weight: 500; }
+.mm-grupo-descricao { margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.4; }
+.mm-grupo-numeros { display: grid; gap: var(--iw-e-3); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 480px) { .mm-grupo-numeros { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .mm-grupo-numeros[data-colunas='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mm-grupo-numeros[data-colunas='4'] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.mm-numero { min-width: 0; padding: 0.75rem 1rem; }
+.mm-numero-valor { margin-top: 0.375rem; color: var(--iw-texto); font-size: 1.5rem; font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; }
+.mm-numero-detalhe { margin-top: 0.375rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.4; }
+.mm-nulo { color: var(--iw-texto-3); font-weight: 400; }
+.mm-numero[data-nulo] .mm-numero-valor { color: var(--iw-texto-3); }
+
+/* ── Gráficos: grade e leitura em texto ── */
+.mm-graficos { display: grid; gap: var(--iw-e-3); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) {
+  .mm-graficos[data-colunas='2'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mm-graficos[data-colunas='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.mm-grafico { min-width: 0; padding: 0.75rem 1rem; }
+.mm-grafico h3 { margin: 0 0 0.5rem; }
+.o-grafico-numeros { margin-top: var(--iw-e-2); }
+.o-grafico-numeros > summary { width: fit-content; color: var(--iw-texto-3); font-size: var(--iw-t-meta); cursor: pointer; border-radius: var(--iw-r-controle); }
+.o-grafico-numeros > summary:hover { color: var(--iw-texto); }
+.o-grafico-numeros-caixa { max-height: 14rem; margin-top: var(--iw-e-2); overflow: auto; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); }
+.o-grafico-numeros table { width: 100%; border-collapse: collapse; font-size: var(--iw-t-meta); }
+.o-grafico-numeros th, .o-grafico-numeros td { padding: 0.3rem 0.625rem; border-bottom: 1px solid var(--iw-linha); }
+.o-grafico-numeros thead th { position: sticky; top: 0; background: var(--iw-superficie); color: var(--iw-texto-3); font-weight: 500; text-align: left; }
+.o-grafico-numeros thead th + th, .o-grafico-numeros td { text-align: right; font-variant-numeric: tabular-nums; }
+.o-grafico-numeros tbody th { color: var(--iw-texto-2); font-family: var(--f-mono); font-weight: 400; text-align: left; }
+.o-grafico-numeros td { color: var(--iw-texto); }
+.o-grafico-numeros td[data-nulo] { color: var(--iw-texto-3); }
+
+.mm-abas { margin-top: var(--iw-e-4); }
+
+/* ── Recortes (filtros) ── */
+.mm-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2); margin-top: var(--iw-e-4); }
+.mm-filtros > .iw-busca.mm-filtros-busca { flex: 1 1 14rem; min-width: 0; max-width: 26rem; margin-bottom: 0; }
+.mm-filtros-conta { margin-left: auto; color: var(--iw-texto-3); font-size: var(--iw-t-meta); white-space: nowrap; }
+@media (max-width: 479.98px) {
+  .mm-filtros > .iw-busca.mm-filtros-busca { flex-basis: 100%; max-width: none; }
+  /* F16: a 320 "Tudo · Gerenciadores · Instagram" passava 6 px da tela (a
+     régua comum dos segmentos no celular não quebra). Aqui ela quebra. */
+  :root .mm-filtros > .iw-segmentos { flex-wrap: wrap; }
+}
+
+/* ── O critério do ranking ── */
+.mm-criterio { display: grid; gap: 0.375rem; margin-top: var(--iw-e-3); padding: 0.625rem 0.875rem; border-left: 2px solid var(--luz); border-radius: 0 var(--iw-r-controle) var(--iw-r-controle) 0; background: var(--iw-superficie); }
+.mm-criterio p { margin: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); line-height: 1.45; }
+.mm-criterio b { color: var(--iw-texto); font-weight: 600; }
+
+/* ── A lista do ranking ── */
+.mm-ranking { margin: var(--iw-e-3) 0 0; padding: 0; overflow: hidden; list-style: none; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-fundo); container-type: inline-size; }
+.mm-ranking > li + li { border-top: 1px solid var(--iw-linha); }
+.mm-criativo { display: grid; grid-template-columns: 1.75rem 3rem minmax(0, 1fr) auto; grid-template-areas: 'pos mini quem numeros'; align-items: center; gap: var(--iw-e-2) var(--iw-e-3); padding: 0.625rem 0.875rem; }
+.mm-criativo-posicao { grid-area: pos; color: var(--iw-texto-3); font-family: var(--f-mono); font-size: var(--iw-t-meta); text-align: right; }
+.mm-criativo[data-podio] .mm-criativo-posicao { color: var(--luz-texto); font-weight: 600; }
+.mm-criativo-miniatura { grid-area: mini; width: 3rem; height: 3rem; overflow: hidden; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-controle); background: var(--ink-2); }
+.mm-criativo-quem { grid-area: quem; min-width: 0; }
+.mm-criativo-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; margin: 0; }
+.mm-criativo-nome { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 550; overflow-wrap: anywhere; }
+.mm-criativo-origem { margin: 0.125rem 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); line-height: 1.35; overflow-wrap: anywhere; }
+/* Colunas de largura fixa: o mesmo número cai no mesmo x em todas as linhas —
+   comparar é correr o olho numa coluna, não caçar o número em cada linha. */
+.mm-criativo-numeros { grid-area: numeros; display: grid; grid-template-columns: 6.75rem 6.25rem 9.5rem; gap: var(--iw-e-4); margin: 0; }
+.mm-criativo-numeros > div { min-width: 0; text-align: right; }
+.mm-criativo-numeros dt { color: var(--iw-texto-3); font-size: var(--iw-t-meta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-criativo-numeros dd { margin: 0.125rem 0 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); white-space: nowrap; }
+.mm-criativo-valor dd { color: var(--luz-texto); font-size: var(--iw-t-corpo); font-weight: 650; }
+.mm-criativo-valor dt { color: var(--iw-texto-2); }
+@container (max-width: 52rem) {
+  .mm-criativo { grid-template-columns: 1.5rem 2.75rem minmax(0, 1fr); grid-template-areas: 'pos mini quem' '. numeros numeros'; }
+  .mm-criativo-miniatura { width: 2.75rem; height: 2.75rem; }
+  .mm-criativo-numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--iw-e-3); }
+  .mm-criativo-numeros > div { display: flex; flex-direction: column; justify-content: flex-end; text-align: left; }
+  /* O nome da unidade não se corta no celular: "Conversas iniciadas" é o dado. */
+  .mm-criativo-numeros dt { white-space: normal; overflow: visible; line-height: 1.25; }
+}
+
+/* ── As contas ── */
+.mm-contas { margin: 0; padding: 0; overflow: hidden; list-style: none; border: 1px solid var(--iw-linha); border-radius: var(--iw-r-painel); background: var(--iw-fundo); container-type: inline-size; }
+.mm-contas > li + li { border-top: 1px solid var(--iw-linha); }
+.mm-conta { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) minmax(12rem, auto) auto; grid-template-areas: 'tipo quem coleta abrir'; align-items: center; gap: var(--iw-e-2) var(--iw-e-4); padding: 0.625rem 0.875rem; }
+.mm-conta[data-estado='falha'] { box-shadow: inset 3px 0 0 var(--err); }
+.mm-conta-tipo { grid-area: tipo; align-self: start; padding-top: 0.2rem; font-size: var(--iw-t-meta); font-weight: 600; letter-spacing: 0.04em; }
+/* O tipo da conta é LETRA (IG, ADS), então lê o prisma como texto — `-texto` —,
+   e não o de preenchimento: #00a344 e #d15600 sobre branco davam 3,3 e 4,2. */
+.mm-conta-tipo-ads { color: var(--luz-lives-texto); }
+.mm-conta-tipo-ig { color: var(--luz-agencia-texto); }
+.mm-conta-quem { grid-area: quem; min-width: 0; }
+.mm-conta-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; margin: 0; }
+.mm-conta-nome { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 550; overflow-wrap: anywhere; }
+.mm-conta-nome:hover { text-decoration: underline; text-underline-offset: 3px; }
+.mm-conta[data-estado='inativa'] .mm-conta-nome, .mm-conta[data-estado='inativa'] .mm-conta-tipo { color: var(--iw-texto-3); }
+.mm-conta-id { margin: 0.125rem 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); overflow-wrap: anywhere; }
+.mm-conta-erro { margin: 0.25rem 0 0; color: var(--err); font-size: var(--iw-t-meta); line-height: 1.4; }
+.mm-conta-coleta { grid-area: coleta; display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; min-width: 0; text-align: right; }
+.mm-conta-fraco { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.mm-conta-abrir { grid-area: abrir; }
+@container (max-width: 44rem) {
+  .mm-conta { grid-template-columns: 2rem minmax(0, 1fr) auto; grid-template-areas: 'tipo quem abrir' '. coleta coleta'; }
+  .mm-conta-coleta { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; text-align: left; }
+}
+/* F16 — celular estreito (320–390): o "relatório ›" ao lado do nome deixava a
+   coluna do nome com ~110 px e "@aurora.merc/ado" quebrava no meio. O nome
+   ganha a linha inteira; o atalho desce para o fim da linha da coleta. */
+@container (max-width: 26rem) {
+  .mm-conta { grid-template-columns: 2rem minmax(0, 1fr) auto; grid-template-areas: 'tipo quem quem' '. coleta abrir'; }
+  .mm-conta-abrir { align-self: end; }
+}

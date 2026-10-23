@@ -1,0 +1,204 @@
+/* "IR PARA…" — F43, Fase 9 (`@/board/IrPara`).
+
+   O GATILHO TEM CARA DE CAMPO DE BUSCA, e é por isso que ele mantém a borda:
+     a camada calma (Fase 5) tirou a moldura dos blocos e deixou-a nos campos e
+     na busca — é a borda que diz "aqui se digita". Letra em `--mute`, como o
+     texto de exemplo de qualquer campo; a tecla num retângulo de tom, sem
+     contorno. Verde só no fio de foco (`--iw-foco`, o mesmo da busca da
+     página), enquanto a janela que ele abriu está aberta: ele não é o lugar
+     atual nem a ação principal.
+
+   A JANELA É A `Janela` (`.o-scrim` + `.o-modal`), com três ajustes:
+     · ela nasce no ALTO da tela, e não no meio: a lista cresce e encolhe a cada
+       letra, e uma janela centrada faria o campo pular para cima e para baixo
+       debaixo do cursor;
+     · sem o recheio de 1.25rem da `Janela` — o campo e a lista vão de borda a
+       borda, separados por um fio;
+     · altura com teto e a LISTA rola, não a janela: o campo nunca sai de vista.
+
+   Só tokens que existem (`test/token-de-cor-existe.test.ts`); nenhuma letra
+   pintada com `--luz` (`test/contraste-legivel.test.ts`). */
+
+/* ───────────────────────────── o gatilho ───────────────────────────── */
+
+.bl-ir {
+  display: flex;
+  align-items: center;
+  gap: var(--iw-e-2);
+  /* Só a árvore cede altura na coluna da barra (F17.50) — ver `.bl-topo`. */
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 2rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.6rem;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--iw-r-controle);
+  background: var(--iw-fundo);
+  color: var(--mute);
+  font: inherit;
+  font-size: var(--iw-t-apoio);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.bl-ir:hover { border-color: var(--hair-3); color: var(--plat-dim); }
+.bl-ir[aria-expanded='true'] { border-color: var(--iw-foco); }
+.bl-ir-lupa { flex: 0 0 auto; }
+.bl-ir-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bl-ir-tecla,
+.ir-dica kbd {
+  flex: 0 0 auto;
+  padding: 0.05rem 0.35rem;
+  border-radius: 5px;
+  background: var(--hair);
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: var(--iw-t-meta);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Em `Somente ícones` o gatilho é a lupa num quadrado, igual aos itens da
+   coluna estreita: sem a moldura de campo, que numa coluna de 3.5rem seria só
+   uma caixa vazia em volta de um ícone. */
+.bl-barra[data-aparencia='icones'] .bl-ir {
+  justify-content: center;
+  padding: 0.4rem;
+  border-color: transparent;
+  background: transparent;
+}
+.bl-barra[data-aparencia='icones'] .bl-ir:hover { background: var(--iw-hover); color: var(--plat); }
+
+/* No toque, o alvo de 44 px da barra (layout-foco.css, `pointer: coarse`) — e
+   sem a tecla: no telefone ela não diz nada a ninguém. */
+@media (pointer: coarse) {
+  .bl-ir { min-height: var(--iw-alvo-toque); }
+  .bl-ir-tecla { display: none; }
+}
+
+/* ───────────────────────────── a janela ───────────────────────────── */
+
+.o-scrim:has(.ir-janela) {
+  place-items: start center;
+  padding-top: min(12vh, 6rem);
+}
+@media (max-width: 639.98px) {
+  .o-scrim:has(.ir-janela) { padding: 0.75rem; }
+}
+
+.o-modal.ir-janela {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  max-height: min(34rem, 80vh);
+  overflow: hidden;
+}
+
+.ir-caixa {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ir-campo {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--iw-e-2);
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border-bottom: 1px solid var(--iw-linha);
+  color: var(--mute);
+}
+.ir-lupa { flex: 0 0 auto; }
+.ir-campo input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.45rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--plat);
+  font: inherit;
+  /* 16 px: abaixo disso o Safari do iPhone aproxima a página ao focar o campo. */
+  font-size: var(--iw-t-leitura);
+}
+.ir-campo input::placeholder { color: var(--mute); }
+/* O anel de foco é a própria janela aberta: o campo é a única coisa que se
+   digita ali, e o cursor piscando já diz onde está o foco. */
+.ir-campo input:focus-visible { outline: 0; box-shadow: none; }
+
+.ir-resultados {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.35rem 0.5rem 0.5rem;
+}
+
+.ir-grupo + .ir-grupo { margin-top: 0.35rem; }
+.ir-grupo-titulo {
+  padding: 0.5rem 0.5rem 0.25rem;
+  color: var(--mute);
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+}
+
+.ir-opcao {
+  display: flex;
+  align-items: baseline;
+  gap: var(--iw-e-3);
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--iw-r-controle);
+  color: var(--plat-dim);
+  font-size: var(--iw-t-corpo);
+  cursor: pointer;
+}
+/* A ATIVA é a que o `Enter` abre: o mesmo véu e o mesmo fio do item atual da
+   barra (`layout-foco.css`) — "é este" se diz do mesmo jeito nas duas. */
+.ir-opcao[data-ativa='true'] {
+  background: var(--iw-selecionado);
+  color: var(--plat);
+  box-shadow: inset 3px 0 0 var(--luz-texto);
+}
+.ir-opcao-nome {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ir-opcao-onde {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--mute);
+  font-size: var(--iw-t-meta);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ir-nota {
+  flex: 0 0 auto;
+  padding: 0.25rem 1.1rem 0.75rem;
+  color: var(--mute);
+  font-size: var(--iw-t-apoio);
+}
+
+.ir-dica {
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--iw-linha);
+  color: var(--mute);
+  font-size: var(--iw-t-meta);
+}
+@media (pointer: coarse) {
+  .ir-dica { display: none; }
+}

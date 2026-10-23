@@ -1,0 +1,50 @@
+/*
+  O DESTAQUE DA TAREFA URGENTE.
+
+  Antes, a urgência era uma bandeirinha pequena no rodapé do cartão e se perdia
+  entre prazo e indicadores — o designer não via que a demanda era urgente. Agora
+  há DOIS sinais, e nenhum depende só da cor: a faixa vermelha na lateral e o
+  selo com a palavra `URGENTE`. Cor sai dos tokens do sistema.
+*/
+.q-selo-urgente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: flex-start;
+  width: fit-content;
+  margin-bottom: 0.3rem;
+  padding: 0.08rem 0.45rem;
+  border-radius: var(--r-pill);
+  background: var(--err);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.q-selo-urgente svg {
+  width: 0.72rem;
+  height: 0.72rem;
+}
+
+/* O cartão do quadro. `:has` evita mexer em cada `<li>` que desenha o corpo. */
+.q-cartao:has(.q-selo-urgente) {
+  border-color: var(--err);
+  border-left-width: 4px;
+  background: linear-gradient(var(--err-soft), var(--err-soft)), var(--ink-2);
+}
+
+/* A linha da visão em lista e a de Minhas tarefas. */
+.ek-linha:has(.q-selo-urgente),
+.mt-linha:has(.q-selo-urgente) {
+  box-shadow: inset 4px 0 0 var(--err);
+  background: var(--err-soft);
+}
+.ek-tarefa-topo .q-selo-urgente,
+.mt-texto .q-selo-urgente {
+  margin-bottom: 0;
+}
+.mt-texto .q-selo-urgente {
+  margin-bottom: 0.15rem;
+}

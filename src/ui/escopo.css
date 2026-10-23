@@ -1,0 +1,509 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LISTA | KANBAN DO ESCOPO — F18B (revisão de 28/09, R09).
+
+   Só tokens que existem (`obsidian.css`, `acabamento.css`, `layout-foco.css`):
+   `--ink-*`, `--hair*`, `--plat*`, `--mute`, `--luz*`, `--r-sm/--r-md`,
+   `--dur-1`, `--ease-out`, `--iw-foco`. A cor de DADO (a etapa) entra por
+   `--cor-status`, como no quadro (D10).
+
+   A régua da Lista é UMA para todos os grupos: as colunas de "Cliente",
+   "Time", "Etapa" se alinham de um grupo ao outro. Quando o grupo já diz a
+   origem (ou a etapa), a coluna sai da régua inteira.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ek-trabalho {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* ───────────────────────────── filtros ───────────────────────────── */
+
+.ek-filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ek-filtros-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+/* A barra de busca comum (`.q-filtro`) se desfaz na linha: busca, `Responsável`
+   e `Filtros` fluem juntos — no celular, os dois botões dividem a segunda
+   linha em vez de gastar uma cada. */
+.ek-filtros-linha > .q-filtro {
+  display: contents;
+}
+.ek-filtros-linha .q-filtro-caixa {
+  flex: 1 1 20rem;
+  min-width: 0;
+  max-width: 34rem;
+}
+/* O `Limpar` da barra de busca só limpa busca e responsável; aqui quem limpa é
+   `Limpar filtros`, que apaga todos os recortes. Dois botões iguais confundem. */
+.ek-filtros .q-filtro > .o-btn {
+  display: none;
+}
+.ek-filtros-fim {
+  margin-left: auto;
+}
+
+.ek-abrir-filtros {
+  display: none;
+  gap: 0.4rem;
+  align-items: center;
+}
+.ek-conta {
+  min-width: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--luz-soft);
+  color: var(--luz-texto);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.15rem;
+  text-align: center;
+}
+
+.ek-recortes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+}
+
+.ek-campo {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.ek-rotulo {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.ek-select.o-campo {
+  width: auto;
+  min-width: 9.5rem;
+  max-width: 15rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  font-size: 0.82rem;
+}
+/* Recorte ligado se VÊ: um filtro esquecido é a primeira razão de "sumiu tarefa". */
+.ek-select[data-cheio='true'] {
+  border-color: var(--luz);
+  color: var(--plat);
+}
+
+.ek-marcar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.1rem;
+  padding: 0 0.2rem;
+  font-size: 0.82rem;
+  color: var(--plat);
+  cursor: pointer;
+}
+.ek-marcar input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--luz);
+}
+
+.ek-limpar {
+  align-self: flex-end;
+}
+
+/* ───────────────────────────── o alcance ───────────────────────────── */
+
+.ek-alcance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.55rem;
+  min-height: 1.75rem;
+  font-size: 0.82rem;
+}
+.ek-alcance-principal {
+  font-weight: 600;
+  color: var(--plat);
+}
+.ek-alcance-base {
+  color: var(--mute);
+}
+.ek-alcance-fim {
+  margin-left: auto;
+  align-self: center;
+}
+
+.ek-corpo {
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+.ek-corpo[aria-busy='true'] {
+  opacity: 0.55;
+}
+
+.ek-mais {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.ek-mais-conta {
+  font-size: 0.78rem;
+  color: var(--mute);
+}
+
+/* ───────────────────────────── a Lista ───────────────────────────── */
+
+.ek-lista {
+  --ek-colunas: minmax(14rem, 2.4fr) minmax(9rem, 1.4fr) minmax(7rem, 1fr) minmax(8rem, 1.1fr) minmax(8.5rem, 1fr) 7.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+.ek-lista[data-omite-origem='true'] {
+  --ek-colunas: minmax(16rem, 3fr) minmax(8rem, 1.1fr) minmax(8.5rem, 1fr) 7.5rem;
+}
+.ek-lista[data-omite-etapa='true'] {
+  --ek-colunas: minmax(14rem, 2.4fr) minmax(9rem, 1.4fr) minmax(7rem, 1fr) minmax(8.5rem, 1fr) 7.5rem;
+}
+
+.ek-regua,
+.ek-linha {
+  display: grid;
+  grid-template-columns: var(--ek-colunas);
+  column-gap: 0.9rem;
+  align-items: center;
+}
+.ek-regua {
+  padding: 0 0.6rem 0.35rem;
+  border-bottom: 1px solid var(--hair);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.ek-grupo-topo {
+  --cor-status: var(--hair-3);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0 0.6rem 0.35rem;
+}
+.ek-grupo-nome {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--plat);
+}
+.ek-grupo-sobre {
+  font-size: 0.74rem;
+  color: var(--mute);
+}
+.ek-grupo-conta {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--plat-dim);
+}
+
+.ek-linhas {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  overflow: hidden;
+}
+
+.ek-linha {
+  min-height: 2.75rem;
+  padding: 0.45rem 0.6rem;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.ek-linha + .ek-linha {
+  border-top: 1px solid var(--hair);
+}
+.ek-linha:hover {
+  background: var(--ink-2);
+}
+.ek-linha[data-concluida='true'] .ek-titulo {
+  color: var(--plat-dim);
+}
+
+.ek-c {
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--plat-dim);
+}
+.ek-c-tarefa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.ek-tarefa-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+/* O ✓ de concluir: círculo vazio em repouso, cheio ao passar. Fica no toque. */
+.ek-concluir {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--hair-3);
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
+}
+.ek-concluir:hover:not(:disabled),
+.ek-concluir:focus-visible {
+  color: var(--ok, var(--plat));
+  border-color: var(--ok, var(--plat));
+}
+.ek-concluir:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.ek-titulo {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--plat);
+}
+.ek-titulo:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ek-mae {
+  font-size: 0.72rem;
+  color: var(--mute);
+}
+.ek-origem {
+  display: block;
+  color: var(--plat-dim);
+}
+a.ek-origem:hover {
+  color: var(--plat);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ek-nada {
+  color: var(--mute);
+}
+.ek-etapa {
+  --cor-status: var(--hair-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.ek-etapa-ponto {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--cor-status);
+}
+.ek-grupo-topo > .ek-etapa-ponto {
+  align-self: center;
+}
+.ek-quem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.ek-quem-nome {
+  color: var(--plat-dim);
+}
+.ek-prazo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.ek-prazo[data-estado='atrasado'] {
+  color: var(--err);
+}
+.ek-prazo[data-estado='hoje'] {
+  color: var(--warn);
+}
+
+.ek-rotulo-celular,
+.ek-detalhes {
+  display: none;
+}
+
+.ek-titulo:focus-visible,
+.ek-origem:focus-visible,
+.ek-detalhes:focus-visible {
+  outline: 2px solid var(--iw-foco);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ───────────────────────────── o Kanban ───────────────────────────── */
+
+.ek-kanban {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.ek-faixa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.ek-faixa-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding-left: 0.65rem;
+  border-left: 3px solid var(--luz);
+}
+.ek-faixa-nome {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--plat);
+}
+.ek-faixa-sobre {
+  font-size: 0.76rem;
+  color: var(--mute);
+}
+/* Várias faixas na mesma página: a coluna rola por dentro numa altura que
+   deixa ver a faixa seguinte começar. */
+.ek-colunas .q-coluna-corpo {
+  max-height: min(60vh, 34rem);
+}
+
+/* ───────────────────────────── celular ───────────────────────────── */
+
+@media (max-width: 719.98px) {
+  .ek-abrir-filtros {
+    display: inline-flex;
+  }
+  .ek-filtros-linha .q-filtro-caixa {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .ek-filtros-fim {
+    margin-left: 0;
+  }
+  .ek-recortes {
+    display: none;
+  }
+  .ek-filtros[data-aberto='true'] .ek-recortes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+  }
+  .ek-select.o-campo {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .ek-regua {
+    display: none;
+  }
+  .ek-lista,
+  .ek-lista[data-omite-origem='true'],
+  .ek-lista[data-omite-etapa='true'] {
+    --ek-colunas: minmax(0, 1fr) auto 2.75rem;
+  }
+  /* A seta de detalhes tem coluna própria: o responsável longo ("Sem
+     responsável") não a empurra de linha para linha. */
+  .ek-linha {
+    grid-template-areas:
+      'tarefa tarefa detalhes'
+      'origem origem detalhes'
+      'prazo quem quem'
+      'time time time'
+      'etapa etapa etapa';
+    row-gap: 0.25rem;
+    padding: 0.6rem 0.65rem;
+  }
+  .ek-c-tarefa { grid-area: tarefa; }
+  .ek-c-origem { grid-area: origem; }
+  .ek-c-prazo { grid-area: prazo; }
+  .ek-c-quem { grid-area: quem; justify-self: end; }
+  .ek-c-time { grid-area: time; }
+  .ek-c-etapa { grid-area: etapa; }
+
+  .ek-secundaria {
+    display: none;
+  }
+  .ek-linha[data-aberta='true'] .ek-secundaria {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ek-rotulo-celular {
+    display: inline;
+    min-width: 3rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .ek-detalhes {
+    grid-area: detalhes;
+    align-self: start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    justify-self: end;
+    margin: -0.5rem -0.4rem 0 0;
+    border-radius: var(--r-sm);
+    color: var(--mute);
+  }
+  .ek-detalhes svg {
+    transition: transform var(--dur-1) var(--ease-out);
+  }
+  .ek-detalhes[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+  .ek-alcance-fim {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ek-corpo,
+  .ek-linha,
+  .ek-detalhes svg {
+    transition: none;
+  }
+}

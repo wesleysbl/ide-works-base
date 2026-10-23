@@ -1,0 +1,409 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERAÇÃO — o que se seleciona, o quadro que se puxa, a trilha. Etapa F17.25.
+
+   POR QUE UM ARQUIVO NOVO, E NÃO UMA EDIÇÃO NO `obsidian.css`
+     Mesmo motivo da F17.18 (`cores-do-tema.css`) e da F17.20
+     (`acabamento.css`): o `obsidian.css` está sendo editado por outra sessão, e
+     um bloco novo no meio dele é conflito garantido. Este arquivo entra por
+     `@import` no `index.css`, DEPOIS dos três dicionários — ele não redefine
+     token nenhum, só acrescenta regra.
+
+   ⚠️ POR QUE ALGUNS SELETORES COMEÇAM COM `:root `
+     A explicação longa está na seção 3 do `acabamento.css`, e vale igual aqui:
+     `clickup.css`, `quadro.css`, `tarefa.css`, `passos.css` e `conversa.css`
+     são importados de dentro dos COMPONENTES, e o empacotador os injeta DEPOIS
+     do `index.css` inteiro. Com a mesma especificidade, quem chega por último
+     ganha. `:root ` custa um degrau (0,1,1 contra 0,1,0) e vence a ordem.
+
+     O degrau só aparece onde precisa — por isso a lista não é uniforme.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. A SELEÇÃO ACIDENTAL
+
+   O QUE O USUÁRIO DESCREVEU
+     *"se eu clicar em qualquer lugar de todo o sistema e arrastar, isso fará
+     com que selecione todo o conteúdo. Isso deve ser retirado — gera o risco de
+     copiar informações erradas."*
+
+   ⚠️ E O RISCO É REAL, MEDIDO ANTES DE ESCREVER ESTE ARQUIVO
+     No Chrome, um arrasto de 320×120 pixels começando no cabeçalho do quadro
+     selecionava **505 caracteres**, e o texto era este:
+
+       "Meu trabalho Minhas tarefas Todas as tarefas Quadro Compartilhado
+        comigo + D Ide · Deman…"
+
+     Isso é a barra lateral inteira. Neste sistema se copia link do Dropbox e
+     briefing o dia todo; colar essa sopa numa tarefa de cliente é erro que
+     chega ao cliente.
+
+   A REGRA, E ELA É UMA SÓ
+     **O CROMO NÃO SE SELECIONA. O CONTEÚDO SE SELECIONA.**
+
+     Cromo é a casca do aplicativo — barra lateral, cabeçalho, chip, botão,
+     rótulo, contador, coluna do quadro, cartão. Ninguém copia uma coluna.
+
+     Conteúdo é o que a pessoa ESCREVEU — a descrição da tarefa, o comentário,
+     o nome do arquivo, o endereço do link — e todo campo de digitação.
+
+   POR QUE NO LUGAR MAIS ALTO, E NÃO CLASSE POR CLASSE
+     `user-select: none` HERDA. Posto no `body`, ele vale para as trinta telas
+     de uma vez, inclusive as da Meta, que esta sessão não pode tocar. O
+     caminho inverso — marcar cada peça de cromo — seria centenas de exceções,
+     e a peça nova de amanhã nasceria selecionável de novo.
+
+     A liberação é curta e nomeada, logo abaixo. É a lista inteira do que se
+     copia neste sistema.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+  O CONTEÚDO VOLTA. Três famílias, e nada além delas:
+
+  1. TODO CAMPO DE DIGITAÇÃO. `input`, `textarea` e `select` são nativos;
+     `[contenteditable]` é o editor da descrição e do comentário.
+
+     ⚠️ A liberação explícita do `[contenteditable]` NÃO é redundância. Medido
+     no Chrome: com `user-select: none` herdado de um ancestral, o cursor entra
+     no `contenteditable` mas a seleção não pega — e o editor rico DEPENDE de
+     seleção (`document.execCommand('bold')` mira o que está selecionado, e a
+     bolha de formatação da F17.16 só aparece quando há seleção). Sem esta
+     linha, negrito e itálico parariam de funcionar.
+
+  2. O TEXTO ESCRITO POR GENTE, marcado com `.selecionavel` — a descrição
+     desenhada, o comentário, o nome do arquivo, o endereço do link.
+
+  3. A RECUSA. `.o-alerta` é onde as dez travas da F17 escrevem a frase que
+     nomeia a tarefa, a etiqueta ou o espaço que está no caminho. Quem leva uma
+     recusa manda a frase para alguém — e uma frase que não se copia obriga a
+     redigitar.
+
+  4. O VALOR DE UMA FICHA E A CÉLULA DE UMA TABELA — e estes dois entram por um
+     motivo que não é do Pilar B.
+
+     A regra é do `body` para baixo: ela vale nas trinta telas, e o Pilar A
+     (Entrega) e a área Meta vieram junto. Na ficha do cliente, `.o-linha .v` é
+     o telefone, o WhatsApp, o e-mail e o endereço — dado que se copia para
+     colar no WhatsApp o dia inteiro. Na tabela larga, `tbody td` é o número do
+     relatório, que vai para a mensagem do cliente.
+
+     A separação é a mesma da regra: `.k` é o RÓTULO da linha e `thead th` é o
+     nome da coluna — os dois são cromo, e continuam sem seleção. O que se copia
+     é o valor.
+
+     ⚠️ Nenhum arquivo daquelas áreas foi tocado para isto: são duas linhas de
+     seletor aqui. `src/meta/**` e as páginas da Meta são de outra sessão.
+*/
+:root input,
+:root textarea,
+:root select,
+:root [contenteditable],
+:root [contenteditable] *,
+:root .selecionavel,
+:root .selecionavel *,
+:root .o-alerta,
+:root .o-alerta *,
+:root .o-linha .v,
+:root .o-tab-rola tbody td {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/*
+  O DUPLO CLIQUE SELECIONA PALAVRA onde há texto de verdade — é o que o
+  `user-select: text` acima já dá, de graça, porque é o comportamento nativo do
+  navegador. Não há nada a escrever aqui além desta nota: se um dia alguém puser
+  `onDoubleClick` com `preventDefault` numa dessas regiões, é isto que quebra.
+
+  O cursor de texto anuncia a região selecionável antes do clique. Sem ele, a
+  pessoa não sabe onde pode arrastar — e descobrir por tentativa é justamente o
+  que esta seção existe para acabar.
+*/
+:root .selecionavel {
+  cursor: text;
+}
+
+/* Botão e link DENTRO de uma região selecionável continuam sendo botão e link:
+   o cursor de mão volta, e o texto deles não vira alvo de arrasto. Um link de
+   Dropbox no meio do briefing precisa clicar; o ENDEREÇO dele se copia pelo
+   menu do botão direito, que continua inteiro. */
+:root .selecionavel button,
+:root .selecionavel a,
+:root .selecionavel [role='button'] {
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. O QUADRO QUE SE PUXA
+
+   O gesto inteiro mora em `@/board/rolagem` — inclusive por quê. Aqui só está
+   o que a pessoa VÊ: a mão que anuncia que dá para puxar, e a mão fechada
+   enquanto se puxa.
+
+   ⚠️ A MÃO É A PROMESSA, E ELA SÓ VALE ONDE O GESTO EXISTE
+     `podePuxar` recusa o arrasto em cima de cartão, botão, link e campo. Se a
+     mão aparecesse ali também, ela prometeria um gesto que não acontece — e a
+     pessoa aprenderia a não confiar no cursor. Por isso cada um deles recupera
+     o cursor que já tinha, logo abaixo.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root .q-colunas {
+  cursor: grab;
+}
+
+:root .q-colunas[data-puxando='true'],
+:root .q-colunas[data-puxando='true'] * {
+  cursor: grabbing;
+}
+
+/* O que tem gesto próprio recupera o cursor próprio. O cartão já traz o dele
+   (`.q-cartao { cursor: grab }`, e `grabbing` no `:active`), e por isso não
+   está nesta lista: ele nunca perdeu. */
+:root .q-colunas button,
+:root .q-colunas a,
+:root .q-colunas [role='button'] {
+  cursor: pointer;
+}
+
+:root .q-colunas input,
+:root .q-colunas textarea {
+  cursor: text;
+}
+
+:root .q-colunas button:disabled {
+  cursor: default;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. A TRILHA
+
+   O porquê de cada degrau, e o que ele leva, está em `@/board/trilha`. Aqui
+   está só a forma — e a forma tem UMA obrigação: **nunca empurrar o resto**.
+
+   COMO ELA NÃO EMPURRA
+     · a trilha é UMA LINHA (`flex-wrap: nowrap`);
+     · cada nome trunca com reticências, e o degrau do lugar onde se está ganha
+       o dobro do espaço dos outros;
+     · numa janela estreita demais para o mínimo, a própria trilha rola de lado
+       dentro da caixa dela, sem barra à vista — a última linha de defesa, e a
+       única que nunca aumenta a altura da tela.
+
+   ⚠️ `min-width: 0` NO `ol` E NO `li` NÃO É ENFEITE
+     Item de `flex` tem largura mínima automática igual ao conteúdo — sem o
+     zero, `text-overflow: ellipsis` nunca corta nada: a caixa cresce em vez de
+     apertar, e é a página que estoura.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root .tr-trilha {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  /* Sem barra à vista: ela é a saída de emergência, não um controle. */
+  scrollbar-width: none;
+}
+
+:root .tr-trilha::-webkit-scrollbar {
+  display: none;
+}
+
+:root .tr-trilha > ol {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:root .tr-trilha > ol > li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/*
+  ⚠️ O DEGRAU DA TRILHA INTEIRA NÃO ENCOLHE — E ISSO É O QUE TORNA O `…`
+  POSSÍVEL. Medido no Chrome.
+
+  Com `min-width: 0` no `li`, cada degrau apertava até o nome virar duas letras
+  e reticências — e a caixa NUNCA transbordava. `scrollWidth` era sempre igual a
+  `clientWidth`, e a medição que decide o encurtamento nunca disparava: em
+  380 px a trilha continuava com os seis degraus, ilegíveis.
+
+  Com `flex: 0 0 auto`, cada degrau ocupa a largura que precisa (até o teto de
+  `max-width`, onde o nome trunca). Aí a soma pode passar da caixa, o
+  transbordo aparece, e `TrilhaDoLugar` encurta.
+
+  A versão CURTA fica de fora de propósito: ela vive dentro de uma linha de
+  lista que já tem largura própria, e ali apertar é melhor que transbordar.
+*/
+:root .tr-trilha:not([data-compacta='true']) > ol > li {
+  flex: 0 0 auto;
+}
+
+/*
+  ⚠️ DEPOIS DE ENCURTAR, QUEM APERTA SÃO OS OUTROS — F29 (Fase 5a).
+
+  O `flex: 0 0 auto` acima existe para a trilha INTEIRA transbordar e a medição
+  poder encurtá-la. Mas encurtada ela ainda podia não caber: medido em 390 px,
+  a ficha da tarefa ficava `Compartilhado comigo › … › Jatobá › Gravar de…`
+  com o último degrau — onde a pessoa ESTÁ, a resposta da trilha — cortado na
+  borda, e o resto escondido na rolagem de emergência.
+
+  `data-apertada` é a medição dizendo "já encurtei e mesmo assim não cabe"
+  (`TrilhaDoLugar`). Aí a ORDEM de quem cede é a do pedido — "encurtar os do
+  meio antes":
+    · os degraus de antes encolhem primeiro, até o nome virar `C…` — mas não
+      somem (`min-width`), porque o primeiro é o caminho de volta;
+    · o `…` não encolhe: encolhido, ele se desenhava por cima do vizinho
+      (medido em 390 px);
+    · o último — onde a pessoa ESTÁ — também pode encolher, mas cede muito
+      mais devagar (`flex-shrink` 1 contra 6 dos outros): na prática só corta
+      com reticências quando os outros já estão no mínimo, e mesmo assim
+      continua à vista, dentro da caixa.
+  ⚠️ O PESO DO ÚLTIMO É 1, E NÃO MENOS. A primeira versão deu 0,15 a ele e 1
+  aos outros, e em 390 px sobraram 56 px de transbordo: pela regra do flexbox,
+  quando os itens que ainda podem encolher somam peso menor que 1, só essa
+  fração do aperto é distribuída — com os outros já no mínimo, o último
+  absorvia 15% do que faltava. Peso alto nos outros dá a mesma ordem sem isso.
+  O `cheia` guardado pela medição não muda com isto, então não há oscilação.
+*/
+:root .tr-trilha[data-apertada='true'] > ol > li {
+  flex: 0 6 auto;
+  min-width: 2.75rem;
+}
+
+:root .tr-trilha[data-apertada='true'] > ol > li[data-meio='true'] {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+:root .tr-trilha[data-apertada='true'] > ol > li:last-child {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+:root .tr-seta {
+  padding: 0 0.28rem;
+  color: var(--mute);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+:root .tr-degrau {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  min-width: 0;
+  max-width: 11rem;
+  padding: 0.14rem 0.3rem;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+
+/* O NOME é quem trunca — não o degrau inteiro. Truncar o degrau cortaria o
+   ícone antes do texto, e o ícone é o que diz de que nível aquilo é. */
+:root .tr-nome {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Onde a pessoa ESTÁ: mais espaço, mais peso, e a cor de leitura. É a resposta
+   da pergunta que a trilha faz, e por isso é o degrau que nunca some. */
+:root .tr-degrau[aria-current='page'] {
+  max-width: 22rem;
+  color: var(--plat);
+  font-weight: 600;
+}
+
+/* Só o que LEVA a algum lugar responde ao ponteiro. O degrau que é só nome
+   (a empresa, a seção, o lugar onde já se está) fica quieto — prometer clique
+   onde não há é o mesmo defeito do botão morto. */
+:root a.tr-degrau:hover,
+:root button.tr-degrau:hover {
+  background: var(--hair);
+  color: var(--plat);
+}
+
+:root a.tr-degrau,
+:root button.tr-degrau {
+  cursor: pointer;
+}
+
+:root .tr-icone {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+:root .tr-mais {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* A versão de linha de lista: sem ícone, menor, e sem a caixa de hover — ela
+   vive DENTRO de uma linha que já tem o seu próprio realce. */
+:root .tr-trilha[data-compacta='true'] .tr-degrau {
+  max-width: 9rem;
+  padding: 0;
+  font-size: 0.72rem;
+}
+
+/* Na curta, o último degrau é a LISTA — e ela não é "a página atual", porque
+   quem lê aquela linha está em `Minhas tarefas`. Ela ganha mais espaço por ser
+   o nome mais específico da trilha, e não por ser onde a pessoa está. */
+:root .tr-trilha[data-compacta='true'] > ol > li:last-child .tr-degrau {
+  max-width: 12rem;
+}
+
+:root .tr-trilha[data-compacta='true'] a.tr-degrau:hover {
+  background: transparent;
+  color: var(--plat);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+:root .tr-trilha[data-compacta='true'] .tr-seta {
+  padding: 0 0.2rem;
+  font-size: 0.7rem;
+}
+
+/* ── O nó que a trilha acabou de revelar, na árvore ──
+   Um anel curto, e nada mais: ele responde "é este aqui" e some sozinho, junto
+   com o atributo que o componente tira em 1,7 s.
+
+   ⚠️ O ANEL É ESTADO, E A ANIMAÇÃO É SÓ O DESVANECIMENTO — MEDIDO.
+     A primeira versão punha o anel SÓ dentro do `@keyframes`. O bloco de
+     `prefers-reduced-motion` do `obsidian.css` zera `animation-duration` para
+     `*` com `!important` — então, para quem pediu menos movimento, o quadro
+     inicial nunca chegava a pintar e clicar num espaço ou numa pasta na trilha
+     não mostrava nada. Foi visto na captura, não deduzido.
+
+     Com o `box-shadow` na regra e a animação por cima, quem tem movimento vê o
+     anel desvanecer, e quem não tem vê o anel aceso pelo tempo do atributo. Os
+     dois recebem a resposta; um deles sem movimento. */
+@keyframes tr-revelado {
+  from { box-shadow: 0 0 0 2px var(--luz); }
+  to { box-shadow: 0 0 0 2px transparent; }
+}
+
+:root .cu-no[data-revelado='true'] {
+  border-radius: var(--r-xs);
+  box-shadow: 0 0 0 2px var(--luz);
+  animation: tr-revelado 1.6s var(--ease-out);
+}

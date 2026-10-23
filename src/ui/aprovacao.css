@@ -1,0 +1,255 @@
+/* A APROVAÇÃO DO CLIENTE — F42, Fase 3.
+   Ficha do cliente (`.ap-cliente`) e caixa da esteira (`.ap-esteira`).
+   Só tokens que existem (`--hair*`, `--ink-*`, `--mute`, `--plat*`, `--ok`,
+   `--warn`, `--err`): token inexistente apaga a cor em silêncio. A 320 px nada
+   passa da largura — tudo quebra linha e encolhe (`min-width: 0`). */
+
+.ap-cliente { padding-bottom: 0.75rem; }
+.ap-cliente > .ap-apoio,
+.ap-cliente > .ap-corpo,
+.ap-cliente > .ap-falha { margin: 0.4rem 0.75rem 0; }
+
+.ap-apoio { margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--mute); overflow-wrap: anywhere; }
+.ap-corpo { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.ap-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.ap-estado { font-size: 0.75rem; color: var(--mute); }
+.ap-estado[data-ligada] { color: var(--ok); font-weight: 600; }
+.ap-alerta { margin: 0; font-size: 0.8rem; color: var(--warn); }
+.ap-link { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+.ap-botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.ap-confirmar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--warn);
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--plat);
+}
+.ap-confirmar > p { margin: 0; overflow-wrap: anywhere; }
+.ap-endereco {
+  width: 100%;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.4rem;
+  background: var(--ink-1);
+  color: var(--plat);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+}
+.ap-ok { margin: 0; font-size: 0.8rem; color: var(--ok); }
+.ap-falha { margin: 0; font-size: 0.8rem; color: var(--err); overflow-wrap: anywhere; }
+
+/* ─────────────── a caixa da esteira ─────────────── */
+
+.ap-esteira {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.25rem;
+  width: 19rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ap-caminho {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: 0.5rem;
+  background: var(--ink-1);
+}
+.ap-caminho-linha,
+.ap-caminho-ramos { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; min-width: 0; }
+.ap-caminho-ramos { padding-left: 0.6rem; }
+.ap-seta { color: var(--mute); font-size: 0.85rem; }
+.ap-passo {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 5.5rem;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.4rem;
+  background: var(--ink-2);
+}
+.ap-passo-rotulo { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--mute); }
+.ap-passo-etapa { font-size: 0.8rem; color: var(--plat); overflow-wrap: anywhere; }
+.ap-passo[data-tom='ok'] { border-color: var(--ok); }
+.ap-passo[data-tom='err'] { border-color: var(--err); }
+.ap-passo[data-falta] { border-style: dashed; border-color: var(--warn); }
+.ap-passo[data-falta] .ap-passo-etapa { color: var(--warn); }
+.ap-passo-inicio .ap-passo-etapa { color: var(--mute); }
+
+.ap-seletores { display: flex; flex-direction: column; gap: 0.35rem; }
+/* Rótulo e seletor na mesma linha; abaixo de ~17rem o seletor desce. */
+.ap-seletor { display: flex; flex-wrap: wrap; align-items: center; gap: 0.15rem 0.5rem; min-width: 0; }
+.ap-seletor > .cu-mini-select { flex: 1 1 8rem; min-width: 0; }
+.ap-seletor-rotulo { flex: 0 0 8.5rem; font-size: 0.78rem; font-weight: 600; color: var(--plat); }
+
+.ap-situacao { margin: 0; font-size: 0.8rem; color: var(--warn); }
+.ap-situacao[data-situacao='completa'] { color: var(--ok); }
+
+/* O botão de salvar da caixa da esteira fica SEMPRE à vista (F42, Fase 4).
+   A caixa mora num balão com teto de altura (`--cu-teto`) e rolagem; em
+   1440×900 o pé ficava abaixo da dobra. Grudado no fundo do balão, ele rola
+   junto e nunca some. `bottom` negativo compensa o `padding` do `.cu-balao`. */
+.ap-esteira > .ap-botoes {
+  position: sticky;
+  bottom: -0.3rem;
+  z-index: 1;
+  margin: 0 -0.25rem -0.25rem;
+  padding: 0.45rem 0.25rem 0.35rem;
+  background: var(--ink-2);
+  border-top: 1px solid var(--hair);
+}
+
+/* ─────────────── "Solicitar aprovação" no card — F42, Fase 4 ─────────────── */
+
+.ap-card { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.ap-card-topo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; }
+.ap-card-titulo { font-size: 0.85rem; font-weight: 600; color: var(--plat); }
+.ap-card-falta { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; min-width: 0; }
+
+.ap-rodadas { display: flex; flex-direction: column; gap: 0.3rem; margin: 0; padding: 0; list-style: none; }
+.ap-rodada {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.55rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: 0.45rem;
+  min-width: 0;
+}
+.ap-rodada[data-estado='superseded'],
+.ap-rodada[data-estado='cancelled'] { opacity: 0.75; }
+.ap-rodada-versao { font-size: 0.8rem; font-weight: 700; color: var(--plat); }
+.ap-rodada-estado { font-size: 0.75rem; font-weight: 600; color: var(--mute); }
+.ap-rodada-estado[data-tom='ok'] { color: var(--ok); }
+.ap-rodada-estado[data-tom='err'] { color: var(--err); }
+.ap-rodada-estado[data-tom='warn'] { color: var(--warn); }
+/* F42, Fase 7: a decisão do cliente e o motivo ocupam a linha inteira, abaixo. */
+.ap-rodada-decisao { flex-basis: 100%; font-size: 0.72rem; color: var(--mute); }
+.ap-rodada-motivo {
+  flex-basis: 100%;
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--plat);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.ap-rodada-motivo-rotulo { font-weight: 600; color: var(--mute); }
+
+/* A janela. Abaixo de 480 px ela ocupa a largura toda, com menos respiro. */
+.ap-janela-corpo { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
+.ap-janela-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+.ap-janela-titulo { margin: 0; font-size: 1rem; font-weight: 600; color: var(--plat); overflow-wrap: anywhere; }
+.ap-bloco { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+.ap-bloco-titulo { margin: 0; font-size: 0.8rem; font-weight: 600; color: var(--plat); }
+.ap-conta { font-weight: 400; color: var(--mute); }
+
+.ap-ordem,
+.ap-sugestoes { display: flex; flex-direction: column; gap: 0.3rem; margin: 0; padding: 0; list-style: none; }
+.ap-ordem-item,
+.ap-sugestao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.45rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--hair);
+  border-radius: 0.45rem;
+  background: var(--ink-2);
+  min-width: 0;
+}
+.ap-ordem-n { flex: 0 0 auto; min-width: 1.2rem; font-size: 0.8rem; font-weight: 700; color: var(--plat); text-align: center; }
+.ap-ordem-nome { flex: 1 1 8rem; min-width: 0; font-size: 0.8rem; color: var(--plat-dim); overflow-wrap: anywhere; }
+.ap-origem { color: var(--mute); }
+.ap-ordem-acoes { display: flex; gap: 0.15rem; margin-left: auto; }
+.ap-ordem-acoes .o-btn-sm { padding: 0.25rem 0.5rem; }
+.ap-tipo {
+  flex: 0 0 auto;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+}
+.ap-tipo[data-tipo='video'] { color: var(--warn); border-color: var(--warn); }
+.ap-tipo[data-tipo='image'] { color: var(--ok); border-color: var(--ok); }
+.ap-incluir-todos { align-self: flex-start; }
+
+.ap-colar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.4rem; }
+.ap-colar > .ap-endereco { flex: 1 1 12rem; resize: vertical; }
+
+.ap-legenda {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--hair);
+  border-radius: 0.45rem;
+  background: var(--ink-2);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--plat-dim);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+.ap-previa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  border: 1px dashed var(--hair-2);
+  border-radius: 0.5rem;
+  background: var(--ink-1);
+}
+.ap-previa-item { display: flex; flex-direction: column; gap: 0.3rem; margin: 0; min-width: 0; }
+.ap-previa-midia {
+  display: block;
+  width: 100%;
+  max-height: 22rem;
+  object-fit: contain;
+  border-radius: 0.4rem;
+  background: var(--ink-3);
+}
+.ap-previa-pasta {
+  align-self: flex-start;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--hair-2);
+  border-radius: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--plat);
+  text-decoration: none;
+}
+.ap-previa-pasta:hover { background: var(--hair); }
+.ap-legenda-previa { max-height: none; }
+
+.ap-janela-pe { display: flex; flex-direction: column; gap: 0.4rem; padding-top: 0.6rem; border-top: 1px solid var(--hair); }
+.ap-botoes-fim { justify-content: flex-end; }
+
+@media (max-width: 480px) {
+  .o-scrim:has(.ap-janela) { padding: 0.5rem; }
+  .o-modal.ap-janela { padding: 0.85rem; max-height: 94vh; }
+}
+
+/* F42, Fase 9 — a miniatura da arte anexada, na lista de sugestões. */
+.ap-miniatura {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border: 1px solid var(--hair);
+  border-radius: 0.35rem;
+  background: var(--hair);
+}

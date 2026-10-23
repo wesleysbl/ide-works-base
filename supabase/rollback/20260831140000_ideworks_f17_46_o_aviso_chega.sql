@@ -1,0 +1,26 @@
+-- Desfaz a F17.46. Nome idêntico ao da migration, de propósito.
+--
+-- O QUE ELE DEVOLVE
+--   O estado exato do fim da F17.45: nenhuma caixa de entrada, e nenhum "já vi
+--   isto" guardado.
+--
+--   ⚠️ REVERTER APAGA O VISTO DE TODO MUNDO. `drop table ideworks.notice_reads`
+--   leva todas as marcas de leitura, de todas as pessoas. O estrago é pequeno e
+--   é reversível pelo uso: os AVISOS não se perdem — eles não são linhas desta
+--   tabela, são leitura de `task_events` e de `tasks.due_on`. O que acontece é
+--   que tudo volta a aparecer como não visto, e cada um marca de novo.
+--
+--   O que NÃO se perde, e é o que importa: o registro da automação.
+--   `task_events` é da F17.41 e esta migration não a tocou — nem para ler
+--   diferente, nem para acrescentar coluna.
+--
+-- A ORDEM
+--   Uma tabela só, sem função, sem gatilho e sem view. As políticas caem junto
+--   com ela: um `drop policy` solto deixaria a tabela viva com segurança por
+--   linha ligada e nenhuma política permissiva, que é uma tabela viva e
+--   ilegível.
+--
+--   As permissões também caem junto — `grant` acompanha a tabela, e não sobra
+--   privilégio pendurado em objeto que já não existe.
+
+drop table if exists ideworks.notice_reads;

@@ -1,0 +1,19 @@
+-- =============================================================================
+-- ROLLBACK da F14e — a guarda de `aplicar_convite`
+-- =============================================================================
+-- VOLTA A FUNCAO A DEPENDER INTEIRAMENTE DA ROTA.
+--
+-- Ela concede acesso — cria perfil, define papel, area e empresa — e e SECURITY
+-- DEFINER, entao roda por cima de toda politica. Sem a guarda, a unica coisa
+-- que a protege e o codigo de cima estar correto, e o codigo de cima muda toda
+-- semana.
+--
+-- Nao ha caminho de ataque conhecido hoje, e e por isso que o rollback existe:
+-- para quem o rodar saber que esta trocando uma garantia por nada.
+--
+-- Nao esta automatizado de proposito. Se for mesmo necessario, apague o bloco
+-- `if not ideworks.acting_is_superadmin()` da definicao em
+-- `supabase/migrations/20260824140000_*.sql` e reaplique.
+-- =============================================================================
+
+-- (sem desfazer automatico — ver acima)

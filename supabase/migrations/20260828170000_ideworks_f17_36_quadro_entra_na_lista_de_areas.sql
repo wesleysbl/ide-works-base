@@ -1,0 +1,40 @@
+-- =============================================================================
+-- IDE WORKS — F17.36  `quadro` entra na lista de areas
+-- =============================================================================
+-- O PEDIDO
+--   "Na tela de usuarios, para os adms (sem ser os super), preciso que
+--    acrescente a opcao Quadro entre as telas de acesso."
+--
+--   Ate aqui as areas eram quatro — `entrega`, `meta`, `catalogos`, `pessoas` —
+--   e as rotas `/board` do Pilar B eram classificadas como `entrega`. O proprio
+--   `src/auth/areas.ts` previu esta conversa e disse por que adiava: uma area
+--   propria mexeria na lista de areas de TODA pessoa ja cadastrada, e o
+--   primeiro efeito seria a equipe inteira abrir o quadro e levar 403.
+--
+--   O Pilar B tem superficie propria agora — quadro, visao do espaco, minhas
+--   tarefas, todas as tarefas e a ficha da tarefa — e o usuario pediu. Entao a
+--   separacao acontece, e o 403 previsto la e o risco desta etapa.
+--
+-- ⚠️ ELA VAI SOZINHA, E ISSO NAO E ESCOLHA DE ESTILO
+--   `alter type ... add value` nao pode ser USADO na mesma transacao em que o
+--   valor e acrescentado — regra do Postgres, nao do projeto. Juntar aqui o
+--   `update` que da `quadro` a quem ja tem `entrega` faria a migration falhar
+--   com "unsafe use of new value of enum type", que e uma mensagem que nao
+--   explica nada sobre a causa.
+--
+--   E o mesmo motivo pelo qual a F11c foi sozinha. Quem completa esta etapa e a
+--   F17.36b, na migration seguinte: ela e que garante que ninguem perde o
+--   quadro. Esta aqui, sozinha, nao muda o acesso de NINGUEM — so cria a
+--   caixinha vazia.
+--
+--   ⚠️ Aplicar esta e nao aplicar a F17.36b e o unico estado perigoso desta
+--   etapa, e ele so vira dano quando o codigo novo subir: e o codigo que passa
+--   a classificar `/board` como `quadro`. Aplicar as duas juntas.
+--
+-- POSICAO NA LISTA
+--   `after 'entrega'` para a ordem do enum ser a mesma de `AREAS` em
+--   `src/auth/areas.ts`. A ordem de enum nao vale regra nenhuma aqui; vale
+--   leitura — retrato de schema e `order by` saem na mesma sequencia da tela.
+-- =============================================================================
+
+alter type ideworks.area add value if not exists 'quadro' after 'entrega';

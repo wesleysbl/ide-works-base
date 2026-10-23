@@ -1,0 +1,435 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACABAMENTO — a gramática do iOS por cima do OBSIDIAN. Etapa F17.20.
+
+   O QUE O USUÁRIO PEDIU
+     *"padrão de letras e cores com pura IA, arredondamentos em lugares que não
+     precisa, forma da fonte, sem efeitos... deixe mais clean, use o sistema iOS
+     como base, deixe limpo e fluído."*
+
+   POR QUE UM ARQUIVO NOVO, E NÃO UMA EDIÇÃO NO `obsidian.css`
+     Mesmo motivo da F17.18 com `cores-do-tema.css`: o `obsidian.css` está sendo
+     editado por outra sessão (F19). Um bloco novo no meio dele é conflito
+     garantido. Aqui não se toca em nenhuma linha dela — só se REDEFINE token e
+     se reescreve a regra de umas poucas classes de RÓTULO.
+
+   ⚠️ ELE MEXE EM TOKEN, NÃO EM TELA
+     É a razão de a etapa caber. Trocar `--f-body` e `--r-md` limpa as trinta
+     telas de uma vez — inclusive as da Meta, que esta sessão não pode tocar.
+     Reescrever tela por tela custaria vinte arquivos e colidiria com a outra
+     sessão em metade deles.
+
+   O QUE ELE **NÃO** MUDA
+     A cor da marca. `--luz` continua sendo o que o OBSIDIAN diz que é, e a
+     decisão D10 continua inteira: cor mora em variável, nenhuma tela escreve
+     cor literal. `contraste-legivel.test.ts` e `cores.test.ts` leem o
+     `obsidian.css` e o `cores-do-tema.css` — nenhum dos dois é tocado aqui.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────── 1. os tokens ─────────────────────────── */
+
+:root {
+  /* A FONTE DO SISTEMA, QUE É A DO iOS.
+     Quicksand é uma geométrica arredondada — a letra que o usuário chamou de
+     "pura IA", e ele tem razão: ela é a fonte-padrão de todo gerador de
+     interface. O iOS não tem fonte própria de aplicativo, ele usa a do
+     aparelho. Aqui é a mesma ideia: a do aparelho de quem abre.
+
+     E ela é de graça em dois sentidos. Não desenha personalidade que a agência
+     não pediu, e não custa requisição: as duas famílias do Google Fonts
+     saíram do `index.html` junto com esta linha — eram uma folha bloqueante e
+     dois arquivos de fonte antes da primeira pintura. */
+  --f-body:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text',
+    'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
+
+  /* O monoespaçado fica — mas só para NÚMERO, que é onde ele serve (coluna de
+     dígito que não dança). Rótulo em monoespaçado é o outro sinal de "gerado":
+     as classes lá embaixo o tiram de todos eles. */
+  --f-mono:
+    ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+
+  /* UM RAIO SÓ.
+     Era 4 · 8 · 14 · 18 · 26 — cinco valores, e o de 26px punha quina de balão
+     de fala num modal de trabalho. O iOS tem um raio de controle e nada mais.
+     Fica 10px em tudo, 6px no que é menor que um dedo (ficha de 19px de altura
+     com raio 10 vira cápsula), e 12px na folha do modal, que é maior que tudo.
+     A cápsula do botão continua cápsula — ela é intencional, não arredondamento
+     de sobra. */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 10px;
+  --r-lg: 10px;
+  --r-xl: 12px;
+  --r-pill: 999px;
+
+  /* MOVIMENTO CURTO E COM A CURVA DO iOS.
+     0.4s é longo o bastante para a pessoa esperar; a referência fica entre
+     0,15 e 0,25. A curva é a que a Apple usa nas transições de tela — sai
+     rápido e assenta devagar, sem quicar. */
+  --dur-1: 0.15s;
+  --dur-2: 0.24s;
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* O HALO DE NEON VIRA FIO.
+     `0 0 34px` é brilho de vitrine. Num painel aberto oito horas ele é a maior
+     fonte de "cor acesa" da tela, e ele acende em hover de botão, em coluna
+     alvo de arrasto e em toda chave ligada ao mesmo tempo. O tema claro já
+     tinha chegado nessa conclusão sozinho — aqui o escuro segue. */
+  --glow-luz: 0 0 0 1px var(--luz-soft);
+
+  /* ── A RÉGUA DO LAYOUT FOCO — F01 do plano UX ─────────────────────────────
+     Tipografia, espaço e raio em degraus nomeados, para que título, filtro e
+     conteúdo guardem as mesmas relações em todas as páginas da mesma família.
+     Especificação §4: texto de trabalho 14–16px, metadado 12–13px, título de
+     página 20–24px (18–22 no celular); espaço 4·8·12·16·24·32. */
+  --iw-t-meta: 0.75rem;      /* 12px — data, contador, trilha */
+  --iw-t-apoio: 0.8125rem;   /* 13px — rótulo, item de navegação */
+  --iw-t-corpo: 0.875rem;    /* 14px — linha de tarefa, campo */
+  --iw-t-leitura: 1rem;      /* 16px — texto corrido, campo no celular */
+  --iw-t-secao: 1.0625rem;   /* 17px — título de seção/cabeçalho compacto */
+  --iw-t-titulo: clamp(1.125rem, 0.9rem + 0.6vw, 1.375rem); /* 18 → 22px */
+  --iw-t-destaque: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);     /* 24 → 32px */
+  --iw-lh-denso: 1.3;
+  --iw-lh-corpo: 1.45;
+
+  --iw-e-1: 0.25rem;  /*  4px */
+  --iw-e-2: 0.5rem;   /*  8px */
+  --iw-e-3: 0.75rem;  /* 12px */
+  --iw-e-4: 1rem;     /* 16px */
+  --iw-e-5: 1.5rem;   /* 24px */
+  --iw-e-6: 2rem;     /* 32px */
+
+  --iw-r-controle: 8px;          /* botão, campo, item de lista */
+  --iw-r-cartao: var(--r-sm);    /* 10px — cartão, bloco */
+  --iw-r-painel: var(--r-xl);    /* 12px — barra, coluna, painel */
+  --iw-r-dialogo: 16px;          /* diálogo e gaveta */
+
+  /* Estados que não são cor. A cor de cada estado está nos papéis
+     (`--iw-hover`, `--iw-selecionado`, `--iw-foco`) em `obsidian.css`. */
+  --iw-foco-largura: 2px;
+  --iw-foco-folga: 2px;
+  --iw-desabilitado: 0.45;       /* opacidade do que não pode ser usado agora */
+  --iw-alvo-toque: 44px;
+}
+
+/* QUEM PEDIU MENOS MOVIMENTO recebe durações zeradas também no que lê o token
+   por JavaScript ou estilo em linha — o bloco de `obsidian.css` só alcança
+   `animation`/`transition` declarados em folha. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-1: 0.01ms; --dur-2: 0.01ms; }
+}
+
+/* Mesma especificidade do bloco de `cores-do-tema.css`, e depois dele: sem
+   isto, escolher uma das dez cores traria o halo de 34px de volta. */
+:root[data-cor] {
+  --glow-luz: 0 0 0 1px var(--luz-soft);
+}
+
+/* ─────────────────────────── 2. o corpo ─────────────────────────── */
+
+/* 1.55 é entrelinha de artigo. Numa lista de tarefa ela afasta o título da
+   trilha a ponto de os dois pararem de se ler como uma linha só. */
+body {
+  line-height: 1.45;
+  letter-spacing: normal;
+}
+
+/* ─────────────────────────── 3. os rótulos ───────────────────────────
+   ESTA É A SEÇÃO QUE MAIS MUDA A CARA DO SISTEMA.
+
+   `IDE TRABALHO` · `MEU TRABALHO` · `COMPARTILHADO COMIGO` · `ENTREGA` ·
+   `HOJE` · `EM ATRASO` — todos em versalete monoespaçado com letra espaçada.
+   É a assinatura do OBSIDIAN e é também a assinatura de interface gerada.
+
+   O iOS escreve rótulo de seção em caixa normal, peso médio, cinza discreto,
+   sem espaçamento forçado. A hierarquia vem do PESO e da COR, não do formato
+   da letra. Cada regra abaixo faz a mesma troca, na classe que já existe —
+   nenhuma tela muda de classe.
+
+   ⚠️ POR QUE METADE DOS SELETORES COMEÇA COM `:root ` — E A OUTRA METADE NÃO
+     Isto foi medido no navegador, não deduzido. Na primeira versão deste
+     arquivo os seletores estavam todos limpos, e o resultado foi meio conserto:
+     `Meu trabalho` e `Entrega` viraram caixa normal, `IDE TRABALHO` e `HOJE`
+     continuaram em versalete.
+
+     A causa é a ORDEM. Este arquivo entra por `@import` no `index.css`, junto
+     com o `obsidian.css` — então ele ganha do OBSIDIAN por vir depois, e as
+     classes de lá (`.eyebrow`, `.o-rotulo`, `.o-selo`) obedecem sem
+     mais nada.
+
+     Mas `clickup.css`, `quadro.css`, `tarefa.css`, `passos.css` e `conversa.css`
+     são importados de dentro dos COMPONENTES (`import '@/ui/clickup.css'`), e o
+     empacotador os injeta DEPOIS do `index.css` inteiro. Com a mesma
+     especificidade, quem chega por último ganha — e eles chegam por último.
+
+     `:root ` acrescenta um degrau de especificidade (0,1,1 contra 0,1,0), que
+     vence a ordem. É a menor ferramenta que resolve: não usa `!important`, não
+     obriga a tocar nas cinco folhas, e o degrau a mais fica só onde precisa —
+     por isso a lista não é uniforme.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.eyebrow,
+.o-rotulo,
+.o-selo,
+:root .mt-recolher,
+:root .cu-balao-titulo,
+:root .cu-data-campo > span,
+:root .cu-moldes-rotulo,
+:root .cu-molde-etapa,
+:root .cu-campo > span,
+:root .pz-rotulo {
+  font-family: var(--f-body);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+}
+
+/* O tamanho, agora numa escada de três degraus em vez de nove valores soltos
+   entre 0,58rem e 0,7rem — abaixo de 0,72rem (11,5px) o rótulo deixa de ser
+   lido e vira textura. */
+.eyebrow,
+.o-rotulo,
+:root .cu-balao-titulo,
+:root .cu-data-campo > span,
+:root .cu-moldes-rotulo,
+:root .cu-campo > span,
+:root .pz-rotulo {
+  font-size: 0.75rem;
+}
+
+.o-selo,
+:root .cu-molde-etapa {
+  font-size: 0.72rem;
+}
+
+/* O título de grupo de `Meu trabalho` é o mais graúdo dos rótulos: ele é um
+   cabeçalho de seção, e o iOS o escreve em peso forte e caixa normal. */
+:root .mt-recolher {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* A chave da linha de ficha (`.o-linha .k`) não tem versalete, mas tem
+   monoespaçado e espaçamento — o mesmo cheiro, meio grau abaixo. */
+.o-linha .k {
+  font-family: var(--f-body);
+  letter-spacing: normal;
+  font-size: 0.78rem;
+}
+
+/* A TRILHA `espaço / lista` (sem a empresa desde a F31) É NOME DE GENTE E DE CLIENTE, NÃO DADO.
+   Em monoespaçado ela lê como identificador de sistema — e é justamente o
+   pedaço que responde "de quem é esta tarefa". */
+:root .mt-trilha,
+:root .q-cartao-trilha,
+:root .cu-no-empresa {
+  font-family: var(--f-body);
+  font-size: 0.72rem;
+}
+
+/* O prazo é meio texto (`Hoje`, `Amanhã`) e meio número (`31/08/2026`). Fonte
+   do corpo com dígito de largura fixa resolve os dois — o `.tnum` que a linha
+   já traz continua valendo. */
+:root .mt-prazo,
+:root .mt-conta {
+  font-family: var(--f-body);
+  font-size: 0.72rem;
+}
+
+/* O selo perde o contorno junto com o versalete: cápsula com borda, fundo e
+   caixa alta ao mesmo tempo são três marcações para uma informação só. */
+.o-selo {
+  border-color: transparent;
+  padding: 0.15rem 0.5rem;
+}
+
+/* ─────────────────────────── 4. caixa vira grupo ───────────────────────────
+   No iOS uma seção de lista não tem moldura: ela tem um rótulo por cima, um
+   fio fino entre os itens, e espaço em branco separando as seções.
+
+   As três seções da barra lateral eram três retângulos com borda, sombra e
+   fundo próprio — dentro de uma coluna que já é uma coluna. O contorno some;
+   o agrupamento continua, feito de espaço.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.bl-secao.o-card,
+.cu-arvore.o-card {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Sem a moldura, quem separa uma seção da outra é o branco. */
+:root .bl-barra { gap: 1.1rem; }
+:root .bl-secao-titulo { padding: 0 0.5rem 0.35rem; }
+:root .bl-item { padding: 0.36rem 0.5rem; }
+
+/* O pé era um botão com borda e perdia a borda aqui, pelo mesmo motivo: ele é
+   um item, não um cartão. Desde a F29 o pé é o chip da conta (`.bl-conta`, em
+   `clickup.css`), que já nasce com o desenho de item — não há o que desfazer. */
+
+/* A lista de um grupo de `Meu trabalho` é a mesma peça: fio entre linhas, sem
+   moldura em volta. */
+:root .mt-lista {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+}
+:root .mt-linha { border-radius: var(--r-sm); padding: 0.5rem; }
+:root .mt-linha + .mt-linha { border-top-color: var(--hair); }
+
+/* Grupo vazio não ganha caixa: ele é uma linha de texto discreta sob o
+   cabeçalho, e a contagem `0` ao lado do nome já disse o que há. */
+:root .mt-vazio { padding: 0.35rem 0.5rem; font-size: 0.75rem; }
+
+/* ─────────────────────────── 5. sem efeito de vitrine ───────────────────────────
+   Peça que sobe 3px quando o ponteiro passa é gesto de página de venda. O iOS
+   responde ao TOQUE (a peça afunda), não à passagem. Fica a resposta ao toque,
+   sai o levantamento.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.o-card-hover:hover,
+.o-btn-primario:hover:not(:disabled),
+.o-btn-solido:hover:not(:disabled) {
+  transform: none;
+}
+
+.o-btn:active:not(:disabled) { transform: scale(0.97); }
+
+/* A sombra do cartão vira fio. Três sombras empilhadas (`--e-3`) num modal são
+   o que faz a tela parecer maquete de apresentação. */
+.o-card { box-shadow: none; }
+
+/* ─────────────────────────── 6. o que faltava mexer ───────────────────────────
+   O usuário disse "sem efeitos". As telas têm transição em botão e em item de
+   menu, e NENHUMA em abrir menu, trocar aba, recolher grupo e aparecer cartão —
+   que são justamente os quatro movimentos que ele faz o dia inteiro.
+
+   Tudo abaixo respeita `prefers-reduced-motion`: o bloco do `obsidian.css`
+   zera `transition-duration` e `animation-duration` com `!important` para
+   `*`, então quem pediu menos movimento não recebe nenhum destas regras
+   também. Medido, não suposto.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@keyframes ac-surgir {
+  from { opacity: 0; transform: translateY(4px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes ac-assentar {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* O menu ancorado no chip: ele aparecia pronto, do nada. */
+:root .cu-balao {
+  animation: ac-surgir var(--dur-2) var(--ease-out);
+  transform-origin: top left;
+}
+
+/* O modal e a folha por trás dele. */
+:root .cu-modal,
+.o-modal { animation: ac-surgir var(--dur-2) var(--ease-out); }
+:root .cu-fundo,
+.o-scrim { animation: ac-assentar var(--dur-1) var(--ease-out); }
+
+/* O corpo de uma aba trocada, e a lista de um grupo reaberto. */
+:root .mt-lista { animation: ac-assentar var(--dur-1) var(--ease-out); }
+
+/* O cartão do quadro assenta em vez de piscar. */
+:root .q-cartao { animation: ac-assentar var(--dur-1) var(--ease-out); }
+
+/* A aba selecionada desliza de cor em vez de trocar de estado seco. */
+:root .cu-aba { transition: color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out); }
+
+/* A linha da lista e o item da árvore ganham a mesma resposta que o botão já
+   tinha — passar o ponteiro por uma lista de trinta linhas era um piscar. */
+:root .mt-linha,
+:root .cu-no,
+:root .cu-item {
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+
+/* ─────────────────────────── 7. descomprimir — F17.24 ───────────────────────────
+   O usuário: *"parece que em todo o sistema as frases precisam se espremer,
+   resumir, ir para uma linha de baixo (…) descomprima, reduza ruído de
+   instrução."*
+
+   A F17.20 tirou doze blocos de texto e trocou a tipografia. Sobrou o APERTO
+   do que ficou: as notas de rodapé de cada caixa estão entre 0,68rem e
+   0,72rem, com entrelinha de 1,4 — que é densidade de nota de rodapé de
+   contrato, não de aviso que alguém precisa ler no meio do trabalho.
+
+   ⚠️ Estas regras entram por `@import` no `index.css`, como manda a F17.20, e
+   por isso precisam de `:root ` para vencer as folhas importadas de dentro dos
+   componentes (`clickup.css`, `conversa.css`). Ver a explicação longa na
+   seção 3.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* 0,72rem é o piso de leitura da casa — o mesmo que a seção 3 fixou para os
+   rótulos. 1,55 de entrelinha é o que separa duas linhas de um aviso sem
+   afastá-las a ponto de virarem dois avisos. */
+:root .cu-vazio,
+:root .a-nota,
+:root .a-link-nota,
+:root .pz-detalhe,
+:root .a-pendente {
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+/* ⚠️ QUEBRA QUE NÃO ESPREME.
+   Dentro de um balão de 13rem, um e-mail de 34 caracteres
+   (`teste-alma9-acesso@ideworks.invalid`) ou um nome de arquivo comprido
+   estouram a caixa e ficam sob a borda. `anywhere` deixa a palavra partir
+   quando não há outra saída — e só então.
+
+   Ele NÃO entra em `.tnum`: partir um número ao meio foi o defeito que a F19h
+   consertou na tabela da Meta, e a regra de lá continua valendo. */
+:root .cu-vazio,
+:root .cu-ajuda-corpo,
+:root .cu-esteira-nome,
+:root .a-pendente {
+  overflow-wrap: anywhere;
+}
+
+/* A faixa do envio desligado virou uma frase e um `?` — e agora ela é uma
+   LINHA, com o `?` no fim. */
+:root .a-pendente-curta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+:root .a-pendente-curta > span { min-width: 0; }
+
+/* O balão de menu ganha ar. `0.3rem` de recheio com item de `0.4rem` fazia o
+   texto encostar na borda de cima e de baixo. */
+:root .cu-balao { padding: 0.35rem; }
+
+/* ───────────── a barra de rolagem fina do menu — F17.35 ─────────────
+
+   A barra do sistema tem 10px e moldura de 2px (`obsidian.css`). Dentro de um
+   balão de menu, que tem 18rem de largura, ela é um corredor cinza que rouba a
+   largura do texto — e foi parte da reclamação: *"todas ficam muito extensas e
+   blocadas, às vezes sem barra lateral ou com o scroll limitado"*.
+
+   Aqui ela afina para 6px e perde a moldura. Mesma paleta, outra escala: nada
+   de cor literal, tudo em variável (decisão D10).
+
+   Ela vale para as listas de `Menu` e `Gaveta`; o balão do ClickUp tem a
+   mesma régua escrita em `clickup.css`, junto do resto do vocabulário dele. */
+:root .o-rolagem-fina {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-4) transparent;
+  overscroll-behavior: contain;
+}
+
+:root .o-rolagem-fina::-webkit-scrollbar { width: 6px; height: 6px; }
+:root .o-rolagem-fina::-webkit-scrollbar-track { background: transparent; }
+:root .o-rolagem-fina::-webkit-scrollbar-thumb {
+  background: var(--ink-4);
+  border: 0;
+  border-radius: 99px;
+}
+:root .o-rolagem-fina::-webkit-scrollbar-thumb:hover { background: var(--hair-3); }

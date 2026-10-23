@@ -1,0 +1,49 @@
+-- =============================================================================
+-- IDE WORKS — F17.39  A terceira intencao: convite que TAMBEM define a senha
+-- =============================================================================
+-- O DEFEITO, E O TAMANHO DELE
+--   `arte3@exemplo.com.br` foi convidado, ativou, escolheu uma senha e
+--   nao conseguiu entrar. Antes dele, `gestao@exemplo.com.br`. Nao e caso de
+--   borda: das 30 pessoas do legado, as 30 tem conta de login, e faltam 19
+--   pessoas reais migrarem. O caminho "a conta ja existe" e 100% do que sobra.
+--
+--   A F17.30 fez o convite VINCULAR a conta existente em vez de recria-la —
+--   certo, e foi o que protegeu a senha de quem ja trabalhava no Sistema IDE.
+--   Mas a tela pede uma senha e a joga fora. Pedir o que se vai descartar e
+--   errado dezenove vezes seguidas.
+--
+-- ⚠️ A SAIDA NAO E AFROUXAR `invite`
+--   A invariante da F17.30 — «codigo de convite nao toca senha de conta que ja
+--   existe» — e o que impede uma pessoa de sobrescrever a senha de outra. Ela
+--   tem prova (`scripts/provar-conta-que-ja-existe.mjs`) e continua de pe.
+--
+--   Nasce uma intencao TERCEIRA, declarada na propria linha, que faz as duas
+--   coisas: aplica o acesso prometido E autoriza escrever a senha. Quem decide
+--   qual das tres a linha recebe e o banco, na hora do convite — nunca a tela.
+--
+-- ⚠️ ELA VAI SOZINHA, E ISSO NAO E ESCOLHA DE ESTILO
+--   `alter type ... add value` nao pode ser USADO na mesma transacao em que o
+--   valor e acrescentado — regra do Postgres, nao do projeto. Juntar aqui as
+--   funcoes que citam `'invite_with_password'` faria a migration falhar com
+--   "unsafe use of new value of enum type", mensagem que nao explica nada sobre
+--   a causa. Foi o que a F17.36 pagou tres dias atras.
+--
+--   Quem completa esta etapa e a F17.39b, na migration seguinte. Esta aqui,
+--   sozinha, nao muda o comportamento de NADA: nenhuma linha nasce com o valor
+--   novo, nenhuma funcao o le. So cria a caixinha vazia.
+--
+--   ⚠️ Aplicar esta e nao aplicar a F17.39b nao e estado perigoso — e so estado
+--   inutil. O contrario, sim: a F17.39b nao roda sem esta.
+--
+-- POSICAO NA LISTA
+--   `after 'invite'` porque e um convite, e nao um irmao da redefinicao: quem
+--   ler o tipo le "as duas formas de dar acesso, e depois a da senha".
+--
+-- SEGURANCA POR LINHA
+--   Nao cria tabela, nao ha politica nova. `ideworks.invitations` ja tem RLS
+--   ligada com `_select`, `_insert` e `_update`, todas decidindo pela LINHA
+--   inteira — nao ha permissao por coluna nesta tabela, entao quem nao lia o
+--   convite continua sem ler a intencao.
+-- =============================================================================
+
+alter type ideworks.invitation_purpose add value if not exists 'invite_with_password' after 'invite';

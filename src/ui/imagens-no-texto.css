@@ -1,0 +1,46 @@
+.imagem-no-texto {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 34rem;
+  object-fit: contain;
+  margin: 0.75rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid var(--hair);
+}
+.imagem-no-texto-link { padding: 0; border: 0; background: transparent; cursor: zoom-in; display: block; width: fit-content; max-width: 100%; }
+.imagem-no-texto-aviso { display: block; color: var(--mute); padding: 0.75rem 0; font-size: 0.8rem; }
+.imagens-do-rascunho { min-width: 0; }
+.imagens-do-rascunho .imagem-no-texto { max-height: 16rem; }
+.imagem-do-rascunho { position: relative; display: inline-block; max-width: 100%; margin-right: 0.75rem; }
+.imagem-do-rascunho > button { display: block; }
+.imagens-anteriores { padding: 0 0.9rem; }
+.a-ficha .imagem-no-texto-link { width: 100%; }
+.a-ficha .imagem-no-texto-link > .imagem-no-texto {
+  width: 100%;
+  height: 10rem;
+  margin: 0 0 0.25rem;
+  background: var(--ink-3);
+}
+.editor-inserir-imagem { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; }
+
+.c-editor-com-imagens { position: relative; flex: 1 1 auto; min-width: 0; }
+.c-editor-com-imagens > .c-caixa { display: block; width: 100%; }
+/* F43, Fase 6: o clipe divide a linha de cima do pé com o `?` do campo
+   (`.c-pe-icones`, em `conversa.css`); a medida dele é a mesma. */
+.c-pe-icones > .o-btn.c-anexar-imagem { width: 2.15rem; }
+.c-editor-com-imagens[data-arrastando='true'] { outline: 2px dashed var(--luz); border-radius: var(--r-sm); }
+.c-soltar-imagem {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  color: var(--plat);
+  font-size: 0.82rem;
+  pointer-events: none;
+}

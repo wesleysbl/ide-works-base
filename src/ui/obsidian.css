@@ -1,0 +1,1289 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OBSIDIAN — o design system do Grupo Ide, portado para o IDE Works.
+   Etapa F4.3.
+
+   ORIGEM
+     `sistema-ide-base/Novo design System da ide.html` (DS4 · OBSIDIAN).
+     Aquele arquivo é um design system de SITE: tem hero em WebGL, funil de
+     conversão, showreel, orbs animados. Nada disso entra aqui.
+
+     O que entra são as camadas que um painel de trabalho usa oito horas por
+     dia: a escada de superfícies, os fios de luz, a platina, os semânticos,
+     a tipografia, a elevação — e as primitivas (cartão, botão, selo, campo,
+     chave, alerta, modal).
+
+   POR QUE UM CSS E NÃO CLASSES DO TAILWIND
+     Porque o espectro pode mudar. Enquanto a cor mora em `--luz`, trocar a
+     luz inteira é editar este arquivo. Se ela morar espalhada em
+     `text-emerald-400` por vinte telas, trocar vira arqueologia.
+
+     Regra: NENHUMA tela usa cor literal do Tailwind. Usa var() ou classe daqui.
+
+   O QUE MUDA EM RELAÇÃO AO ORIGINAL
+     - `--luz` nasce verde (a luz da agência), não platina-gelo: este é o
+       painel do Grupo Ide operando, não a vitrine institucional.
+     - Densidade maior. O DS do site respira; um painel com 91 clientes não
+       pode. Espaçamentos e raios encolhem um degrau.
+     - Cursor nativo intocado, como manda o original.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Obsidiana — escada de superfícies ─────────────────────────────────────
+     LEVANTADA EM 2026-08-24, e o motivo é medido, não gosto.
+
+     Era `#050506`: preto de OLED. Preto puro num painel de trabalho tem dois
+     problemas — a peça branca em cima dele vibra na borda (halação), e a
+     separação entre um cartão e o fundo fica em 1.036 de razão, que o olho não
+     distingue. O resultado é uma tela escura e CHAPADA: tudo no mesmo plano,
+     sem hierarquia, com cara de rascunho.
+
+     Agora a separação entre degraus vai de 1.05 a 1.10. Continua escuro — só
+     deixou de ser um buraco. É o que faz cartão parecer cartão. */
+  --ink-0: #17181a;   /* fundo universal */
+  --ink-1: #202123;   /* superfície */
+  --ink-2: #27282b;   /* elevado */
+  --ink-3: #303135;   /* topo */
+  --ink-4: #3b3c42;   /* borda de campo */
+  /* ⚠️ F01 do plano UX (28/09/2026): os valores acima e a platina abaixo são
+     os do layout Foco. Moravam como sobrescrita em `layout-foco.css`, e os
+     testes de contraste liam ESTE arquivo — mediam uma paleta que a tela não
+     usava mais. Agora a paleta tem um dono só, e o teste mede a que se vê. */
+
+  /* ── Fios de luz ───────────────────────────────────────────────────────────
+     Também levantados. A 0.09 de opacidade a borda simplesmente não existia
+     para o olho, e é ela que dá ACABAMENTO: sem contorno visível a peça não
+     tem forma, ela só flutua. Uma borda que ninguém vê não delimita nada. */
+  --hair:   rgba(244, 241, 234, 0.11);
+  --hair-2: rgba(244, 241, 234, 0.22);
+  --hair-3: rgba(244, 241, 234, 0.34);
+
+  /* ── Platina — a escada de texto ───────────────────────────────────────────
+     A ESCADA TINHA QUATRO DEGRAUS E O QUARTO ERA ILEGÍVEL — F17.37.
+
+     Havia um quarto tom, o mais apagado, e a F17.24 já o havia levantado de
+     2.6 para 4.5 escrevendo ao lado dele "o limite, e não além dele". O limite
+     de quê, é a pergunta que não foi feita: 4.5 é o piso da norma para texto
+     NORMAL. E aquele tom neste sistema quase nunca era texto normal — ele era a
+     dica de 10,6px embaixo do campo, o contador de 10,2px da árvore, o e-mail
+     de 11,5px da lista de pessoas.
+
+     Medido na tela, com o Chrome aberto (`scripts/provar-a-letra.mjs`), o pior
+     caso real dele era 4,22 no tema claro. Texto miúdo pede MAIS contraste que
+     texto corrido, não o mínimo — então o degrau saiu. Não foi reajustado: um
+     tom que só existe para ser o mais fraco, num sistema onde o mais fraco já é
+     pequeno demais, é um degrau que só serve para apagar.
+
+     Sobraram três, e a régua deles é 7:1 — a do texto miúdo, mais dura que a
+     norma, porque a queixa do usuário foi sobre a letra que some.
+
+     ⚠️ O PIOR FUNDO É DIFERENTE EM CADA TEMA, e isto custou uma medida errada.
+     `test/contraste-legivel.test.ts` media os dois contra `--ink-3`. No escuro
+     está certo: ali `--ink-3` é a superfície mais clara. No CLARO, `--ink-3` é
+     o branco — o MELHOR caso para tinta escura. O pior é `--ink-0`, o fundo da
+     página, e contra ele `--mute` dava 5,59 e o quarto tom, 3,86: abaixo até do
+     4.5 que o teste jurava estar guardando. O teste passava havia semanas. */
+  --plat:     #f5f5f6;   /* 11.9 sobre --ink-3 — principal */
+  --plat-dim: #d8d9de;   /*  9.2 sobre --ink-3 — secundário (F01: era #d0d1d6, colado demais no --mute: 1,19) */
+  --mute:     #bfc0c6;   /*  7.2 sobre --ink-3 — terciário, e o piso do sistema */
+
+  /* ⚠️ `--hair` DESCEU DE 0.14 PARA 0.11 — F43 Fase 5 (a camada calma).
+     O comentário dele aí em cima (antes de `--mute`, onde não cabe texto novo:
+     `test/contraste-legivel.test.ts` lê só 4000 caracteres a partir do
+     `:root`) explica por que ele subiu em agosto. A queixa de outubro foi a
+     oposta: "colcha de retalhos" — quase todo bloco tinha moldura, e o olho
+     não sabia onde uma coisa começava. Os blocos (`.o-card`, `.o-alerta`,
+     botão vidro) perderam a moldura e se separam por tom; o que sobrou em
+     `--hair` é fio ENTRE linhas, que pode ser mais leve. Não desce abaixo de
+     0.11: a 0.09 ele já sumiu uma vez. Campo continua em `--hair-2`. */
+
+  /* Prisma — as cinco luzes do plano */
+  --luz-agencia: #00ff66;
+  --luz-filmes:  #ffffff;
+  --luz-estudio: #16c172;
+  --luz-lives:   #ff6b00;
+  --luz-ia:      #2e86ff;
+
+  /* Luz ativa. No painel é a da agência. */
+  --luz:      #00ff66;
+  --luz-soft: rgba(0, 255, 102, 0.16);
+  /* A luz como TEXTO ou ícone pequeno — F01 (verificação). Igual à `--luz` em
+     todo lugar, menos no verde padrão do tema claro: #00a344 dá 2,72 sobre
+     `--ink-3` e 3,32 sobre o branco. Preenchimento continua `--luz`; só letra,
+     ícone e anel de foco leem este. */
+  --luz-texto: var(--luz);
+  /* O PRISMA COMO TEXTO — F11B (pendência da F01). As cores de conteúdo
+     (vídeo, arte, foto, ads) pintam barra e ícone; quando viram LETRA — a data
+     da linha, o nome do tipo, "+2 extras" — leem estes. No escuro são as
+     mesmas; no claro descem um passo (ver o bloco do claro). */
+  --luz-agencia-texto: var(--luz-agencia);
+  --luz-estudio-texto: var(--luz-estudio);
+  --luz-lives-texto: var(--luz-lives);
+  --luz-ia-texto: var(--luz-ia);
+
+  /* ── A cor da ARTE — F43 Fase 5 ────────────────────────────────────────────
+     Os tipos de conteúdo pegaram emprestadas as luzes do prisma (vídeo = IA,
+     foto = estúdio, ads = lives), e a arte ficou com a da agência — que é o
+     MESMO `#00ff66` do botão principal, do item atual da barra e do "ok".
+     Quatro sentidos numa cor só: um calendário cheio de arte gritava como se
+     tudo ali fosse ação ou sucesso.
+
+     A arte ganha cor própria, fora do prisma: um lilás calmo, longe do azul
+     do vídeo, do verde da foto e do laranja do ads. 5,3 sobre `--ink-3`. */
+  --tipo-arte: #b794f6;
+  --tipo-arte-texto: var(--tipo-arte);
+
+  /* ── A tinta que se escreve EM CIMA da luz — F17.58 ────────────────────────
+     ELA NÃO SEGUE O TEMA, E É ESSE O PONTO.
+
+     `.o-btn-solido` pedia `var(--ink-0)`, o fundo universal da PÁGINA. No tema
+     escuro isso dá quase-preto sobre verde neon e ninguém reclamou; no tema
+     claro `--ink-0` vira `#ececed` e o MESMO botão vira letra quase branca
+     sobre verde. Medido na tela: 1,43:1 em `Novo cliente`, `Criar acesso`,
+     `Convidar alguém`, `Ativar e definir senha` e `Importar da Meta`.
+
+     O valor não era o erro — a PERGUNTA era. O texto de um botão sólido não
+     está sobre a página: está sobre `--luz`. Como `--luz` é clara nos dois
+     temas (`#00ff66` no escuro, `#00a344` no claro), a tinta dele é escura nos
+     dois, e fixa. Onde a luz deixa de ser clara — o rosa do Instagram logo
+     abaixo, e as dez cores de `cores-do-tema.css`, que no tema claro são tons
+     escuros — o token é redefinido junto com ela, no mesmo bloco. */
+  --tinta-solido: #0c0c10;
+
+  /* Semânticos
+
+     "OK" DEIXOU DE SER O VERDE DA MARCA — F43 Fase 5.
+     Era `#00ff66`, byte a byte a `--luz`: o selo "em dia", o visto do
+     calendário, a chave ligada, o item atual da barra e o botão principal
+     falavam a mesma cor, e a tela inteira parecia pedir atenção. Agora o verde
+     neon fica para AÇÃO e LUGAR (`--luz`), e "está tudo bem" é um verde-sálvia
+     claro, que se lê sem gritar: 8,3 sobre `--ink-3`. Sobre o próprio soft
+     (o fundo do selo "em dia") passa de 7 do `--ink-0` ao `--ink-2` — a régua
+     do texto miúdo — e dá 6,6 no `--ink-3`, onde o neon dava 6,9. */
+  --ok:   #9fdcb6; --ok-soft:   rgba(159, 220, 182, 0.10);
+  --warn: #ffb020; --warn-soft: rgba(255, 176, 32, 0.14);
+  /* F01: #ff5a5a dava 4,25 sobre o `--ink-3` do Foco; agora 4,68. */
+  --err:  #ff6b6b; --err-soft:  rgba(255, 107, 107, 0.14);
+
+  /* Tipografia, raio e movimento moram em `acabamento.css` — F01 do plano UX.
+     Os valores que ficavam aqui (Quicksand, raios de 4 a 26px, 0,18s/0,4s)
+     eram todos redefinidos por ele no mesmo `:root`, logo depois: ninguém os
+     via. Um dono por token; aqui fica a COR. */
+
+  /* ── A régua do formulário — F17.37 ────────────────────────────────────────
+     "Espaçamentos indevidos" era literal: a distância entre rótulo e campo
+     vinha de `.o-rotulo`, a de campo para dica vinha de um `mt-1` escrito à
+     mão dentro do componente, e a de bloco para bloco vinha do `space-y-N`
+     que cada tela escolheu — 12px numa, 16px noutra, 20px na terceira. Três
+     autores, três réguas, e nenhuma delas errada sozinha.
+
+     Agora são três números, e eles moram aqui. Rótulo→campo e campo→dica são
+     o MESMO valor de propósito: o rótulo, o campo e a dica são uma peça só, e
+     peça só tem folga por dentro igual. O salto para o bloco seguinte é o
+     dobro e meio — é ele que faz o olho saber onde uma pergunta termina. */
+  --gap-rotulo: 0.375rem;  /*  6px — rótulo → campo */
+  --gap-dica:   0.375rem;  /*  6px — campo → dica */
+  --gap-bloco:  1.25rem;   /* 20px — bloco → bloco */
+
+  /* Elevação */
+  --e-1: 0 1px 0 var(--hair) inset, 0 6px 18px rgba(0, 0, 0, 0.45);
+  --e-2: 0 1px 0 var(--hair-2) inset, 0 20px 44px -14px rgba(0, 0, 0, 0.6);
+  --e-3: 0 1px 0 var(--hair-2) inset, 0 40px 120px -20px rgba(0, 0, 0, 0.85);
+
+  /* ── Papéis do layout Foco — F01 do plano UX ─────────────────────────────
+     A escada `--ink-*` diz QUANTO uma superfície sobe; o papel diz PARA QUE
+     ela serve. Tela nova pede o papel; os nomes antigos continuam valendo
+     (são eles que os papéis usam), então nenhuma página precisa migrar agora.
+
+     COR DE IDENTIDADE ≠ COR DE DESTAQUE ≠ COR DE ESTADO
+       `--iw-verde-*` é o verde da ARTE Ide Works: não muda com a cor que a
+       pessoa escolheu. `--luz` é o destaque da pessoa (seleção, ação, foco).
+       `--ok`/`--warn`/`--err` são estado (prazo, erro, sucesso) e nunca se
+       misturam com os dois de cima. */
+  --iw-fundo: var(--ink-0);          /* a página */
+  --iw-lateral: var(--ink-1);        /* barra lateral e árvore */
+  --iw-superficie: var(--ink-1);     /* bloco de apoio dentro da página */
+  --iw-sobreposicao: var(--ink-2);   /* menu, balão, diálogo */
+  --iw-selecionado: #343638;         /* item atual da navegação e aba ativa */
+  --iw-hover: color-mix(in srgb, var(--plat) 6%, transparent);
+  --iw-linha: #36373b;               /* divisória entre linhas e blocos */
+  --iw-texto: var(--plat);
+  --iw-texto-2: var(--plat-dim);
+  --iw-texto-3: var(--mute);
+  --iw-foco: var(--luz-texto);
+  --iw-marca-tinta: var(--plat);     /* as letras da marca */
+  --iw-verde-marca: #6ff527;         /* o verde da arte, como FUNDO */
+  --iw-verde-marca-tinta: #0c0c10;   /* texto sobre ele: 13,7:1 */
+  --iw-verde-marca-texto: #6ff527;   /* verde como TEXTO/ícone sobre a página: 12,5:1 */
+  /* F03: o item escolhido de um controle segmentado sobe do trilho
+     (`--iw-superficie`) — um degrau acima dele, com fio e sombra curta. */
+  --iw-elevado: var(--ink-3);
+  --iw-relevo: 0 0 0 1px var(--hair), 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A TABELA DE NÚMEROS ROLA — ELA NÃO COMPRIME — F19h
+   ═══════════════════════════════════════════════════════════════════════════
+   Com onze métricas escolhidas, a tabela de anúncios virava isto:
+
+       LEAD          INVEST        R$ 157,7
+       S             IDO           5
+
+   Duas coisas erradas ao mesmo tempo, e as duas nossas.
+
+   1. `width: 100%` prendia a tabela na largura do cartão. Tabela presa não
+      transborda: ela ESPREME as colunas até caber. Quem escolhe a décima
+      primeira métrica não está pedindo colunas mais finas — está pedindo mais
+      tabela, e mais tabela se alcança rolando.
+
+   2. `overflow-wrap: anywhere` (regra 4, para nome de cliente não estourar o
+      cartão) partia número no meio. "R$ 157,7 / 5" não é um número apertado:
+      é um número ERRADO por meio segundo, que é tempo de sobra para alguém ler
+      157,7 e seguir em frente. Num relatório de mídia paga isso vira decisão.
+
+   A regra passa a ser a do gerenciador de anúncios, que é o que a equipe já
+   sabe operar: o dado nunca quebra, o cabeçalho quebra só entre palavras, a
+   primeira coluna corta com reticências, e o que não couber se alcança pelas
+   duas barras de rolagem — a de baixo e a da lateral.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A CAIXA QUE ROLA NOS DOIS EIXOS.
+   O teto de altura não é enfeite: sem ele o contêiner cresce com o conteúdo,
+   nunca rola na vertical, e o cabeçalho grudado não tem em que grudar.
+
+   ELE FICA NO QUADRO DE DENTRO, E NÃO NO CARTÃO DE FORA. Caixa com `overflow`
+   corta o que sai dela, e o que sai dela aqui é o balão do seletor de
+   métricas. Pôr o teto no cartão inteiro consertaria a tabela e quebraria o
+   menu que escolhe as colunas dela — trocar um defeito visível por outro. */
+.o-tab-caixa { overflow: auto; max-height: 28rem; }
+
+/* O QUADRO QUE ROLA VIRA UNIDADE DE MEDIDA — F17.47.
+   `container-type: inline-size` não muda nada do que se vê: ele só dá um nome à
+   largura VISÍVEL do quadro, para que o painel de anúncios, que mora dentro de
+   uma linha da tabela e por isso nasceria com a largura da tabela inteira,
+   possa pedir "a largura da janela do quadro" em vez dela. */
+.o-tab-quadro { container-type: inline-size; }
+
+/* O PAINEL QUE ABRE DENTRO DA LINHA FICA NA JANELA, E NÃO NA TABELA.
+   Sem isto, ele nascia com os 1908px da tabela de fora: rolar a tabela de
+   campanhas para o lado levava junto o nome do anúncio — a coluna presa do
+   painel ficava presa a um quadro que já tinha saído da tela. Com a largura da
+   janela e `sticky`, o painel fica onde se lê, com a barra dele. */
+.o-tab-encaixe {
+  position: sticky;
+  left: 0;
+  width: 100cqi;
+}
+
+/* Largura pelo CONTEÚDO, com o cartão como piso e não como teto. */
+.o-tab-rola { width: auto; min-width: 100%; }
+
+/* O DADO NUNCA QUEBRA. */
+.o-tab-rola tbody td {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* O CABEÇALHO QUEBRA ENTRE PALAVRAS, E SÓ ENTRE PALAVRAS.
+   "Custo/conexões por mensagem" em três linhas é um cabeçalho; "LEAD / S" é um
+   defeito. O piso de largura existe para o rótulo comprido não virar uma
+   coluna de uma letra por linha. */
+.o-tab-rola thead th {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+.o-tab-rola thead th + th { min-width: 5.25rem; }
+
+/* O CABEÇALHO ACOMPANHA A ROLAGEM. Rolar 141 anúncios e perder de vista de
+   qual coluna é o número é o mesmo que não ter cabeçalho.
+   A sombra faz o papel do fio: com `border-collapse: collapse`, a borda da
+   linha do cabeçalho não viaja junto com a célula grudada. */
+.o-tab-rola thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--fundo-fixo, var(--ink-1));
+  box-shadow: inset 0 -1px 0 var(--hair);
+}
+/* A quina onde as duas grudagens se cruzam fica por cima das duas. */
+.o-tab-rola thead th:first-child { z-index: 3; }
+
+/* A PRIMEIRA COLUNA É NOME, NÃO NÚMERO: corta com reticências em vez de
+   empurrar a tabela inteira para fora da tela.
+
+   ⚠️ O `overflow: hidden` é a metade que faltava — F17.47. O teto de 24rem
+   segurava a LARGURA DA CÉLULA, e mais nada: o texto continuava desenhado
+   inteiro, 258px para dentro das colunas de número. E como esta célula é a
+   presa, ela pinta POR CIMA delas — era isso o "informações encavaladas uma
+   por cima da outra". Teto sem corte não corta. */
+/* NO TELEFONE, 24rem SÃO A TELA INTEIRA. A coluna presa media 384px dentro de
+   uma janela de 348: ela cobria os números, e ao rolar até o fim encostava pela
+   direita — 36px do nome ficavam de fora. `min()` deixa o teto em 24rem na mesa
+   de trabalho, onde 60vw é maior, e o encolhe onde a tela é estreita. */
+.o-tab-rola thead th:first-child,
+.o-tab-rola tbody td:first-child:not([colspan]) {
+  max-width: min(24rem, 60vw);
+  overflow: hidden;
+}
+
+/* A SEGUNDA LINHA DA PRIMEIRA COLUNA — o período do anúncio, o conjunto a que
+   ele pertence, de onde veio o número da campanha.
+
+   É LEGENDA, E NÃO DADO: ela quebra e, se ainda assim não couber, termina em
+   reticências — com o texto inteiro no `title`. A regra "o dado nunca quebra"
+   vale para o número que se alinha em coluna; um nome de conjunto de 93
+   caracteres não é isso.
+
+   DUAS LINHAS, E NÃO UMA: numa só, o conjunto de 93 caracteres perdia 270px de
+   texto para as reticências — trocar o encavalamento por um segredo não é
+   consertar. Em duas, cabe o caso real. */
+.o-tab-legenda {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  min-width: 0;
+  overflow: hidden;
+  white-space: normal;
+}
+
+/* A célula que abre a tabela de dentro é CONTÊINER, não dado — as regras de
+   dado não valem para ela. */
+.o-tab-rola tbody td[colspan] {
+  white-space: normal;
+  max-width: none;
+}
+
+/* --- base ------------------------------------------------------------------ */
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--f-body);
+  background: var(--ink-0);
+  color: var(--plat-dim);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--luz); color: var(--ink-0); }
+
+/* O anel a 2px sem folga encosta na borda e parece defeito de renderizacao.
+   Com o halo suave ele le como ESTADO. */
+:focus-visible {
+  outline: 2px solid var(--luz-texto);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+  box-shadow: 0 0 0 4px var(--luz-soft);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--ink-0); }
+::-webkit-scrollbar-thumb {
+  background: var(--ink-4);
+  border-radius: 99px;
+  border: 2px solid var(--ink-0);
+}
+::-webkit-scrollbar-thumb:hover { background: #2b2b32; }
+
+/* Números que mudam a cada carga não podem dançar de largura. */
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+
+/* O rótulo em versalete monoespaçado é a assinatura do OBSIDIAN. */
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.o-titulo {
+  font-family: var(--f-body);
+  font-weight: 600;
+  color: var(--plat);
+  letter-spacing: -0.02em;
+}
+
+.o-mono { font-family: var(--f-mono); }
+
+/* --- superfícies ----------------------------------------------------------- */
+
+/* O BLOCO NÃO TEM MOLDURA — F43 Fase 5 (a camada calma).
+   Tinha fio de 1px em volta, e quase tudo na tela era `.o-card`: setenta
+   retângulos contornados, um dentro do outro, e a queixa foi "não sei onde
+   começa ou termina algo". O contorno não separava — ele EMPATAVA, porque
+   tudo tinha o mesmo. Agora o bloco se separa pelo TOM (`--ink-1`, um degrau
+   acima da página) e pelo espaço, como a barra lateral já fazia desde a
+   F17.20 (`acabamento.css`, "caixa vira grupo").
+
+   A borda continua declarada, transparente: assim o bloco mede o mesmo de
+   antes (nada pula 1px) e quem precisar de um contorno de estado ainda tem
+   onde pintá-lo. Campo, busca e o cartão arrastável do Quadro mantêm a deles:
+   ali o contorno diz "isto se digita" ou "isto se pega". */
+.o-card {
+  position: relative;
+  background: var(--ink-1);
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  transition:
+    background-color var(--dur-2),
+    box-shadow var(--dur-2),
+    transform var(--dur-2) var(--ease-out);
+}
+
+/* Sem moldura, o hover não tem borda para acender: o bloco sobe um tom. */
+.o-card-hover:hover {
+  transform: translateY(-3px);
+  background: var(--ink-2);
+}
+
+/* Bloco dentro de bloco — ou dentro do diálogo, que já é `--ink-1` — sobe
+   mais um degrau. Com moldura, o de dentro se via pelo fio; sem ela, o mesmo
+   tom do de fora seria bloco nenhum. */
+.o-card .o-card,
+.o-modal .o-card { background: var(--ink-2); }
+
+/* O estado, quando importa, vira um traço à esquerda — e não a moldura
+   inteira tingida. Só âmbar e vermelho: "está tudo bem" não precisa de marca
+   (F43 Fase 5 — cor só na exceção). */
+.o-card[data-tom='warn'] { box-shadow: inset 3px 0 0 var(--warn); }
+.o-card[data-tom='err']  { box-shadow: inset 3px 0 0 var(--err); }
+
+/* O LÁPIS DO CARTÃO DE CLIENTE — F27.
+   No computador ele aparece no hover e no foco: o cartão inteiro já é link, e
+   um lápis fixo em cada um dos vinte cartões seria ruído. Mas SEM MOUSE NÃO HÁ
+   HOVER (a mesma regra de `chat.css`): no telefone o lápis ficava invisível, e
+   uma ação que só aparece no hover é uma ação que não existe.
+
+   No toque ele fica à vista, com o mesmo desenho de 28px e um alvo de 44px
+   (o `::after` estende a área sem engordar o ícone). O cabeçalho do cartão
+   ganha folga à direita para o medidor não ficar debaixo do lápis. */
+.o-btn-icone.o-editar-cartao {
+  width: 1.75rem;
+  height: 1.75rem;
+  opacity: 0;
+  transition:
+    opacity var(--dur-2),
+    transform var(--dur-1) var(--ease-out),
+    background var(--dur-1),
+    color var(--dur-1);
+}
+.o-card:hover > .o-editar-cartao,
+.o-editar-cartao:focus-visible { opacity: 1; }
+
+/* F43 Fase 10: também com ponteiro GROSSO, e não só sem hover. Tablet com
+   caneta, notebook com tela de toque e alguns Android declaram `hover: hover`
+   e mesmo assim são tocados com o dedo: lá o lápis ficava invisível até o
+   toque acertar o lugar dele às cegas. A linha da carteira (o cartão virou
+   linha) reserva a coluna do lápis na grade, então ele não cobre nada. */
+@media (hover: none), (pointer: coarse) {
+  .o-btn-icone.o-editar-cartao { opacity: 1; }
+  /* O `::after` se mede a partir da borda de DENTRO do botão (o fio de 1px
+     fica de fora): -0.5rem sozinho dava 26 + 16 = 42px. O `- 1px` fecha 44. */
+  .o-editar-cartao::after { content: ''; position: absolute; inset: calc(-0.5rem - 1px); }
+}
+
+/* Linha de ficha: chave à esquerda, valor à direita, fio embaixo. */
+.o-linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--hair);
+  font-size: 0.85rem;
+}
+.o-linha:last-child { border-bottom: 0; }
+.o-linha .k {
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+.o-linha .v { color: var(--plat); }
+
+/* --- botões ---------------------------------------------------------------- */
+
+.o-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 0.86rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1),
+    background var(--dur-1),
+    border-color var(--dur-1),
+    color var(--dur-1);
+}
+.o-btn:active { transform: translateY(1px) scale(0.99); }
+.o-btn:disabled,
+.o-btn[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Sólido — o verde da conversão. Texto escuro passa AA sobre ele.
+
+   O SEGUNDO PONTO DO DEGRADÊ ERA UM VERDE ESCRITO — F17.58.
+   `#00e65c` é, exatamente, `--luz` do tema escuro a 90%: o degradê sempre foi
+   "a própria luz, um passo mais escura". Escrito à mão, porém, ele não sabia
+   disso: no tema claro a luz descia para `#00a344` e o pé do botão continuava
+   neon, e no contexto do Instagram o botão ia de rosa a VERDE. Agora ele
+   deriva, e o tema escuro sai byte a byte igual (90% de `#00ff66` é `#00e65c`).
+
+   A tinta vem de `--tinta-solido`, que segue o fundo do BOTÃO e não o da
+   página — ver o token lá em cima. */
+.o-btn-solido {
+  background: linear-gradient(180deg, var(--luz), color-mix(in srgb, var(--luz) 90%, #000));
+  color: var(--tinta-solido);
+  border-color: var(--luz);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.o-btn-solido:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), var(--glow-luz);
+}
+
+/* Primário — platina sobre obsidiana. O botão de todo dia.
+   O HOVER NÃO ACENDE VERDE — F43 Fase 10 (sobra da Fase 5). O fio virava
+   `--luz` com o brilho da marca: num botão de todo dia, passar o ponteiro
+   pintava de verde o que não é a ação principal nem o lugar atual. Agora ele
+   sobe um tom e o fio fica um degrau mais visível, como o vidro. */
+.o-btn-primario {
+  background: var(--ink-2);
+  color: var(--plat);
+  border-color: var(--hair-3);
+  box-shadow: var(--e-1);
+}
+.o-btn-primario:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--ink-3);
+  border-color: color-mix(in srgb, var(--plat) 32%, transparent);
+  box-shadow: var(--e-2);
+}
+
+/* Vidro / fantasma.
+   O BOTÃO SECUNDÁRIO É UM TOM, E NÃO UM CONTORNO — F43 Fase 5.
+   Era branco a 5,5% com fio de `--hair-2` em volta: no escuro o fio fazia o
+   trabalho, e no claro ele fazia TODO o trabalho — branco a 5,5% sobre branco
+   é nada. Agora o fundo é a própria tinta do tema (`--plat`) bem diluída: no
+   escuro clareia, no claro escurece, e o botão existe nos dois sem moldura.
+   O hover e o apertado sobem a diluição; quem diz "isto é ação principal"
+   continua sendo só o sólido verde. */
+.o-btn-vidro {
+  background: color-mix(in srgb, var(--plat) 7%, transparent);
+  color: var(--plat);
+  border-color: transparent;
+}
+.o-btn-vidro:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--plat) 12%, transparent);
+}
+
+.o-btn-fantasma { background: transparent; color: var(--plat-dim); }
+.o-btn-fantasma:hover:not(:disabled) { color: var(--plat); background: var(--hair); }
+
+.o-btn-icone { padding: 0; width: 2.15rem; height: 2.15rem; }
+.o-btn-sm { padding: 0.36rem 0.8rem; font-size: 0.78rem; }
+
+/* Estado ligado de um botão que alterna (filtro, ordenação).
+   F43 Fase 5: era o verde da marca (fundo `--luz-soft`, fio e letra `--luz`).
+   Um filtro ligado não é ação principal nem lugar — e com três pílulas
+   ligadas a barra de filtros virava uma fileira de botões verdes competindo
+   com o "Novo cliente". Agora ele SOBE, como o item escolhido do controle
+   segmentado (F03): tom mais denso, letra plena e um fio por dentro — o fio
+   é o sinal que não depende de cor, e só o estado ligado o tem. O hover do
+   vidro troca só o fundo, então o fio fica: ligado continua ligado sob o
+   ponteiro. */
+.o-btn[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--plat) 16%, transparent);
+  border-color: transparent;
+  color: var(--plat);
+  box-shadow: inset 0 0 0 1px var(--hair-3);
+}
+
+/* --- selos e etiquetas ------------------------------------------------------ */
+
+.o-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--r-pill);
+  /* Sem contorno — F43 Fase 5. `acabamento.css` já o apagava no neutro desde
+     a F17.20 ("três marcações para uma informação só"), mas os tons abaixo
+     tinham mais especificidade e o traziam de volta, colorido. O selo agora é
+     fundo suave e letra, nos quatro tons; a borda fica transparente para a
+     altura não mudar. Cor do banco (o plano) entra só no fundo e na letra. */
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--plat) 8%, transparent);
+  color: var(--plat-dim);
+  white-space: nowrap;
+}
+.o-selo[data-tom='ok']   { color: var(--ok);   background: var(--ok-soft); }
+.o-selo[data-tom='warn'] { color: var(--warn); background: var(--warn-soft); }
+.o-selo[data-tom='err']  { color: var(--err);  background: var(--err-soft); }
+
+/* A etiqueta do cliente carrega cor própria, vinda do banco. */
+.o-etiqueta {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  border: 1px solid var(--hair);
+  color: var(--plat-dim);
+  white-space: nowrap;
+}
+
+/* ═══ A COR DO BANCO PINTA A MARCA, E NÃO A LETRA — F17.37 ═══════════════════
+   Medido no painel real: `#ef4444` deu 4,60 sobre o cartão no escuro e 1,93
+   no claro; `#84cc16` deu 1,93. Vinte e uma etiquetas abaixo da régua numa
+   tela só, e nenhuma delas conserta-se aqui — a cor é DADO, escolhida por
+   quem cadastrou a etiqueta, e o sistema não tem o direito de trocá-la.
+
+   O que ele tem o direito de escolher é ONDE ela vai. Cor de identificação
+   não precisa estar na letra: precisa estar visível ao lado dela. O contorno
+   e o ponto continuam sendo a cor exata do banco, e o nome volta para a
+   platina — a etiqueta continua reconhecível de longe e passa a ser legível
+   de perto.
+
+   ⚠️ O ponto usa `currentColor` do PONTO, não do texto. Se ele herdasse do
+   pai, voltaria a ser platina e a cor sumiria de vez. */
+.o-etiqueta[data-cor] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-color: var(--cor-etiqueta);
+}
+.o-etiqueta[data-cor] > .ponto {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--cor-etiqueta);
+}
+
+/* --- campos ---------------------------------------------------------------- */
+
+.o-rotulo {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: var(--gap-rotulo);
+}
+
+/* A dica embaixo do campo — F17.37, e ela era a frase da captura do usuário.
+   Três coisas estavam erradas nela ao mesmo tempo, e cada uma sozinha já
+   bastava para "some":
+
+     · o tom mais apagado do sistema, que era o mínimo da norma para texto
+       NORMAL, usado no menor texto da tela — 4,51 no escuro, 3,86 no claro;
+     · 0,66rem, que dá 10,6px: menor que o carimbo de data, menor que o
+       contador da árvore, menor que tudo o que é dado;
+     · MONOESPAÇADA. Mono alinha coluna de número; em frase corrida ele só
+       afasta as letras e come a diferença entre `l`, `1` e `I`.
+
+   A regra desta etapa é que mono é para dado que se alinha. Dica é prosa, e
+   prosa usa a família do texto. O tamanho sobe para 0,78rem (12,5px) — ainda
+   é a peça mais discreta do bloco, e agora é a peça mais discreta LEGÍVEL. */
+.o-dica {
+  display: block;
+  margin-top: var(--gap-dica);
+  font-family: var(--f-body);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--mute);
+}
+.o-dica[data-erro='true'] { color: var(--err); }
+
+/* Rótulo e `?` na mesma linha — F17.37.
+
+   ⚠️ O `?` NÃO PODE ENGORDAR A LINHA, e engordava: medido em `Convidar`, o
+   campo com `?` tinha 8px até a caixa e o campo sem `?` tinha 6px. Dois
+   pixels, na mesma coluna, em dois campos vizinhos — que é exatamente o
+   "espaçamento indevido" que a etapa foi chamada para acabar.
+
+   A causa é boba e vale registrar: o círculo do `?` tem 1,15rem de altura e a
+   versalete do rótulo tem menos que isso, então quem decidia a altura da linha
+   era o botão. A margem negativa devolve a decisão ao rótulo, e o círculo
+   passa a transbordar meio pixel para cada lado sem empurrar nada. */
+.o-rotulo-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: var(--gap-rotulo);
+}
+.o-rotulo-linha > .o-rotulo,
+.o-rotulo-linha > .eyebrow { margin-bottom: 0; }
+.o-rotulo-linha > .cu-ajuda { margin-block: -0.2rem; }
+
+/* O formulário respira pela régua, e não pelo `space-y-N` que cada tela
+   escolheu. `> *` e não `> * + *`: a coluna já não desenha folga antes do
+   primeiro filho. */
+.o-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-bloco);
+}
+
+/* ⚠️ O BOTÃO NÃO ESTICA, e esticou na primeira versão desta regra.
+   `space-y-N` num `<div>` deixa cada filho com a largura que ele pede, e o
+   botão pedia a do texto. Numa coluna flex o padrão é `stretch`, e "Criar
+   acesso" saiu com a largura inteira do formulário — 448px de verde para um
+   rótulo de doze caracteres. Foi visto na captura, não no código.
+
+   O campo continua esticando, que é o que ele quer; quem volta a pedir o
+   próprio tamanho é só o botão. */
+.o-form > .o-btn { align-self: flex-start; }
+
+.o-campo {
+  width: 100%;
+  background: var(--ink-2);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-sm);
+  padding: 0.55rem 0.85rem;
+  color: var(--plat);
+  font-size: 0.88rem;
+  transition: border-color var(--dur-1), box-shadow var(--dur-1), background var(--dur-1);
+}
+.o-campo::placeholder { color: var(--mute); }
+.o-campo:focus {
+  outline: none;
+  border-color: var(--luz);
+  background: var(--ink-3);
+  box-shadow: 0 0 0 3px var(--luz-soft);
+}
+
+/* Campo com um botão desenhado dentro da caixa — o "mostrar senha" da F27.
+   O botão é irmão do campo, e não filho do rótulo: ver `CampoDeSenha`. A folga
+   à direita existe para o texto digitado não correr por baixo do ícone.
+
+   ⚠️ CENTRADO POR `margin-block: auto`, E NÃO POR `translateY(-50%)`.
+   `.o-btn:active` já usa `transform` para o afundar do clique, e um segundo
+   `transform` aqui seria substituído por ele: o ícone pularia meia altura
+   para baixo a cada toque. */
+.o-campo-com-adorno { position: relative; }
+.o-campo-com-adorno > .o-campo { padding-right: 2.75rem; }
+.o-campo-com-adorno > .o-adorno {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0.2rem;
+  margin-block: auto;
+}
+
+/* ⚠️ NO CELULAR — F27.
+
+   16px NO CAMPO: o Safari do iPhone dá zoom na página inteira ao focar um
+   campo com letra menor que 16px, e não devolve o zoom ao sair dele. A pessoa
+   digita a senha e termina com a tela de entrada cortada pela metade. Vale
+   também para o campo compacto dos balões — ele é o mesmo `<input>` para o
+   Safari —, e por isso o seletor composto: `.o-campo-sm` vem mais abaixo nesta
+   folha, e sozinho venceria pela ordem.
+
+   44px DE ALTURA: o piso de área tocável da referência do iOS, o mesmo número
+   do `?` em `clickup.css`. Só em `input` e `select`: o `<textarea>` já nasce
+   com 5rem, e uma regra mais específica que a utilidade `min-h-[5rem]` o
+   encolheria. O campo compacto dos balões fica de fora de propósito — ele é
+   filtro de menu, e 44px ali empurraria a lista para fora do balão.
+
+   O BOTÃO PRINCIPAL SÓ DA ENTRADA (`.o-entrada > .o-btn`): é a tela que se
+   abre no celular sem ter onde errar. Os outros botões do sistema não mudam. */
+@media (max-width: 640px) {
+  .o-campo,
+  .o-campo.o-campo-sm { font-size: 16px; }
+  input.o-campo:not(.o-campo-sm),
+  select.o-campo { min-height: 44px; }
+  .o-campo-com-adorno > .o-adorno { right: 0; width: 44px; height: 44px; }
+  .o-entrada > .o-btn { min-height: 44px; }
+}
+
+.o-select {
+  appearance: none;
+  /* A seta é desenhada aqui porque `appearance: none` apaga a nativa, e um
+     select sem seta não se anuncia como select. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238A8A94' stroke-width='1.6'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  padding-right: 2.2rem;
+}
+
+/* A lista aberta é desenhada pelo sistema, não pela página: sem isto ela sai
+   branca sobre preto em alguns navegadores, ilegível. */
+.o-select option {
+  background: var(--ink-2);
+  color: var(--plat);
+}
+
+/* Chave liga/desliga — usada em Ativo e Financeiro OK. */
+.o-chave {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  user-select: none;
+}
+.o-chave input { position: absolute; opacity: 0; width: 0; height: 0; }
+.o-chave .trilho {
+  width: 38px;
+  height: 21px;
+  border-radius: 99px;
+  background: var(--ink-3);
+  border: 1px solid var(--hair-2);
+  position: relative;
+  transition: background var(--dur-1), border-color var(--dur-1);
+}
+.o-chave .trilho::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--plat-dim);
+  transition: transform var(--dur-1), background var(--dur-1);
+}
+/* LIGADA é "ok", e não o verde da marca — F43 Fase 5. As chaves dizem
+   "Ativo" e "Financeiro OK": estado, não ação. No neon, cada chave ligada de
+   uma ficha competia com o botão Salvar logo abaixo. O que diz "ligada" sem
+   depender da cor continua sendo a bolinha do lado direito. */
+.o-chave input:checked + .trilho {
+  background: color-mix(in srgb, var(--ok) 30%, var(--ink-2));
+  border-color: var(--ok);
+}
+.o-chave input:checked + .trilho::after {
+  transform: translateX(17px);
+  background: var(--ok);
+}
+.o-chave input:disabled + .trilho { opacity: 0.4; cursor: not-allowed; }
+
+/* O FOCO DA CHAVE MORA NO TRILHO — acessibilidade, WCAG 2.4.7.
+   O `<input>` é invisível (`opacity: 0`, 0×0) para o trilho desenhar a chave, e
+   o `:focus-visible` global caía só nele: quem navegava por teclado apertava
+   Tab em "Manter conectado", "Ativo", "Financeiro OK" e nada na tela dizia onde
+   estava o foco. O mesmo anel do resto do sistema vai para o que se vê. */
+.o-chave input:focus-visible + .trilho {
+  outline: 2px solid var(--luz-texto);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--luz-soft);
+}
+
+/* --- alerta ---------------------------------------------------------------- */
+
+/* O AVISO É UM TOM, E O TRAÇO SÓ APARECE NA EXCEÇÃO — F43 Fase 5.
+   Tinha moldura de `--hair-2` e um traço de 3px em TODO tom — verde no ok,
+   azul no info, o verde da marca no sem-tom. Um "salvo" e um "não foi
+   possível salvar" tinham o mesmo desenho, só trocando a cor do traço, e a
+   tela de Conexões chegava a ter quatro avisos emoldurados empilhados.
+
+   Agora o aviso é um fundo suave sem moldura (a diluição de `--plat`, que
+   clareia no escuro e escurece no claro, e por isso aparece sobre a página E
+   sobre o bloco), e o traço fica só para âmbar e vermelho — é ele que faz o
+   erro ser visto de longe. Ok e info são texto calmo; a frase já diz. */
+.o-alerta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.8rem 1rem;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--plat) 5%, transparent);
+  position: relative;
+  overflow: hidden;
+  font-size: 0.86rem;
+  color: var(--plat-dim);
+}
+.o-alerta[data-tom='warn']::before,
+.o-alerta[data-tom='err']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--al);
+}
+.o-alerta[data-tom='warn'] { --al: var(--warn); }
+.o-alerta[data-tom='err']  { --al: var(--err); }
+
+/* --- barra de progresso ----------------------------------------------------- */
+
+.o-barra {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--ink-3);
+  overflow: hidden;
+}
+.o-barra > i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--bc, var(--luz));
+  transition: width var(--dur-2) var(--ease-out);
+}
+
+/* --- carregando: esqueleto e tela de antes — F27 ---------------------------- */
+
+/* O ESQUELETO DA PRIMEIRA CARGA. O desenho é o de `.cu-esqueleto` (clickup.css,
+   F17.CARGA03): barra em `--hair`, pulso de opacidade. Ele mora aqui, e não
+   reaproveita aquele `@keyframes`, porque `clickup.css` não é global — cada
+   tela o importa — e uma tela sem quadro perderia o pulso sem aviso.
+
+   Existe para o painel não escrever "0" enquanto ainda não sabe: zero é um
+   número, e "Crítico 0" antes da resposta é uma afirmação falsa.
+
+   Só pulsa dentro de algo que está `aria-busy`: um esqueleto parado depois de
+   uma falha diz "não chegou", não "está chegando". Movimento reduzido é zerado
+   pelo bloco `prefers-reduced-motion` deste arquivo. */
+.o-esqueleto {
+  display: block;
+  border-radius: var(--r-xs);
+  background: var(--hair);
+}
+[aria-busy='true'] .o-esqueleto { animation: o-esqueleto-pulso 1.4s var(--ease-out) infinite; }
+
+@keyframes o-esqueleto-pulso {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* A RECARGA não troca nada por esqueleto: os números de antes ficam, só
+   esmaecidos, para a tela não piscar vazia a cada troca de período. O
+   `aria-busy` é quem liga, e é ele também que o leitor de tela anuncia. */
+.o-recarregavel { transition: opacity var(--dur-2) var(--ease-out); }
+.o-recarregavel[aria-busy='true'][data-com-dados] { opacity: 0.55; }
+
+/* --- modal ------------------------------------------------------------------ */
+
+.o-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(5, 5, 6, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+.o-modal {
+  background: var(--ink-1);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-xl);
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: var(--e-3);
+}
+
+/* --- movimento reduzido ------------------------------------------------------ */
+/* Quem pediu ao sistema para parar de animar não deveria ter que pedir de novo. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA CLARO — etapa F10d
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Só tokens. Nenhuma tela sabe que existe tema claro, e é por isso que ele
+   coube: o OBSIDIAN nasceu com a cor morando em variável, então trocar o tema
+   é trocar o dicionário, não reescrever as páginas.
+
+   A ESCADA DE SUPERFÍCIE NÃO INVERTE, ELA REFLETE
+     No escuro, elevar clareia: --ink-0 é o fundo mais escuro e --ink-3 é o topo.
+     No claro, elevar TAMBÉM clareia — o fundo é cinza e o cartão é branco. A
+     direção se mantém, o que muda é de onde ela parte. Inverter a ordem faria o
+     cartão ficar mais escuro que a página, e todo `--ink-2` de código viraria
+     erro visual.
+
+   O NEON NÃO SOBREVIVE AO BRANCO
+     `#00ff66` sobre branco tem contraste 1.4:1 — texto invisível, botão que
+     some. As cinco luzes do prisma são escurecidas aqui, mantendo o matiz: é a
+     mesma cor da marca, na intensidade que o fundo claro comporta.
+
+     Este é o único lugar do sistema onde a paleta muda de valor, e é o único
+     que pode: os tokens semânticos continuam se chamando `--ok`, `--err`,
+     `--luz`.
+
+   AS SOMBRAS PERDEM A FORÇA
+     Sombra preta a 85% sobre fundo claro vira mancha. No claro elas ficam
+     sutis, e a separação passa a vir mais do fio que da profundidade.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+:root[data-tema='claro'] {
+  /* Escada de superfícies — cinza de papel subindo para o branco.
+     `--ink-2` e `--ink-3` eram os DOIS branco puro: dois degraus com o mesmo
+     valor não são dois degraus. O elevado agora fica um passo abaixo do topo,
+     para o cartão dentro do cartão continuar existindo. */
+  /* ⚠️ F01 do plano UX: no layout Foco a página é BRANCA e a escada desce
+     para o cinza — superfície, elevado e topo são áreas de apoio (barra,
+     bloco interno, seleção), não cartões que sobem. Por isso o pior fundo
+     para tinta escura agora é `--ink-3`, e é contra ele que a escada de texto
+     e as cores do tema são medidas (`test/contraste-legivel.test.ts`,
+     `src/ui/cores.test.ts`). */
+  --ink-0: #ffffff;   /* fundo universal */
+  --ink-1: #f7f7f8;   /* superfície */
+  --ink-2: #f0f0f2;   /* elevado */
+  --ink-3: #e8e8eb;   /* topo */
+  --ink-4: #d4d4d8;   /* borda de campo */
+
+  /* Fios: agora escuros sobre claro, e um degrau mais firmes — mesma razão do
+     tema escuro, contorno que não se vê não delimita nada. */
+  --hair:   rgba(16, 16, 20, 0.11);
+  --hair-2: rgba(16, 16, 20, 0.22);
+  --hair-3: rgba(16, 16, 20, 0.36);
+
+  /* Tinta: a escada de texto desce em vez de subir. Três degraus, como no
+     escuro — F17.37.
+
+     ⚠️ E medida contra `--ink-0`, que é o pior fundo DESTE tema. O branco
+     (`--ink-3`) aqui é o melhor caso, não o pior: era o engano que deixava
+     `--mute` em 5,59 e o quarto tom em 3,86 no fundo da página, com o teste verde.
+     `--mute` desceu de `#5c5c67` para passar de 7:1 sobre `#ececed`. */
+  --plat:     #252629;   /* 12.4 sobre --ink-3 */
+  --plat-dim: #3b3b44;   /*  9.1 sobre --ink-3 */
+  --mute:     #4a4a54;   /*  7.2 sobre --ink-3 — o piso do sistema */
+
+  /* Prisma escurecido — mesmo matiz, intensidade que o branco comporta */
+  --luz-agencia: #00a344;
+  --luz-filmes:  #16161a;
+  --luz-estudio: #0e8a52;
+  --luz-lives:   #d15600;
+  --luz-ia:      #1a5fd6;
+  /* O prisma como texto no claro — F11B. #00a344/#0e8a52/#d15600 davam
+     3,1–4,1 sobre `--ink-3`; estes passam de 4,5 em toda superfície do claro
+     (`test/contraste-legivel.test.ts`). Mesmo matiz, um passo mais fechado. */
+  --luz-agencia-texto: #007537;
+  --luz-estudio-texto: #0a6f45;
+  --luz-lives-texto: #a84200;
+  --luz-ia-texto: #1857c4;
+  /* A arte no claro (F43 Fase 5): o lilás desce para violeta. Como barra e
+     ícone, 4,6 sobre `--ink-3`; como letra, um passo mais fechado — 5,6. */
+  --tipo-arte: #7e45d6;
+  --tipo-arte-texto: #6a3fc0;
+  /* Os fios descem com os do escuro (0.14 → 0.11): ver o motivo lá. */
+
+  --luz:      #00a344;
+  --luz-soft: rgba(0, 163, 68, 0.14);
+
+  /* F01: medidos contra `--ink-3` (#e8e8eb), o pior fundo do claro no Foco —
+     #00863a dava 3,84 e #a86b00 dava 3,60 como texto de estado.
+     F43 Fase 5: o "ok" saiu do verde da marca também aqui — de `#007533`
+     (saturado, vizinho do `#00a344` da `--luz`) para um verde-floresta calmo.
+     7,5 sobre o branco da página, 6,1 sobre `--ink-3`, e 5,3 sobre o próprio
+     soft no pior fundo (o `#007533` dava 5,9, 4,8 e 4,05). */
+  --ok:   #24603f; --ok-soft:   rgba(36, 96, 63, 0.10);
+  --warn: #8f5b00; --warn-soft: rgba(143, 91, 0, 0.12);
+  /* F16: #c62828 sobre --err-soft dava 4,36 ("Crítico" do Painel e da
+     ficha); #b3261e dá ≥ 5,0 no soft e ≥ 5,6 no --ink-3. O soft segue o tom. */
+  --err:  #b3261e; --err-soft:  rgba(179, 38, 30, 0.12);
+
+  /* Elevação discreta: sombra forte sobre claro vira mancha */
+  --e-1: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 3px rgba(16, 16, 20, 0.08);
+  --e-2: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 8px 24px -8px rgba(16, 16, 20, 0.16);
+  --e-3: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 24px 60px -16px rgba(16, 16, 20, 0.22);
+  --glow-luz: 0 0 0 1px var(--luz-soft);
+
+  /* Papéis do Foco no claro — só o que não sai da escada. */
+  --iw-sobreposicao: var(--ink-0);
+  --iw-selecionado: #e9eaeb;
+  --iw-linha: #e9e9eb;
+  /* O verde da arte é lima: sobre branco dá 1,4:1. Como texto ele desce para
+     um verde fechado (5,8 sobre o branco, 4,8 sobre `--ink-3`). */
+  --iw-verde-marca-texto: #2b7410;
+  --iw-elevado: var(--ink-0);
+  --iw-relevo: 0 0 0 1px var(--hair), 0 1px 2px rgba(16, 16, 20, 0.08);
+}
+
+/* O verde padrão (sem `data-cor`) como texto no claro: um passo mais fechado,
+   5,7 sobre `--ink-3` e 6,9 sobre o branco. As dez cores escolhíveis já passam
+   de 4,5 no claro (`src/ui/cores.test.ts`) e seguem iguais à `--luz`. */
+:root[data-tema='claro']:not([data-cor]) {
+  /* #007537 → #006b30 na revisão de acessibilidade: o verde de letra também é a
+     letra do item ESCOLHIDO sobre a névoa dele (`bg-luz-soft text-luz`: o dia do
+     período, o filtro marcado), e ali dava 4,4 sobre `--ink-2` e 4,1 sobre
+     `--ink-3`. Mesmo matiz, um passo mais fechado: 5,0 e 4,7. */
+  --luz-texto: #006b30;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CONTEXTO INSTAGRAM — etapa F10e
+   ═══════════════════════════════════════════════════════════════════════════
+
+   O pedido foi "a parte de Instagram ter as cores do Insta". A tentação era
+   espalhar `#E1306C` pelas telas — e isso quebraria a regra que sustenta o
+   OBSIDIAN: cor mora em variável, tela nenhuma escreve cor.
+
+   A saída é trocar o DICIONÁRIO para um pedaço da árvore. Quem estiver dentro
+   de `[data-contexto='instagram']` continua pedindo `var(--luz)`; o que muda é
+   o que `--luz` significa ali. Nenhum componente sabe, nenhum componente muda,
+   e sair do contexto restaura tudo sozinho.
+
+   É o mesmo mecanismo do tema claro, aplicado a um galho em vez da raiz.
+
+   AS CORES SÃO DA MARCA, MAS PASSAM PELO MESMO CRIVO
+     O rosa do Instagram sobre obsidiana funciona; sobre o branco do tema claro
+     ele clareia demais, então há uma versão para cada tema — pelo mesmo motivo
+     que o verde neon precisou ser escurecido.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+[data-contexto='instagram'] {
+  --ig-roxo:   #8134af;
+  --ig-rosa:   #dd2a7b;
+  --ig-laranja:#f58529;
+  --ig-amarelo:#feda77;
+
+  --luz:      var(--ig-rosa);
+  --luz-soft: rgba(221, 42, 123, 0.16);
+  --luz-texto: var(--luz);
+  --glow-luz: 0 0 34px var(--luz-soft);
+
+  /* O rosa é meio-tom nos DOIS temas: sobre ele a tinta que se lê é a clara,
+     e não a escura do resto do sistema. Medido: branco dá 4,48 no rosa escuro
+     e 5,71 no rosa claro; a tinta escura daria 3,65 e 2,91. Vale para os dois
+     temas, então fica num bloco só — F17.58. */
+  --tinta-solido: #ffffff;
+
+  /* As três luzes que os gráficos usam passam a ser a escada do Instagram. */
+  --luz-ia:      var(--ig-roxo);
+  --luz-estudio: var(--ig-laranja);
+  --luz-lives:   var(--ig-amarelo);
+}
+
+:root[data-tema='claro'] [data-contexto='instagram'] {
+  /* Sobre branco, o rosa e o amarelo da marca perdem contraste. Mesmo matiz,
+     intensidade que o fundo claro comporta. */
+  --ig-roxo:   #6a2b8f;
+  --ig-rosa:   #c21e68;
+  --ig-laranja:#c25e10;
+  --ig-amarelo:#a07a12;
+
+  --luz:      var(--ig-rosa);
+  --luz-soft: rgba(194, 30, 104, 0.12);
+}
+
+/* A faixa da marca, para o cabeçalho da área. Um fio, não um bloco: o degradê
+   do Instagram é forte demais para virar fundo de tela de trabalho. */
+.o-fio-instagram {
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(
+    90deg,
+    var(--ig-amarelo) 0%,
+    var(--ig-laranja) 30%,
+    var(--ig-rosa) 65%,
+    var(--ig-roxo) 100%
+  );
+}
+
+/* Campo compacto, para dentro de balão de menu — etapa F10h.
+   O fundo DESCE na escada: `.o-campo` usa --ink-2, que é exatamente o fundo do
+   balão, e ali o campo sumiria. Dentro de um painel flutuante, campo se lê como
+   reentrância — mais escuro, não mais claro. */
+.o-campo-sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  border-radius: var(--r-sm);
+  background: var(--ink-1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACABAMENTO — F19
+   ═══════════════════════════════════════════════════════════════════════════
+   As peças abaixo não acrescentam função nenhuma. Elas existem porque quem vai
+   usar este sistema todo dia são DESIGNERS, e para eles rebarba não é detalhe:
+   é ruído que cansa. Cada uma resolve um incômodo específico e observável.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. O TEXTO PARA DE SERRILHAR.
+      Sem isto, fonte clara sobre fundo escuro engorda no antialias do sistema e
+      as letras ficam com halo. É a diferença entre "escuro" e "borrado". */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 2. IMAGEM SEM COR DE FUNDO PISCA BRANCO ANTES DE CARREGAR.
+      Numa tela escura, um retângulo branco por 200ms é um susto. */
+img { background: var(--ink-2); }
+
+/* 4. NOME DE CLIENTE NAO QUEBRA NO MEIO DA PALAVRA.
+      "Canguru Print e Decor Anuncios" cortado ao meio parece dado
+      corrompido. Quebra entre palavras; so parte a palavra se ela sozinha
+      nao couber. */
+.o-card, .o-linha { overflow-wrap: anywhere; }
+
+/* 3. A TRANSIÇÃO RESPEITA QUEM PEDIU PARA NÃO TER.
+      Preferência do sistema operacional, e há gente que passa mal com
+      movimento. Não é opcional. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- tabela larga: a primeira coluna não sai da tela ------------------------
+   Com o seletor de métricas, uma tabela pode passar de dez colunas e rolar de
+   lado. Rolando, o NOME sai primeiro — e sobra uma tela de números sem dono,
+   que é o pior estado possível de uma tabela.
+
+   A célula fixa precisa de fundo opaco, senão o conteúdo que passa por baixo
+   aparece através dela. Como cada tabela vive numa superfície diferente, o
+   fundo vem por variável: quem usa diz onde está.
+
+   `:not([colspan])` exclui a linha expandida — ela ocupa a largura inteira e
+   fixá-la à esquerda a arrancaria do lugar. */
+.o-tab-fixa { --fundo-fixo: var(--ink-1); }
+
+.o-tab-fixa thead th:first-child,
+.o-tab-fixa tbody td:first-child:not([colspan]) {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--fundo-fixo);
+}
+
+/* O fio na borda direita da coluna fixa é o que diz que ela está POR CIMA. Sem
+   ele, o número que passa por baixo parece grudado no nome. */
+.o-tab-fixa tbody td:first-child:not([colspan])::after,
+.o-tab-fixa thead th:first-child::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--hair);
+}

@@ -1,0 +1,21 @@
+-- =============================================================================
+-- ROLLBACK da F17.30 — quem ja tem conta e vinculado, nao recriado
+-- =============================================================================
+-- VOLTA O DEFEITO: quem ja tem conta no cadastro compartilhado — que hoje e a
+-- MAIORIA da agencia — volta a bater na recusa do provedor ao ativar. Sem esta
+-- funcao nao ha como descobrir o id da conta existente: o papel da aplicacao
+-- nao alcanca o schema de autenticacao (medido: sem `usage`).
+--
+-- VOLTE O CODIGO JUNTO. A rota de ativacao chama `ideworks.find_existing_account`
+-- quando o cadastro recusa por endereco ja registrado. Apagar a funcao sem
+-- desfazer a rota troca a mensagem em portugues por um erro de banco na tela —
+-- que e pior do que o defeito original, porque agora ele nao diz nada.
+--
+-- O QUE ESTE ARQUIVO NAO DESFAZ, E DE PROPOSITO: nenhum perfil criado pelo
+-- caminho de vinculo. Quem entrou, entrou por decisao de quem convidou; tirar
+-- o acesso de alguem que ja esta trabalhando nao e reverter uma funcao, e uma
+-- decisao de gente. E nenhuma conta e tocada aqui — este projeto nao apaga
+-- conta.
+-- =============================================================================
+
+drop function if exists ideworks.find_existing_account(text);

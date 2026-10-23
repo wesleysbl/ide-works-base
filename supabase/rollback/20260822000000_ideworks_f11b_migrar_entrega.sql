@@ -1,0 +1,31 @@
+-- =============================================================================
+-- ROLLBACK da F11b — Trazer a entrega do Sistema IDE
+-- =============================================================================
+-- ISTO APAGA A PONTE, E NAO O DADO. Mesma regra da F11a.
+--
+-- SE A INTENCAO FOR ESVAZIAR A ENTREGA MIGRADA
+--   Esta escrito abaixo, comentado, e na ORDEM que funciona — item primeiro,
+--   contrato depois, senao a chave estrangeira recusa:
+--
+--     -- delete from ideworks.content_items
+--     --  where id in (select id from public.weekly_content_items);
+--     -- delete from ideworks.month_contract_items mci
+--     --  using ideworks.month_contracts mc
+--     --  where mci.contract_id = mc.id
+--     --    and (mc.client_id, mc.reference_month) in (
+--     --      select client_id, to_date(month_year||'-01','YYYY-MM-DD')
+--     --        from public.weekly_content_items);
+--     -- delete from ideworks.month_contracts
+--     --  where (client_id, reference_month) in (
+--     --    select client_id, to_date(month_year||'-01','YYYY-MM-DD')
+--     --      from public.weekly_content_items);
+--
+--   ATENCAO: isso apaga tambem o que tiver sido criado AQUI dentro de um mes
+--   que veio do legado. Enquanto o IDE Works for espelho isso e inofensivo;
+--   depois da virada, nao e.
+--
+-- O legado nunca e tocado por nada disto.
+-- =============================================================================
+
+drop function if exists ideworks.migrar_entrega(boolean);
+drop function if exists ideworks.migracao_entrega_previa(boolean);

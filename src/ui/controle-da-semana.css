@@ -1,0 +1,124 @@
+/* O CONTROLE DA SEMANA — F40, Fase 7. Só tokens que existem em obsidian.css e
+   acabamento.css (`--iw-*`, `--err`, `--hair`); token inexistente apaga em silêncio. */
+
+.cs-bloco { margin-top: var(--iw-e-5); }
+.cs-bloco-titulo { font-size: var(--iw-t-secao); font-weight: 600; color: var(--iw-texto); margin: 0 0 var(--iw-e-3); }
+.cs-bloco-contagem { margin-left: var(--iw-e-2); color: var(--iw-texto-3); font-size: var(--iw-t-apoio); font-weight: 400; }
+
+.cs-vazio { color: var(--iw-texto-3); font-size: var(--iw-t-corpo); margin: var(--iw-e-2) 0; }
+
+.cs-clientes { display: grid; gap: var(--iw-e-4); }
+.cs-cliente { border: 1px solid var(--iw-linha); border-radius: 0.5rem; background: var(--iw-superficie); }
+.cs-cliente-nome { margin: 0; padding: var(--iw-e-3) var(--iw-e-4); font-size: var(--iw-t-corpo); font-weight: 600; color: var(--iw-texto); border-bottom: 1px solid var(--iw-linha); }
+.cs-cards { list-style: none; margin: 0; padding: 0; }
+.cs-card { display: grid; gap: var(--iw-e-2); padding: var(--iw-e-3) var(--iw-e-4); }
+.cs-card + .cs-card, .cs-cards + .cs-cards .cs-card:first-child { border-top: 1px solid var(--iw-linha); }
+.cs-card-texto { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-1) var(--iw-e-3); min-width: 0; }
+.cs-card-titulo { color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.cs-card-titulo:hover { text-decoration: underline; }
+.cs-card-prazo { color: var(--iw-texto-2); font-size: var(--iw-t-apoio); white-space: nowrap; }
+.cs-card-prazo[data-sem-data='true'] { color: var(--iw-texto-3); }
+.cs-card-origem { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cs-card-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2); }
+.cs-campo { width: auto; min-width: 9rem; max-width: 100%; }
+.cs-campo-data { min-width: 8.5rem; }
+.cs-dica { margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cs-erro { margin: 0; color: var(--err); font-size: var(--iw-t-apoio); }
+
+.cs-tabela-rolagem { overflow-x: auto; border: 1px solid var(--iw-linha); border-radius: 0.5rem; }
+.cs-tabela { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: var(--iw-t-corpo); }
+.cs-tabela th, .cs-tabela td { padding: var(--iw-e-2) var(--iw-e-3); text-align: left; border-top: 1px solid var(--iw-linha); font-weight: 400; color: var(--iw-texto); }
+.cs-tabela thead th { border-top: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; }
+.cs-tabela .cs-num { text-align: right; }
+.cs-cliente-link { background: none; border: 0; padding: 0; color: var(--iw-texto); font: inherit; font-weight: 500; cursor: pointer; text-align: left; }
+.cs-cliente-link:hover { text-decoration: underline; }
+
+.cs-faltando { display: grid; gap: var(--iw-e-5); }
+.cs-sub { margin: 0 0 var(--iw-e-2); font-size: var(--iw-t-apoio); font-weight: 600; color: var(--iw-texto-2); }
+.cs-lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--iw-linha); border-radius: 0.5rem; }
+.cs-lista > li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--iw-e-2) var(--iw-e-4); padding: var(--iw-e-2) var(--iw-e-4); font-size: var(--iw-t-corpo); color: var(--iw-texto); }
+.cs-lista > li + li { border-top: 1px solid var(--iw-linha); }
+.cs-responsavel { color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+
+.cs-semana { display: flex; flex-wrap: wrap; align-items: center; max-width: 100%; gap: var(--iw-e-1); }
+.cs-semana-nome { min-width: 6.5rem; text-align: center; font-size: var(--iw-t-corpo); color: var(--iw-texto); }
+
+@media (min-width: 900px) {
+  .cs-faltando { grid-template-columns: 1fr 1fr; }
+}
+
+/* ───── F41: faixa de números e grupos por cliente ───── */
+
+.cs-faixa { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--iw-e-3); margin-top: var(--iw-e-4); }
+/* A faixa fica (pedido do Wesley na F41), mais calma — F43 Fase 5: cartão sem
+   moldura, separado pelo tom, e cor SÓ no número que pede ação (para atribuir,
+   clientes em falta, atrasados acima de zero). Zero problema e "feitos" ficam
+   neutros: o estado em palavras embaixo do número já diz "em dia". O `data-tom`
+   continua no HTML com os mesmos valores; quem decide a cor é esta folha. A
+   borda de cima fica transparente para os cinco terem a mesma altura. */
+.cs-cartao { display: grid; gap: var(--iw-e-1); padding: var(--iw-e-3) var(--iw-e-4); border: 0; border-top: 3px solid transparent; border-radius: 0.5rem; background: var(--iw-superficie); min-width: 0; }
+.cs-cartao-rotulo { color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.cs-cartao-valor { color: var(--iw-texto); font-size: var(--iw-t-destaque); font-weight: 600; line-height: 1.1; }
+.cs-cartao-estado { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.cs-cartao[data-tom='warn'] { border-top-color: var(--warn); background: var(--warn-soft); }
+.cs-cartao[data-tom='err'] { border-top-color: var(--err); background: var(--err-soft); }
+.cs-cartao[data-tom='err'] .cs-cartao-valor { color: var(--err); }
+
+.cs-bloco-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--iw-e-2) var(--iw-e-4); margin-bottom: var(--iw-e-3); }
+.cs-bloco-cabeca .cs-bloco-titulo { margin: 0; }
+.cs-bloco-acoes { display: flex; flex-wrap: wrap; gap: var(--iw-e-2); }
+
+.cs-clientes { gap: var(--iw-e-2); }
+.cs-grupo { border: 1px solid var(--iw-linha); border-left: 3px solid var(--iw-linha); border-radius: 0.5rem; background: var(--iw-superficie); min-width: 0; }
+.cs-grupo[data-estado='atrasado'] { border-left-color: var(--err); }
+.cs-grupo[data-estado='falta'] { border-left-color: var(--warn); }
+/* Em dia não ganha cor no traço (F43 Fase 5): cor só na exceção. O selo
+   "✓ em dia" do cabeçalho do grupo já diz. */
+.cs-grupo-titulo { margin: 0; font-size: var(--iw-t-corpo); font-weight: 600; }
+.cs-grupo-botao { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-3); width: 100%; min-height: 2.75rem; padding: var(--iw-e-2) var(--iw-e-4); background: none; border: 0; color: var(--iw-texto); font: inherit; text-align: left; cursor: pointer; }
+.cs-grupo-botao:hover { background: var(--iw-linha); }
+.cs-seta { flex: none; width: 0.5rem; height: 0.5rem; border-right: 2px solid var(--iw-texto-2); border-bottom: 2px solid var(--iw-texto-2); transform: rotate(-45deg); transition: transform 0.15s; }
+.cs-grupo[data-aberto='true'] .cs-seta,
+.cs-bloco[data-aberto='true'] .cs-seta { transform: rotate(45deg); }
+.cs-bloco-botao { display: inline-flex; align-items: center; gap: var(--iw-e-2); min-height: 2.75rem; padding: 0; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; }
+.cs-bloco-botao .cs-bloco-contagem { margin-left: 0; }
+.cs-grupo-nome { min-width: 0; overflow-wrap: anywhere; }
+.cs-grupo-atribuir { color: var(--iw-texto-2); font-size: var(--iw-t-meta); font-weight: 400; white-space: nowrap; }
+.cs-barras { display: flex; flex-wrap: wrap; gap: var(--iw-e-1) var(--iw-e-4); margin-left: auto; min-width: 0; }
+.cs-barra { display: inline-flex; align-items: center; gap: var(--iw-e-2); font-size: var(--iw-t-meta); font-weight: 400; color: var(--iw-texto-2); }
+.cs-trilho { display: inline-block; width: 4.5rem; height: 0.5rem; border-radius: 999px; background: var(--iw-linha); overflow: hidden; }
+.cs-preenchido { display: block; height: 100%; border-radius: 999px; background: var(--warn); }
+.cs-barra[data-tom='ok'] .cs-preenchido { background: var(--ok); }
+.cs-barra[data-tom='err'] .cs-preenchido { background: var(--err); }
+.cs-barra-num { color: var(--iw-texto); min-width: 2rem; }
+.cs-barra-num[data-excedente='true'] { font-weight: 600; }
+
+.cs-grupo-corpo { display: grid; gap: var(--iw-e-4); padding: var(--iw-e-2) var(--iw-e-4) var(--iw-e-4); border-top: 1px solid var(--iw-linha); }
+.cs-grupo-corpo[hidden] { display: none; }
+.cs-parte { min-width: 0; }
+.cs-parte .cs-cards { border: 1px solid var(--iw-linha); border-radius: 0.5rem; }
+.cs-parte .cs-cards + .cs-cards { margin-top: var(--iw-e-2); }
+.cs-andamento { list-style: none; margin: 0; padding: 0; border: 1px solid var(--iw-linha); border-radius: 0.5rem; }
+.cs-andamento > li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-1) var(--iw-e-4); padding: var(--iw-e-2) var(--iw-e-4); font-size: var(--iw-t-corpo); color: var(--iw-texto); }
+.cs-andamento > li + li { border-top: 1px solid var(--iw-linha); }
+.cs-andamento-tipo { min-width: 4rem; font-weight: 500; }
+.cs-etapa { color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.cs-etapa b { color: var(--iw-texto); font-weight: 600; margin-left: var(--iw-e-1); }
+.cs-abrir-lista { justify-self: start; }
+
+@media (max-width: 899px) {
+  .cs-faixa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cs-cartao:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .cs-barras { margin-left: 0; width: 100%; }
+}
+
+/* ───── F41 Fase 2: bloco "Para atribuir" na frente da lista de clientes ───── */
+
+.cs-atribuir { display: grid; gap: var(--iw-e-4); }
+.cs-atribuir-cliente { border: 1px solid var(--iw-linha); border-left: 3px solid var(--warn); border-radius: 0.5rem; background: var(--iw-superficie); min-width: 0; }
+.cs-atribuir-cliente > .cs-sub { margin: 0; padding: 0 var(--iw-e-4); font-size: var(--iw-t-corpo); color: var(--iw-texto); }
+.cs-atribuir-cliente[data-aberto='true'] > .cs-sub { border-bottom: 1px solid var(--iw-linha); }
+.cs-atribuir-cliente[data-aberto='true'] .cs-seta { transform: rotate(45deg); }
+.cs-cliente-botao { width: 100%; }
+.cs-atribuir-cliente [hidden] { display: none; }
+.cs-atribuir-cliente .cs-cards + .cs-cards { border-top: 1px solid var(--iw-linha); }

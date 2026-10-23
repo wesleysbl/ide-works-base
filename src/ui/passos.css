@@ -1,0 +1,365 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OS PASSOS DA TAREFA — etapa F17.15
+   ═══════════════════════════════════════════════════════════════════════════
+
+   POR QUE UMA FOLHA PRÓPRIA
+     `clickup.css` já tem 1000 linhas e outra sessão trabalha em `src/`. Arquivo
+     novo é edição de risco zero — e as duas seções desta etapa têm gramática
+     própria: a de subtarefa é uma LINHA de criação com fila de ícones, e a de
+     checklist é um CARTÃO empilhável.
+
+   A REGRA DE SEMPRE
+     Gramática, estrutura e interação: do ClickUp, fielmente — a referência é a
+     ficha real que o usuário mandou. Cor, tipografia e superfície: do OBSIDIAN
+     (decisão D10), sem exceção. Nenhuma cor literal aqui: tudo sai de `var(--…)`.
+
+     Cor que vem do DADO — o status da subtarefa, a bandeira da prioridade —
+     entra como variável posta no elemento pelo React: `--cor-status`,
+     `--cor-bandeira`. É a mesma convenção do quadro e da ficha.
+
+   O QUE NÃO PODE ACONTECER AQUI
+     Nenhum contêiner destas seções pode cortar o que sai dele. A linha de
+     criação da subtarefa abre balões ancorados nos ícones da direita, e um
+     `overflow` no lugar errado os decapitaria. Por isso `.p-secao` e
+     `.p-linha-nova` são `overflow: visible`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────── a seção ───────────────────────────── */
+
+.p-secao {
+  padding: 0.35rem 0.9rem 0.6rem;
+  overflow: visible;
+}
+
+.p-secao + .p-secao { border-top: 1px solid var(--hair); padding-top: 0.6rem; }
+
+/* O cabeçalho com a seta ▼ de recolher, como na referência. É um botão inteiro:
+   clicar no texto recolhe, e não só clicar na seta — alvo de 8px é alvo que
+   erra. */
+.p-secao-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.3rem 0.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.p-secao-topo:hover { color: var(--plat); }
+
+/* O título e o `?` na mesma linha — F43, Fase 6. A nota de rodapé de cada seção
+   virou `?`; ele fica logo depois do título, fora do botão de recolher (botão
+   dentro de botão não é HTML válido). O botão deixa de ocupar a linha inteira:
+   o alvo continua sendo seta + título + contagem. */
+.p-secao-cabeca { display: flex; align-items: center; gap: 0.25rem; min-width: 0; }
+.p-secao-cabeca > .p-secao-topo { width: auto; min-width: 0; }
+
+.p-caret {
+  display: inline-flex;
+  width: 0.85rem;
+  flex: 0 0 auto;
+  color: var(--mute);
+  transition: transform var(--dur-1) var(--ease-out);
+  transform: rotate(-90deg);
+}
+
+.p-caret[data-aberto='true'] { transform: rotate(0deg); }
+
+/* O contador em cinza ao lado do nome. `0 de 0` por extenso na ficha; a barra
+   fica para o cartão do quadro, onde não cabem três palavras. */
+.p-conta {
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--mute);
+  letter-spacing: 0.02em;
+}
+
+.p-secao-corpo { padding-top: 0.15rem; overflow: visible; }
+
+/* ───────────────────────────── a linha de criação ───────────────────────────── */
+
+/* A LINHA da referência: círculo do status à esquerda, campo no meio, fila de
+   ícones compacta à direita, e `Cancelar` · `Salvar ↵` no fim. É a mesma
+   gramática do modal, condensada numa linha só. */
+.p-linha-nova {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  overflow: visible;
+}
+
+.p-linha-nova[data-erro='true'] { border-color: var(--err); }
+
+.p-campo {
+  flex: 1 1 12rem;
+  min-width: 8rem;
+  border: 0;
+  background: transparent;
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.84rem;
+  padding: 0.15rem 0.1rem;
+}
+
+.p-campo::placeholder { color: var(--mute); }
+.p-campo:focus { outline: 0; box-shadow: none; }
+
+/* A fila de ícones: SÓ ÍCONE, sem rótulo — é o que a referência mostra. Cada um
+   é a mesma escolha que o chip do modal abre, condensada. */
+.p-icones {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  overflow: visible;
+}
+
+.p-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.p-icone:hover { color: var(--plat); background: var(--hair); }
+.p-icone[aria-expanded='true'] { color: var(--plat); background: var(--ink-3); }
+.p-icone[data-cheio='true'] { color: var(--plat); }
+.p-icone:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* O `+` do calendário da referência — um sinal miúdo colado no ícone. */
+.p-icone > .mais {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  line-height: 1;
+  margin-left: -0.15rem;
+  margin-top: -0.4rem;
+}
+
+.p-acoes { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
+
+/* O símbolo de Enter no botão: ele CONFIRMA que Enter salva, e por isso não é
+   enfeite — a linha de criação da referência o mostra. */
+.p-atalho {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  opacity: 0.75;
+  margin-left: 0.3rem;
+}
+
+/* ───────────────────────────── a subtarefa ───────────────────────────── */
+
+.p-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.3rem;
+  border-radius: var(--r-sm);
+  overflow: visible;
+  transition: background var(--dur-1) var(--ease-out);
+}
+
+.p-sub:hover { background: var(--ink-2); }
+.p-sub[data-arquivada='true'] { opacity: 0.55; }
+
+.p-sub-titulo {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--plat-dim);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.p-sub-titulo:hover { color: var(--plat); text-decoration: underline; text-underline-offset: 2px; }
+.p-sub[data-concluida='true'] .p-sub-titulo { text-decoration: line-through; color: var(--mute); }
+
+/* O selo de contagem — o `5`, `3`, `4` da tela real. Ele aparece no cartão do
+   quadro e AQUI, com o mesmo desenho, porque é o mesmo número: filhas diretas,
+   de `ideworks.task_progress`. */
+.p-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex: 0 0 auto;
+  padding: 0.05rem 0.32rem;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  background: var(--ink-3);
+  color: var(--mute);
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+.p-selo[data-cheio='true'] { color: var(--plat-dim); border-color: var(--hair-2); }
+
+/* ───────────────────────────── o cartão de checklist ───────────────────────────── */
+
+.p-cartao {
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  padding: 0.45rem 0.5rem;
+  overflow: visible;
+}
+
+.p-cartao + .p-cartao { margin-top: 0.4rem; }
+
+.p-cartao-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: visible;
+}
+
+/* O nome em NEGRITO, como na referência. Ele é um campo: renomear é dois
+   cliques, não um menu. */
+.p-cartao-nome {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.1rem 0.25rem;
+}
+
+.p-cartao-nome:hover { border-color: var(--hair); }
+.p-cartao-nome:focus { outline: 0; border-color: var(--hair-3); background: var(--ink-3); }
+
+.p-cartao-corpo { margin-top: 0.3rem; }
+
+/* `+ Adicionar item` e `+ Adicionar checklist`: linha clicável, discreta até o
+   ponteiro chegar. Mesmo desenho do `+ Adicionar tarefa` do pé da coluna. */
+.p-adicionar {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.35rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--mute);
+  font-family: var(--f-body);
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.p-adicionar:hover { color: var(--plat-dim); background: var(--hair); }
+
+/* ───────────────────────────── o item ───────────────────────────── */
+
+.p-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.15rem;
+  border-radius: var(--r-xs);
+  overflow: visible;
+}
+
+.p-item:hover { background: var(--ink-3); }
+
+/* A CAIXA QUE RESOLVE. Ela é um botão de verdade — o estado dela mora em
+   `ideworks.checklist_items.resolved_at`, e não no texto do briefing. É essa a
+   diferença que a etapa introduz: a caixa do markdown é TEXTO, esta é ENTIDADE. */
+.p-caixa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--hair-3);
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--ink-0);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.p-caixa:hover { border-color: var(--luz); }
+.p-caixa[aria-checked='true'] { background: var(--luz); border-color: var(--luz); }
+.p-caixa:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.p-item-nome {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--plat-dim);
+  font-family: var(--f-body);
+  font-size: 0.8rem;
+  padding: 0.1rem 0.25rem;
+}
+
+.p-item-nome:hover { border-color: var(--hair); }
+.p-item-nome:focus { outline: 0; border-color: var(--hair-3); background: var(--ink-2); }
+.p-item[data-resolvido='true'] .p-item-nome { color: var(--mute); text-decoration: line-through; }
+
+/* O filho do item — UM nível, garantido pelo banco (`checklist_items_parent_fk`
+   com as duas colunas geradas). O recuo é o desenho dessa garantia. */
+.p-filhos {
+  margin-left: 1.45rem;
+  border-left: 1px solid var(--hair);
+  padding-left: 0.35rem;
+}
+
+/* ───────────────────────────── o aviso da caixa do texto ───────────────────────────── */
+
+/* A ficha passa a ter DUAS caixinhas com significados diferentes, e a diferença
+   precisa estar escrita: a do briefing é texto e salva no botão `Salvar`; a do
+   checklist é entidade e salva no clique. Confundi-las é o defeito que esta
+   etapa pode introduzir. */
+.p-nota {
+  padding: 0.2rem 0.35rem 0;
+  color: var(--mute);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+/* A âncora do campo de título da linha de criação.
+
+   Ela existe por causa do `/`: o texto de ajuda da referência promete comandos,
+   e a promessa é cumprida com um balão ancorado NO CAMPO. `Balao` fecha por
+   clique fora olhando o `parentElement`, então o campo precisa de um pai
+   posicionado só dele — sem isto o balão fecharia ao clicar no próprio campo. */
+.p-campo-ancora { flex: 1 1 12rem; min-width: 8rem; }
+.p-campo-ancora > .p-campo { width: 100%; flex: 1 1 auto; }

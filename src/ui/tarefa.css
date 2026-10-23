@@ -1,0 +1,690 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   A FICHA DA TAREFA E O BRIEFING — as peças que só elas usam. Etapa F17.10.
+
+   POR QUE UM ARQUIVO SEPARADO
+     Mesmas duas razões de `quadro.css`: (1) `obsidian.css` é o DICIONÁRIO do
+     sistema, e "linha de metadado da ficha" não é vocabulário do sistema — é
+     vocabulário de uma tela; (2) há outra sessão trabalhando em `obsidian.css`
+     agora, e arquivo novo não disputa linha com ninguém.
+
+   A REGRA DA D10 VALE INTEIRA
+     Nenhuma cor literal. Estilo sai de `var(--…)` do OBSIDIAN.
+
+     O que NÃO é estilo — a cor do status e a da etiqueta, que vêm do ClickUp —
+     entra por variável posta no próprio elemento (`--cor-status`,
+     `--cor-etiqueta-fundo`, `--cor-etiqueta-tinta`), exatamente como a F17.9a
+     fez, e sempre com token do sistema de reserva.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* --- o que SAIU daqui na F17.10b ------------------------------------------- */
+
+/* A ficha e o formulário da F17.10 eram FORMULÁRIO: `.t-tela`, `.t-lado`,
+   `.t-campo`, `.t-titulo`, `.t-status`, `.t-mini-select`, `.t-mini-campo`,
+   `.t-lista-de-escolha`, `.t-escolha`, `.t-etiqueta`, `.t-amostra-de-cor`,
+   `.t-editor`, `.t-lado-a-lado` e `.t-previa`.
+
+   O usuário comparou com o ClickUp e reprovou a FORMA. A gramática nova —
+   modal, seletor, título grande, fila de chips, menu ancorado no chip, editor
+   rico — mora em `clickup.css`, e as classes acima foram REMOVIDAS em vez de
+   deixadas para trás: folha com duas gramáticas para a mesma tela é o convite
+   para a próxima peça nascer na errada. */
+
+
+/* O `+ Adicionar tarefa` do pé da coluna. Discreto até o ponteiro chegar: uma
+   coluna com um botão vistoso embaixo de cada uma vira um quadro de botões. */
+.t-adicionar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--r-xs);
+  border: 1px dashed var(--hair);
+  color: var(--mute);
+  font-size: 0.74rem;
+  transition: color var(--dur-1), border-color var(--dur-1), background var(--dur-1);
+}
+
+.t-adicionar:hover {
+  color: var(--plat);
+  border-color: var(--hair-3);
+  background: var(--hair);
+}
+
+.t-caixa-nova {
+  border: 1px solid var(--luz);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  padding: 0.5rem;
+  box-shadow: 0 0 0 3px var(--luz-soft);
+}
+
+.t-caixa-nova textarea {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--plat);
+  font-family: var(--f-body);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  resize: none;
+}
+
+.t-caixa-nova textarea:focus {
+  outline: none;
+}
+
+/* --- o briefing desenhado --------------------------------------------------- */
+
+.md {
+  color: var(--plat-dim);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.md > *:first-child {
+  margin-top: 0;
+}
+
+.md-p {
+  margin: 0.55rem 0;
+}
+
+.md-t {
+  color: var(--plat);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.15rem 0 0.45rem;
+}
+
+.md-t1 { font-size: 1.28rem; }
+.md-t2 { font-size: 1.12rem; }
+.md-t3 { font-size: 1rem; }
+.md-t4 { font-size: 0.92rem; }
+.md-t5 { font-size: 0.86rem; color: var(--plat-dim); }
+.md-t6 { font-size: 0.82rem; color: var(--mute); }
+
+.md-regra {
+  margin: 1.1rem 0;
+  border: 0;
+  border-top: 1px solid var(--hair);
+}
+
+.md-ul,
+.md-ol {
+  margin: 0.5rem 0;
+  padding-left: 1.35rem;
+}
+
+.md-ul { list-style: disc; }
+.md-ol { list-style: decimal; }
+
+.md-ul li,
+.md-ol li {
+  margin: 0.22rem 0;
+}
+
+/* A caixa `- [ ]` some do marcador da lista: dois marcadores na mesma linha —
+   o ponto e a caixinha — leem como sujeira. */
+.md-caixa {
+  list-style: none;
+  margin-left: -1.35rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.md-caixa > input {
+  margin-top: 0.28rem;
+  accent-color: var(--luz);
+  flex: 0 0 auto;
+}
+
+.md-elo {
+  color: var(--luz-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md-elo:hover {
+  text-decoration-thickness: 2px;
+}
+
+.md-cod {
+  font-family: var(--f-mono);
+  font-size: 0.82em;
+  background: var(--ink-3);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-xs);
+  padding: 0.05rem 0.28rem;
+}
+
+.md-bloco-cod {
+  margin: 0.65rem 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--ink-0);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+  font-family: var(--f-mono);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--plat-dim);
+}
+
+.md-citacao {
+  margin: 0.65rem 0;
+  padding: 0.15rem 0 0.15rem 0.8rem;
+  border-left: 3px solid var(--hair-3);
+  color: var(--mute);
+}
+
+/* A tabela rola dentro da caixa, nunca a página. Mesma decisão da tabela larga
+   em `obsidian.css` e da faixa de colunas em `quadro.css`. */
+.md-tab-caixa {
+  margin: 0.7rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+}
+
+.md-tab {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.md-tab th,
+.md-tab td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--hair);
+  text-align: left;
+  vertical-align: top;
+}
+
+.md-tab th {
+  background: var(--ink-2);
+  color: var(--plat);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.md-tab tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* --- o título do cartão vira link ------------------------------------------- */
+
+/* Só o TÍTULO abre a ficha, e não o cartão inteiro: o cartão é arrastável, e um
+   clique no corpo dele é o começo de um arrasto. Ver o comentário em
+   `Quadro.tsx`. */
+.q-abre {
+  display: block;
+  color: var(--plat);
+  text-decoration: none;
+}
+
+.q-abre:hover {
+  color: var(--luz-texto);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* --- o registro da automação, F17.41 --------------------------------------
+   A MESMA TINTA E O MESMO TAMANHO DOS CARIMBOS, e isso não é economia: é a
+   mesma classe de informação — o que aconteceu com esta tarefa, e quando. Um
+   bloco com estilo próprio faria o registro parecer um aviso, e ele não é: é
+   histórico, e histórico se lê quando alguém procura.
+
+   Nenhuma cor literal aqui. `--plat`, `--mute` e `--hair` são do OBSIDIAN
+   (decisão D10), e são os mesmos três que `.cu-carimbos` usa logo acima. */
+.t-registro {
+  padding: 0.5rem 0.9rem;
+  border-top: 1px solid var(--hair);
+  font-size: 0.7rem;
+  color: var(--mute);
+}
+
+.t-registro > h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--plat);
+}
+
+.t-registro-linha + .t-registro-linha {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--hair);
+}
+
+.t-registro-linha > b { color: var(--plat); font-weight: 600; }
+
+.t-registro-linha > ul {
+  margin: 0.15rem 0 0;
+  padding-left: 0.9rem;
+  list-style: disc;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CABEÇALHO QUE ACOMPANHA A ROLAGEM — F17.AUD07 (achado 9 da auditoria).
+
+   O QUE ESTAVA ERRADO, MEDIDO
+     A trilha e o X que fecha a ficha (F17.78) ficavam no fluxo normal da coluna
+     de conteúdo. Bastava rolar até o briefing para o X sair da janela: na
+     reprodução da auditoria o topo dele estava em y=-93px. A saída que a F17.78
+     pôs "à vista" só ficava à vista enquanto ninguém lia.
+
+   QUEM ROLA É A JANELA
+     A ficha vive em `PaginaLarga` com altura natural: `<main>` é `min-h-screen`
+     sem `overflow`, `.q-tela` é grade e `.q-conteudo` só tem `min-width: 0`.
+     Nenhum ancestral entre este cabeçalho e o documento recorta ou rola — é o
+     mesmo pressuposto de `LembrarRolagem` —, então `position: sticky` gruda no
+     topo da janela e o bloco contentor é `.q-conteudo`, que vai até o fim da
+     conversa. O X fica visível do primeiro ao último comentário.
+
+   ⚠️ AS CAMADAS, E POR QUE `z-index: 1`
+     Sticky cria contexto de empilhamento; o número decide com quem ele disputa.
+     Os menus da ficha (`.cu-balao`, 120; em portal, 200), a barra do editor
+     (`.cu-flutua`, 130), a janela de saída (`.o-scrim`, 100), o painel
+     `Personalizar` (`.cu-fundo`, 100) e a gaveta da barra lateral (90 e 91)
+     precisam continuar POR CIMA — um menu aberto
+     coberto pelo cabeçalho seria trocar o achado 9 por um pior. `1` é o menor
+     número que ainda vence o conteúdo em fluxo que passa por baixo, e é o mesmo
+     que `.q-barra` e `.o-tab-fixa` usam para a mesma pergunta.
+
+   O FUNDO É O DA PÁGINA
+     `--ink-0`, o mesmo do `body`: o cartão da ficha (`--ink-1`, com fio) passa
+     por baixo e o corte fica nítido sem fio novo — a trilha no topo do quadro,
+     na mesma posição (F17.25), tampouco tem fio. Nenhuma cor literal (D10).
+
+   O CAMPO FOCADO NÃO FICA ESCONDIDO ATRÁS
+     Ao navegar por teclado, o navegador só rola quando o alvo está FORA da
+     janela — um chip atrás do cabeçalho está dentro dela, e ficaria coberto.
+     `scroll-padding-top` no `html` desta tela reserva a altura dele para o
+     foco, o `scrollIntoView` e a âncora (ver a regra logo abaixo de
+     `.t-cabeca`). Vale só nesta tela.
+
+     ⚠️ A CONTA MUDOU NA F29 (Fase 4). O cabeçalho virou o `Topo` (`@/ui/Topo`):
+     a trilha numa linha e o título "Tarefa" embaixo, com o X à direita — e o
+     `‹ Voltar` da moldura saiu da ficha. Medido no Chrome, 1280 e 390: 58px
+     (22 da linha da trilha + 28 do título + 2 × 0,25rem de respiro). Os 3,5rem
+     de antes (56px, para 36 do X + respiro) ficavam 2px dentro da sombra;
+     4rem = 64px dá a folga de volta.
+
+   ⚠️ E O RESPIRO NÃO DESCE A TRILHA — F29 (Fase 5a). O `padding-block` existe
+     para o cabeçalho GRUDADO não encostar a trilha na borda da janela. Parado,
+     ele empurrava a trilha e o título 4px abaixo dos do Quadro, da Pasta e do
+     Espaço (medido: trilha em y=16 e título em 38, contra 12 e 34) — a mesma
+     peça, em telas vizinhas, em alturas diferentes. A margem negativa devolve
+     os 4px de cima: o fundo começa acima e o texto fica na linha das outras.
+     Grudado nada muda — `top: 0` mede a borda da caixa, e o respiro continua
+     dentro dela. */
+.t-cabeca {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-top: -0.25rem;
+  padding-block: 0.25rem;
+  background: var(--ink-0);
+}
+
+/* ⚠️ A RESERVA MORA NA PÁGINA, NÃO NO CAMPO. O Chrome só rola no foco
+   quando o PRÓPRIO campo sai da janela; a `scroll-margin-top` dele não entra
+   nessa conta. Um campo a 20px do topo (atrás dos 58 do cabeçalho) está
+   "visível", e o foco o deixava coberto (V2 do e2e falhava desde a F29).
+   `scroll-padding-top` no rolador — o `html` desta tela — encolhe a área que
+   conta como visível, e aí o foco, o `scrollIntoView` e a âncora respeitam o
+   cabeçalho. Só a ficha em página cheia tem `.t-cabeca`; a ficha ao lado rola
+   dentro do painel e não usa esta regra. */
+/* ⚠️ ERA `html:has(.t-cabeca)` — e `:has()` com a raiz de alvo recalculava o
+   estilo da página inteira a cada nó inserido ou removido em qualquer tela
+   (312 ms por abrir/fechar o painel de um cartão com 500 no quadro). Agora o
+   `html` recebe o atributo da peça `@/ui/rolador-da-ficha`, enquanto a página
+   da ficha está montada. Mesma regra, mesmo valor, sem a pergunta ao documento. */
+:root[data-ficha-em-pagina] {
+  scroll-padding-top: 4rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A FICHA COMO DOCUMENTO — F07 do plano UX
+     linha de controle  →  lista, tipo · "há alterações por salvar", Salvar, ···
+     título             →  a coisa maior da tela (24 → 32 px)
+     propriedades       →  nome à esquerda, valor-botão à direita; uma linha cada
+     contrato           →  o que grava no clique × o que vai com Salvar
+     briefing           →  16 px, linhas de até 72 caracteres (tabela e bloco de
+                           código continuam com a largura toda)
+   Nenhuma cor literal: tom de status, etiqueta e prazo vêm de variável/estado.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cu-ficha { --t-borda: 1rem; }
+
+/* A linha de controle. Sempre com o mesmo respiro e um fio transparente — assim
+   grudar (ao aparecer texto por salvar) não muda a altura de nada abaixo. */
+.cu-ficha > .cu-trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-1) var(--iw-e-2);
+  padding: var(--iw-e-3) var(--t-borda) var(--iw-e-2);
+  border-bottom: 1px solid transparent;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  font-family: var(--f-body);
+  font-size: var(--iw-t-apoio);
+  color: var(--iw-texto-3);
+}
+/* Colada logo abaixo do cabeçalho grudado (`.t-cabeca`, 58 px medidos). Só com
+   texto por salvar: é quando o botão precisa estar à vista. */
+.cu-ficha > .cu-trilha[data-por-salvar='true'] {
+  position: sticky;
+  top: 3.625rem;
+  z-index: 1;
+  background: var(--ink-1);
+  border-bottom-color: var(--iw-linha);
+  border-radius: 0;
+}
+/* Idem: era `html:has(.t-cabeca ~ .cu-ficha > .cu-trilha[data-por-salvar='true'])`.
+   `data-ficha-por-salvar` espelha o `data-por-salvar` da linha de controle. */
+:root[data-ficha-em-pagina][data-ficha-por-salvar='true'] {
+  scroll-padding-top: 7.5rem;
+}
+.t-lugar { display: inline-flex; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.t-lugar > .cu-seletor { max-width: 100%; min-width: 0; }
+.t-tipo { display: inline-flex; flex: none; }
+.t-sem-lista { font-size: var(--iw-t-meta); color: color-mix(in srgb, var(--warn) 80%, var(--plat)); }
+.t-salvar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--iw-e-2);
+  margin-left: auto;
+}
+/* O ESTADO DO TEXTO — F43, Fase 6 (`estadoDoTexto`, em `@/board/ficha`). Era
+   `.t-por-salvar`, que só aparecia com texto por salvar; agora a linha diz
+   sempre em que pé o texto está. "Salvo" é calmo (a cor de apoio); só "há
+   alterações por salvar" (âmbar) e a falha (a mesma frase, em vermelho) pedem
+   atenção — cor só em exceção, a regra da camada calma (F43, Fase 5). */
+.t-estado {
+  font-size: var(--iw-t-meta);
+  font-weight: 500;
+  color: var(--iw-texto-3);
+  white-space: nowrap;
+}
+.t-estado[data-estado='por-salvar'] { color: color-mix(in srgb, var(--warn) 80%, var(--plat)); }
+.t-estado[data-estado='falhou'] { color: color-mix(in srgb, var(--err) 80%, var(--plat)); }
+/* O `?` encosta no estado que ele explica, e não no Salvar. */
+.t-salvar > .cu-ajuda { margin-left: calc(-1 * var(--iw-e-1)); }
+.t-salvar > .cu-ancora > .cu-chip { border-color: transparent; padding-inline: 0.45rem; }
+.t-salvar > .cu-ancora > .cu-chip:hover { border-color: var(--hair); }
+
+/* O título: o nome da tarefa é o que a pessoa veio ler. */
+.cu-ficha .cu-titulo {
+  padding: var(--iw-e-2) var(--t-borda) var(--iw-e-1);
+  font-size: var(--iw-t-destaque);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.028em;
+  text-wrap: pretty;
+}
+.t-mae { padding: var(--iw-e-1) var(--t-borda) 0; }
+.t-mae > .cu-chip { max-width: 100%; border-color: transparent; padding-inline: 0; background: none; color: var(--iw-texto-3); }
+.t-mae > .cu-chip:hover { color: var(--plat); text-decoration: underline; text-underline-offset: 2px; }
+.t-aviso-linha {
+  padding: var(--iw-e-1) var(--t-borda) 0;
+  font-size: var(--iw-t-meta);
+  color: color-mix(in srgb, var(--warn) 80%, var(--plat));
+}
+
+/* As propriedades: grade de duas colunas; o valor é o próprio botão. */
+.t-props {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  column-gap: var(--iw-e-3);
+  margin: var(--iw-e-2) 0 0;
+  padding: 0 var(--t-borda);
+}
+.t-prop { display: contents; }
+/* O nome acompanha a PRIMEIRA linha do valor: quando o valor quebra (Status +
+   Concluir no celular, prazo + "desde…"), o rótulo não desce para o meio. */
+.t-prop > dt {
+  display: flex;
+  align-self: start;
+  align-items: center;
+  min-height: 2.25rem;
+  font-size: var(--iw-t-apoio);
+  color: var(--iw-texto-3);
+}
+.t-prop > dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--iw-e-1) var(--iw-e-2);
+  min-width: 0;
+  min-height: 2.25rem;
+  margin: 0;
+}
+/* O valor alinha com a coluna: o respiro do botão sai para a esquerda. */
+.t-prop > dd > .cu-ancora:first-child,
+.t-prop > dd > .cu-chip:first-child { margin-left: -0.5rem; }
+.t-prop > dd > .cu-ancora { display: inline-flex; min-width: 0; max-width: calc(100% + 0.5rem); }
+.t-props .cu-chip {
+  max-width: 100%;
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border-color: transparent;
+  border-radius: var(--iw-r-controle);
+  font-size: var(--iw-t-apoio);
+  color: var(--mute);
+}
+.t-props .cu-chip[data-cheio='true'] { color: var(--plat); }
+.t-props .cu-chip:hover,
+.t-props .cu-chip[aria-expanded='true'] { border-color: var(--hair-2); background: var(--ink-2); color: var(--plat); }
+/* O status continua pílula com a cor da esteira; Concluir, um botão de verdade. */
+.t-props .cu-chip[data-status='true'] {
+  border-color: color-mix(in srgb, var(--cor-status, var(--mute)) 55%, transparent);
+  border-radius: var(--r-pill);
+  font-weight: 500;
+}
+.t-props .t-concluir { border-color: var(--hair-2); color: var(--plat); }
+.t-props .t-concluir[data-cheio='true'] { color: var(--luz-texto); border-color: color-mix(in srgb, var(--luz) 45%, transparent); }
+.t-props .t-cliente { text-decoration: none; }
+.t-props .t-cliente:hover > .rotulo { text-decoration: underline; text-underline-offset: 2px; }
+/* O prazo: a palavra está no texto; o tom repete a do cartão (`quadro.css`). */
+.t-props .cu-chip[data-prazo='atrasada'] { background: var(--err-soft); color: color-mix(in srgb, var(--err) 80%, var(--plat)); font-weight: 600; }
+.t-props .cu-chip[data-prazo='hoje'] { background: var(--warn-soft); color: color-mix(in srgb, var(--warn) 80%, var(--plat)); font-weight: 600; }
+.t-props .cu-chip[data-prazo='concluida'],
+.t-props .cu-chip[data-prazo='ilegivel'] { color: var(--mute); }
+.t-prop-apoio { font-size: var(--iw-t-meta); color: var(--mute); white-space: nowrap; }
+/* F38, Fase 7: o apoio do cliente traz frase (o motivo de não trocar, a
+   diferença para o cliente da lista) — quebra em vez de alargar a ficha no
+   celular (e2e F07-1/F07-3 a 390 e 320 px). */
+.t-prop[data-prop='cliente'] .t-prop-apoio { white-space: normal; min-width: 0; overflow-wrap: anywhere; }
+/* As etiquetas dentro do botão: o par de cores da origem, como no cartão. */
+.t-etiquetas { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; min-width: 0; }
+.t-etiquetas > .cu-etiqueta {
+  padding: 0.1rem 0.45rem;
+  border: 0;
+  border-radius: var(--r-xs);
+  font-size: var(--iw-t-meta);
+  line-height: 1.4;
+  background: var(--cor-etiqueta-fundo, var(--ink-3));
+  color: var(--cor-etiqueta-tinta, var(--plat));
+}
+
+/* `.t-contrato` (a frase "… gravam ao escolher. Título e briefing vão com
+   Salvar.") saiu na F43, Fase 6: ela mora no `?` ao lado de `.t-estado`. */
+
+/* O briefing: largura e corpo de leitura. */
+.t-corpo > .cu-ficha-corpo {
+  margin-top: var(--iw-e-4);
+  padding: var(--iw-e-4) var(--t-borda) var(--iw-e-2);
+  border-top: 1px solid var(--iw-linha);
+}
+.cu-ficha-corpo .cu-editor { font-size: 0.9375rem; line-height: 1.7; }
+.cu-ficha-corpo .cu-editor > :not(table, pre, figure, hr) { max-width: 72ch; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CARD EM DUAS COLUNAS — F43, Fase 6
+     uma coluna (a de sempre)  →  título · propriedades · briefing · subtarefas
+                                  · checklists · anexos · "+ …" · aprovação ·
+                                  carimbos · conversa
+     duas colunas (ficha larga) →  à esquerda o trabalho, com a conversa logo
+                                  depois do conteúdo; à direita as propriedades
+                                  e os carimbos
+
+   POR QUE *CONTAINER QUERY*, E NÃO `@media`
+     Quem decide é a largura da FICHA, e não a da janela: a mesma janela de
+     1440px dá 1104px de ficha com a barra aberta, ~1260 com a barra em ícones
+     e ~800 com a coluna de listas aberta; e a Fase 7 abre a ficha num painel
+     ao lado do Quadro, com outra largura ainda. `.cu-ficha` é o contêiner.
+
+     ⚠️ MEDIDO ANTES DE ESCOLHER (Chrome 141): `container-type: inline-size`
+     NÃO cria contexto de empilhamento nem bloco de contenção para `fixed` — o
+     balão de um chip continua por cima do cabeçalho grudado (z 120 contra 1,
+     e2e `data-e-cabecalho` B1), e a janela de saída continua cobrindo a tela.
+
+   O LIMIAR: 66rem (1056px) DE FICHA
+     A conversa precisa de largura (`ConversaDaTarefa`, o laptop de 1366px e a
+     tabela de seis colunas no briefing). Medido na prévia com a barra aberta:
+     1366 → ficha de 1030px, fica em UMA coluna; 1440 → 1104px, duas, com o
+     briefing em ~750px. 66rem e não 68,75 (1100) para que 1440 continue em
+     duas colunas também no navegador com barra de rolagem que ocupa espaço
+     (~15px a menos de ficha no Windows).
+
+   A ORDEM É UMA SÓ, E É A DO DOCUMENTO
+     O HTML segue a ordem de uma coluna — que é também a ordem do Tab: título,
+     propriedades, briefing… Em duas colunas `.t-lado` sobe para a direita por
+     POSIÇÃO DE GRADE, sem reordenar o documento. Em uma coluna `.t-lado` some
+     como caixa (`display: contents`) e só os carimbos descem, por `order`, para
+     antes da conversa, onde sempre estiveram — carimbo não tem nada focável,
+     então a ordem do Tab não muda.
+
+   A COLUNA DA DIREITA NÃO GRUDA, DE PROPÓSITO
+     Grudada, ela disputaria o mesmo `top` com a linha do Salvar (que gruda com
+     texto por salvar) e prenderia os balões dos chips numa caixa que não
+     rola — e o e2e `data-e-cabecalho` B1 rola a página para pôr o balão do
+     chip sob o cabeçalho. Fica para a Fase 7 decidir, com o painel.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cu-ficha { container: ficha / inline-size; }
+
+/* UMA COLUNA — a de sempre. */
+.t-corpo { display: flex; flex-direction: column; min-width: 0; }
+.t-corpo > * { min-width: 0; }
+.t-lado { display: contents; }
+.t-lado > .cu-carimbos { order: 1; }
+.t-corpo > .c-bloco { order: 2; }
+
+/* A CONVERSA DENTRO DA FICHA — sem moldura própria (a camada calma, F43 Fase 5:
+   bloco se separa por tom e espaço, não por caixa dentro de caixa). Um fio só
+   a separa do conteúdo, como separava o cartão de antes. */
+.cu-ficha .t-corpo > .c-bloco {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--iw-linha);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  background: none;
+}
+.cu-ficha .t-corpo > .c-bloco > .c-topo { padding-inline: var(--t-borda); border-bottom: 0; }
+
+/* AS SEÇÕES SEM CAIXA — título discreto e espaço; o fio entre uma e outra saiu.
+   A linha de botões do anexo (Anexar arquivo · Guardar link) perde a moldura:
+   são botões, não um campo. O formulário do link (`[data-erro]`) mantém a dele. */
+.cu-ficha .t-corpo > .p-secao,
+.cu-ficha .t-corpo > .a-secao { border-top: 0; padding-top: var(--iw-e-2); }
+.cu-ficha .t-corpo > .a-secao > .a-linha-nova:not([data-erro]) { border: 0; background: none; padding-inline: 0; }
+
+/* "+ Subtarefa · + Checklist · + Anexo" — a linha que substitui as seções vazias. */
+.t-acrescentar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--iw-e-1);
+  padding: var(--iw-e-2) calc(var(--t-borda) - 0.5rem);
+}
+.t-acrescentar-item { display: inline-flex; align-items: center; gap: var(--iw-e-1); }
+.t-acrescentar-ponto { color: var(--iw-texto-3); }
+.t-acrescentar-botao {
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: var(--iw-r-controle);
+  background: transparent;
+  color: var(--iw-texto-3);
+  font-size: var(--iw-t-apoio);
+  cursor: pointer;
+  transition: color var(--dur-1), background var(--dur-1);
+}
+.t-acrescentar-botao:hover:not(:disabled) { background: var(--iw-hover); color: var(--plat); }
+.t-acrescentar-botao:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (pointer: coarse) {
+  .t-acrescentar-botao { min-height: var(--iw-alvo-toque); }
+}
+
+/* DUAS COLUNAS — a ficha larga. */
+@container ficha (min-width: 66rem) {
+  .t-corpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    /* As linhas da coluna da esquerda vêm na ordem, uma por peça; a coluna da
+       direita atravessa todas (`1 / -1`). A última linha é `1fr` e fica vazia:
+       se a coluna da direita for mais alta que a da esquerda, a sobra cai ali,
+       e não espalhada entre o título e o briefing. Vinte linhas é folga — a
+       esquerda tem no máximo uma dúzia de peças. */
+    grid-template-rows: repeat(20, auto) 1fr;
+    align-items: start;
+  }
+  .t-corpo > * { grid-column: 1; }
+  .t-lado {
+    display: flex;
+    flex-direction: column;
+    gap: var(--iw-e-4);
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: stretch;
+    padding: var(--iw-e-3) 0 var(--iw-e-4);
+    border-left: 1px solid var(--iw-linha);
+  }
+  /* As propriedades na coluna estreita: rótulo curto, valor que quebra. */
+  .t-lado > .t-props { margin: 0; grid-template-columns: 6.75rem minmax(0, 1fr); column-gap: var(--iw-e-2); }
+  /* Os carimbos viram uma lista miúda debaixo das propriedades. */
+  .t-lado > .cu-carimbos {
+    flex-direction: column;
+    gap: var(--iw-e-1);
+    padding: 0 var(--t-borda);
+    border-top: 0;
+    font-size: var(--iw-t-meta);
+  }
+  /* O briefing logo debaixo do título: as propriedades foram para o lado, e o
+     fio que as separava do texto não tem mais o que separar. */
+  .t-corpo > .cu-ficha-corpo { margin-top: var(--iw-e-2); padding-top: var(--iw-e-2); border-top: 0; }
+  /* A conversa termina no canto de baixo à ESQUERDA: à direita está a coluna. */
+  .cu-ficha .t-corpo > .c-bloco { border-radius: 0 0 0 var(--r-lg); }
+}
+
+@media (max-width: 639.98px) {
+  .cu-ficha { --t-borda: 0.875rem; }
+  .t-props { grid-template-columns: 6.25rem minmax(0, 1fr); column-gap: var(--iw-e-2); }
+  .t-prop > dt, .t-prop > dd { min-height: 2.5rem; }
+  .t-props .cu-chip { min-height: 2.25rem; }
+  /* Duas linhas, sempre as mesmas: onde a tarefa está (lista e tipo) e o que
+     salvar. Grudada, a faixa não passa de ~90 px — medido com teclado aberto
+     (390×360) no e2e F07-1. */
+  .cu-ficha > .cu-trilha { flex-wrap: wrap; padding-block: var(--iw-e-2) var(--iw-e-1); }
+  .t-lugar { flex: 1 1 0; }
+  .t-salvar { flex: 1 1 100%; justify-content: flex-end; }
+  /* O estado e o `?` à esquerda, o Salvar e o `···` à direita. */
+  .t-salvar > .cu-ajuda { margin-right: auto; }
+  /* O conjunto de status é contexto, não decisão: no celular ele cede a linha
+     para o status e o Concluir caberem juntos. */
+  .t-prop-esteira { display: none; }
+  /* A trilha do topo para no ancestral: o nome da tarefa está logo abaixo, no
+     título grande — o último degrau só apertava a lista até sumir (F03). */
+  .o-topo.t-cabeca .tr-trilha li:last-child:has([aria-current='page']) { display: none; }
+}
+@media (pointer: coarse) {
+  .t-props .cu-chip, .t-salvar > .cu-ancora > .cu-chip { min-height: var(--iw-alvo-toque); }
+}
+.a-para-quem-administra { margin-top: var(--iw-e-2); font-size: var(--iw-t-meta); color: var(--mute); }

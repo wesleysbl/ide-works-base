@@ -1,0 +1,33 @@
+-- Desfaz a F17.44. Nome idêntico ao da migration, de propósito.
+--
+-- O QUE ELE DEVOLVE
+--   O estado exato do fim da F17.43: calendário sem compromisso nenhum.
+--
+--   ⚠️ REVERTER APAGA TODOS OS COMPROMISSOS. `drop table` leva as reuniões, as
+--   gravações e as viagens de todos os clientes, e não há de onde recuperá-las:
+--   compromisso não existe em nenhum outro lugar — não é leitura de outra
+--   tabela, como o aviso da F17.46, nem cópia de nada do legado.
+--
+--   O que NÃO se perde, e é o ponto da etapa: **nenhuma entrega e nenhuma
+--   cota**. `content_items` não foi tocada por esta migration — nem para ganhar
+--   coluna, nem para ganhar valor de enum, nem para ser lida diferente. É
+--   exatamente por isso que a separação entre entrega e compromisso é
+--   aritmética: desfazer o compromisso não mexe em um único número do medidor.
+--
+-- A ORDEM
+--   Uma tabela só, sem função, sem gatilho, sem view e sem enum. As políticas e
+--   os índices caem junto com ela; as permissões também, porque `grant`
+--   acompanha a tabela e não sobra privilégio pendurado em objeto que já não
+--   existe.
+--
+--   ⚠️ NÃO HÁ VALOR DE ENUM PARA DESFAZER, e isso é metade da razão de esta
+--   etapa ter escolhido tabela em vez de `alter type ideworks.content_type add
+--   value 'compromisso'`. Valor de enum **não se remove**: o rollback de uma
+--   migration assim mentiria, dizendo ter desfeito o que ficou.
+--
+-- O QUE O ROLLBACK NÃO ALCANÇA, E É PRECISO SABER
+--   A parte da etapa que apagou a hora falsa das pastilhas vive no servidor
+--   (`src/server/calendar.ts`), e não no banco. Voltar esta migration devolve o
+--   schema; devolver o `00:00` é reverter o código.
+
+drop table if exists ideworks.appointments;

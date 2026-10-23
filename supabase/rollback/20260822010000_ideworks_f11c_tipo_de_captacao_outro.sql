@@ -1,0 +1,16 @@
+-- =============================================================================
+-- ROLLBACK da F11c — o tipo de captacao "Outro"
+-- =============================================================================
+-- NAO HA COMO DESFAZER, e isso e do Postgres, nao do projeto: valor de enum
+-- nao se remove enquanto houver linha usando — e para remover de vez seria
+-- preciso recriar o tipo, o que exige reescrever toda coluna que o usa.
+--
+-- Se for mesmo necessario, o caminho e:
+--   1. reclassificar as captacoes que usam `other`;
+--   2. recriar `ideworks.capture_kind` sem ele;
+--   3. reapontar `video_captures.kinds`.
+--
+-- Nenhum desses passos e rotina, e por isso nao estao automatizados aqui.
+-- =============================================================================
+
+-- (nada a desfazer automaticamente)

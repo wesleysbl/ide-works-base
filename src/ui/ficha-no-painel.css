@@ -1,0 +1,30 @@
+/* O CARD AO LADO DO QUADRO — F43, Fase 7 (`@/board/FichaAoLado`).
+
+   O nome não é `ficha-ao-lado.css` de propósito: `@/ui/ficha-ao-lado.ts` (as
+   regras puras) já tem esse nome, e dois arquivos que só diferem na extensão
+   colidem no import (`test/fontes-integras.test.ts`).
+
+   O painel é o da Fase 3 (`painel-lateral.css`); aqui só o que a ficha pede
+   dentro dele. Só tokens que existem (`test/token-de-cor-existe.test.ts`). */
+
+/* A LINHA DE CIMA: a trilha da tarefa à esquerda, encurtando quando não cabe,
+   e "Abrir em tela cheia" junto do ✕. */
+.fal-topo { display: flex; flex: 1 1 auto; align-items: center; gap: var(--iw-e-2); min-width: 0; }
+.fal-trilha { flex: 1 1 auto; min-width: 0; }
+.fal-tela-cheia { flex: none; gap: 0.4rem; white-space: nowrap; text-decoration: none; }
+
+/* A LINHA DO SALVAR GRUDA NO ALTO DO CORPO DO PAINEL. Na página ela gruda logo
+   abaixo do cabeçalho da página (`.t-cabeca`, 58 px — `tarefa.css`); aqui o
+   cabeçalho do painel está FORA da rolagem, e o alto do corpo já é a borda. */
+.fal-ficha .cu-ficha > .cu-trilha[data-por-salvar='true'] { top: 0; }
+.fal-ficha .cu-ficha:has(> .cu-trilha[data-por-salvar='true'])
+  :where(input, textarea, select, button, a[href], [contenteditable='true'], [tabindex]) {
+  scroll-margin-top: 4rem;
+}
+
+/* NO CELULAR o ✕ e a trilha precisam da linha: o botão fica só com o ícone (o
+   nome continua no `aria-label` e no `title`). */
+@media (max-width: 639.98px) {
+  .fal-tela-cheia { padding-inline: 0.55rem; }
+  .fal-tela-cheia-texto { display: none; }
+}

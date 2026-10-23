@@ -1,0 +1,209 @@
+/* O PLANEJAMENTO NA VISÃO CONTRATO — F43, Fase 2.
+
+   O IDIOMA CALMO: nada de moldura por linha nem por cliente. As linhas se
+   separam por um fio (`--iw-linha`) e os grupos por espaço; a única caixa é a
+   faixa "Precisa de atenção", e ela é um tom de fundo, não uma borda. Cor só
+   onde há motivo: `--warn` e `--err` nos pontos, nos "sem dia", em "nada
+   marcado" e em "atrasadas" — o que está em dia fica neutro.
+
+   Só tokens que existem (`obsidian.css` e `acabamento.css`): um token
+   inexistente apaga a cor em silêncio (`test/token-de-cor-existe.test.ts`). */
+
+/* ───── o mês no topo ───── */
+
+.plc-mes { display: inline-flex; align-items: center; gap: var(--iw-e-1); }
+.plc-mes-nome { min-width: 8.5rem; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 500; text-align: center; white-space: nowrap; }
+/* No celular o trilho das visões ocupa a linha inteira (regra do sistema para
+   o controle segmentado); o mês e o `+ Peça` dividem a linha de cima, em vez
+   de o botão sobrar sozinho numa terceira linha. */
+@media (max-width: 479.98px) {
+  .o-topo-acoes > .plc-nova-peca { order: 1; margin-left: auto; }
+  .plc-mes { gap: 0; }
+  .plc-mes-nome { min-width: 0; }
+  .o-topo-acoes > [role='tablist'] { order: 2; }
+}
+
+/* ───── a faixa "Precisa de atenção" ───── */
+
+.plc-faixa { margin: 0 0 var(--iw-e-5); padding: var(--iw-e-3) var(--iw-e-4) var(--iw-e-1); border-radius: var(--iw-r-painel); background: var(--iw-superficie); }
+.plc-faixa-cabeca { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--iw-e-1) var(--iw-e-2); padding-bottom: var(--iw-e-2); }
+.plc-faixa-titulo { margin: 0; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; }
+.plc-faixa-detalhe { color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+/* "Ninguém atrasado esta semana." — uma linha calma, e não um cartão de vazio. */
+.plc-faixa-calma { margin: 0; padding: var(--iw-e-1) 0 var(--iw-e-2); color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+
+.plc-faixa-lista { margin: 0; padding: 0; list-style: none; }
+.plc-alerta {
+  display: grid;
+  grid-template-columns: 0.5rem minmax(9rem, 13rem) minmax(0, 1fr) auto;
+  grid-template-areas: 'ponto nome motivo acao';
+  align-items: center;
+  gap: var(--iw-e-1) var(--iw-e-3);
+  padding: var(--iw-e-2) 0;
+  border-top: 1px solid var(--iw-linha);
+}
+.plc-ponto { grid-area: ponto; width: 0.5rem; height: 0.5rem; border-radius: var(--r-pill); background: var(--warn); }
+.plc-alerta[data-tom='err'] .plc-ponto { background: var(--err); }
+.plc-alerta-nome { grid-area: nome; min-width: 0; overflow: hidden; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.plc-alerta-motivo { grid-area: motivo; min-width: 0; color: var(--iw-texto-2); font-size: var(--iw-t-apoio); line-height: var(--iw-lh-corpo); }
+.plc-alerta-mais { color: var(--iw-texto-3); }
+.plc-alerta-acao { grid-area: acao; justify-self: end; }
+
+/* O resto da faixa, a um clique. O resumo é um botão quieto, com o fio das
+   linhas em cima — ele é a última linha da faixa enquanto está fechado. */
+.plc-faixa-resto > summary { display: flex; align-items: center; gap: var(--iw-e-2); min-height: 2.25rem; padding: var(--iw-e-1) 0 var(--iw-e-1) calc(0.5rem + var(--iw-e-3)); border-top: 1px solid var(--iw-linha); color: var(--iw-texto-2); font-size: var(--iw-t-apoio); cursor: pointer; list-style: none; }
+.plc-faixa-resto > summary::-webkit-details-marker { display: none; }
+.plc-faixa-resto > summary::after { content: '▾'; color: var(--iw-texto-3); }
+.plc-faixa-resto[open] > summary::after { content: '▴'; }
+.plc-faixa-resto > summary:hover { color: var(--iw-texto); }
+.plc-faixa-resto > summary:focus-visible { outline: var(--iw-foco-largura) solid var(--iw-foco); outline-offset: var(--iw-foco-folga); border-radius: var(--iw-r-controle); }
+.plc-faixa-menos, .plc-faixa-resto[open] .plc-faixa-mais { display: none; }
+.plc-faixa-resto[open] .plc-faixa-menos { display: inline; }
+
+/* ───── o filtro e a legenda ───── */
+
+.plc-ferramentas { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-4); margin-bottom: var(--iw-e-2); }
+.plc-ferramentas > .iw-busca { flex: 0 1 16rem; min-width: 0; margin-bottom: 0; padding-block: 0.125rem; }
+/* O resumo por etapa da antiga aba Mês (Fase 4): texto apagado e o número
+   com peso — sem caixa, sem ponto colorido. Quem acusa é a faixa de cima. */
+.plc-so-falta { flex: none; }
+.plc-resumo { display: flex; flex-wrap: wrap; gap: var(--iw-e-1) var(--iw-e-3); margin: 0; padding: 0; list-style: none; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.plc-resumo li { white-space: nowrap; }
+.plc-resumo b { margin-left: 0.15rem; color: var(--iw-texto); font-weight: 600; }
+.plc-legenda { display: flex; flex-wrap: wrap; gap: var(--iw-e-1) var(--iw-e-4); margin: 0 0 0 auto; padding: 0; list-style: none; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.plc-legenda li { display: inline-flex; align-items: center; gap: 0.35rem; }
+.plc-legenda i { display: inline-block; width: 0.875rem; height: 0.375rem; border-radius: var(--r-pill); }
+
+/* As três partes da barra — as mesmas na legenda. Entregue é a tinta cheia;
+   marcada, a mesma tinta mais clara; sem dia, só o trilho. Neutras: a barra
+   mede, não acusa (quem acusa é o "N sem dia" ao lado). */
+[data-parte='entregue'] { background: var(--iw-texto-2); }
+[data-parte='marcada'] { background: color-mix(in srgb, var(--iw-texto-2) 38%, transparent); }
+[data-parte='sem-dia'] { background: var(--hair); }
+
+/* ───── a tabela ───── */
+
+/* A tabela rola DENTRO de si no celular; a página não (ux-transversal). O nome
+   do cliente fica preso à esquerda enquanto os tipos correm por baixo dele. */
+.plc-rolagem { overflow-x: auto; overscroll-behavior-x: contain; }
+.plc-tabela { width: 100%; min-width: 44rem; border-collapse: separate; border-spacing: 0; color: var(--iw-texto); font-size: var(--iw-t-apoio); }
+.plc-tabela th, .plc-tabela td { padding: var(--iw-e-2) var(--iw-e-3) var(--iw-e-2) 0; text-align: left; vertical-align: middle; font-weight: 400; }
+.plc-tabela thead th { padding-top: 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); font-weight: 500; white-space: nowrap; }
+
+.plc-quem { position: sticky; left: 0; z-index: 1; width: 13rem; min-width: 10rem; max-width: 16rem; background: var(--iw-fundo); }
+.plc-nome { display: block; min-width: 0; overflow: hidden; color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.plc-nome:hover { text-decoration: underline; }
+
+/* O grupo é um respiro e um nome — não uma caixa. */
+.plc-grupo-cabeca th { padding: var(--iw-e-5) 0 var(--iw-e-1); color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+.plc-grupo:first-of-type .plc-grupo-cabeca th { padding-top: var(--iw-e-2); }
+.plc-grupo-titulo { position: sticky; left: 0; }
+.plc-grupo-nome { color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 600; }
+
+/* O fio entre linhas — a única linha da tabela. */
+.plc-linha > * { border-top: 1px solid var(--iw-linha); }
+
+/* O mês do cliente: três pontos (aberto, planejado, aprovado) e o passo. */
+.plc-etapas { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--iw-texto-2); font-size: var(--iw-t-meta); white-space: nowrap; }
+.plc-etapas-pontos { display: inline-flex; gap: 0.1875rem; }
+.plc-etapas i { display: inline-block; width: 0.4375rem; height: 0.4375rem; border-radius: var(--r-pill); background: var(--hair-2); }
+.plc-etapas i[data-ponto='feito'] { background: var(--iw-texto-2); }
+.plc-etapas i[data-ponto='falta'] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--iw-texto-3); }
+.plc-etapas i[data-ponto='atencao'] { background: var(--warn); }
+.plc-etapas i[data-ponto='desconhecido'] { background: transparent; box-shadow: inset 0 0 0 1px var(--hair-3); }
+.plc-etapas-nome { margin-left: 0.3rem; }
+.plc-etapas[data-atencao] .plc-etapas-nome { color: var(--warn); }
+
+.plc-tipo { min-width: 8.5rem; }
+.plc-barra { display: flex; gap: 2px; width: 100%; max-width: 11rem; height: 0.375rem; overflow: hidden; border-radius: var(--r-pill); }
+.plc-barra > span { min-width: 0.25rem; flex-basis: 0; }
+.plc-leg { display: block; margin-top: 0.3rem; color: var(--iw-texto-3); font-size: var(--iw-t-meta); white-space: nowrap; }
+.plc-leg b { color: var(--iw-texto); font-weight: 600; }
+.plc-nada { color: var(--iw-texto-3); }
+.plc-sem-contrato { color: var(--iw-texto-3); font-style: italic; }
+
+.plc-semana { white-space: nowrap; color: var(--iw-texto-2); font-size: var(--iw-t-meta); }
+
+/* O tom do que é motivo — o mesmo na legenda do tipo e na semana. */
+.plc-tabela [data-tom='warn'] { color: var(--warn); }
+.plc-tabela [data-tom='err'] { color: var(--err); font-weight: 600; }
+
+/* ───── celular ───── */
+
+@media (max-width: 639.98px) {
+  .plc-faixa { padding-inline: var(--iw-e-3); }
+  /* O nome e o motivo empilham; a ação fica à direita, alcançável com o polegar. */
+  .plc-alerta {
+    grid-template-columns: 0.5rem minmax(0, 1fr) auto;
+    grid-template-areas: 'ponto nome acao' '. motivo acao';
+    align-items: start;
+  }
+  .plc-ponto { margin-top: 0.4rem; }
+  .plc-alerta-acao { align-self: center; }
+  .plc-ferramentas > .iw-busca { flex: 1 1 100%; }
+  .plc-legenda { margin-left: 0; }
+  .plc-quem { width: 9rem; min-width: 8rem; max-width: 9rem; }
+  .plc-tabela { min-width: 36rem; }
+}
+
+/* ───── o painel do cliente — Fase 3 (`PainelDoCliente`) ─────
+
+   A moldura é a do `PainelLateral` (`painel-lateral.css`); aqui só o que é
+   do cliente. O mesmo idioma calmo da tabela: o único bloco com tom é o mês
+   do cliente — é onde moram as chaves, a única coisa que se marca aqui —; o
+   contrato e as peças se separam por espaço. A barra de cada tipo é a da
+   tabela (`.plc-barra`, `.plc-leg`), sem cópia. */
+
+.plp { display: flex; flex-direction: column; gap: var(--iw-e-5); }
+
+.plp-mes-nav { display: inline-flex; align-items: center; gap: var(--iw-e-1); margin-left: calc(-1 * var(--iw-e-2)); }
+.plp-mes-nome { min-width: 8.5rem; color: var(--iw-texto); font-size: var(--iw-t-apoio); font-weight: 500; text-align: center; white-space: nowrap; }
+
+.plp-mes { padding: var(--iw-e-3) var(--iw-e-4); border-radius: var(--iw-r-painel); background: var(--iw-superficie); }
+
+/* Os três passos numa linha, com um fio entre eles — o protótipo aprovado. O
+   de agora é o único com peso; âmbar só no mês não aberto de quem tem
+   contrato (o mesmo ponto âmbar da tabela). */
+.plp-passos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-1) 0; margin: 0; padding: 0; list-style: none; color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+.plp-passos > li { display: inline-flex; align-items: center; white-space: nowrap; }
+/* O fio vai DEPOIS do passo, e não antes do seguinte: se a linha quebrar (320
+   px), a de baixo começa num nome, e não num traço solto. */
+.plp-passos > li:not(:last-child)::after { content: ''; display: inline-block; width: 1.5rem; height: 1px; margin: 0 var(--iw-e-2); background: var(--hair-2); }
+.plp-visto { margin-right: 0.25rem; }
+.plp-passos > li[data-estado='feito'] { color: var(--iw-texto-2); }
+.plp-passos > li[data-estado='agora'] { color: var(--iw-texto); font-weight: 600; }
+.plp-mes[data-atencao] .plp-passos > li[data-estado='agora'] { color: var(--warn); }
+.plp-passos > li[data-estado='desconhecido'] { font-style: italic; }
+
+.plp-proximo { margin: var(--iw-e-1) 0 0; color: var(--iw-texto-2); font-size: var(--iw-t-meta); }
+.plp-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--iw-e-2) var(--iw-e-5); margin-top: var(--iw-e-3); }
+.plp-espera, .plp-motivo { color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+/* "Só um administrador marca." — o porquê das chaves desligadas, à vista. */
+.plp-motivo { flex-basis: 100%; }
+.plp-recusa { margin-top: var(--iw-e-3); }
+
+.plp-secao { margin: 0 0 var(--iw-e-2); color: var(--iw-texto); font-size: var(--iw-t-corpo); font-weight: 600; }
+.plp-calmo { margin: 0; color: var(--iw-texto-3); font-size: var(--iw-t-apoio); }
+.plp-nota { margin: var(--iw-e-2) 0 0; color: var(--iw-texto-3); font-size: var(--iw-t-meta); }
+
+/* O contrato: nome do tipo, a barra (larga aqui — há espaço) e a frase ao lado. */
+.plp-tipos { margin: 0; padding: 0; list-style: none; }
+.plp-tipo { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--iw-e-3); padding: var(--iw-e-1) 0; }
+.plp-tipo-nome { color: var(--iw-texto-2); font-size: var(--iw-t-apoio); }
+.plp-tipo .plc-barra { max-width: none; }
+.plp-tipo .plc-leg { margin-top: 0; }
+.plp-tipo .plc-leg:only-of-type { grid-column: 2 / -1; }
+.plp-tipo [data-tom='warn'] { color: var(--warn); }
+.plp-tipo [data-tom='err'] { color: var(--err); font-weight: 600; }
+
+.plp-link { color: var(--iw-texto-2); text-decoration: none; }
+.plp-link:hover { color: var(--iw-texto); text-decoration: underline; }
+
+@media (max-width: 639.98px) {
+  .plp-mes { padding-inline: var(--iw-e-3); }
+  /* Os três passos cabem numa linha a 390 px: letra de apoio e fio curto. */
+  .plp-passos { font-size: var(--iw-t-meta); }
+  .plp-passos > li:not(:last-child)::after { width: 0.75rem; margin: 0 0.375rem; }
+  .plp-tipo { grid-template-columns: 3.5rem minmax(0, 1fr) auto; gap: var(--iw-e-2); }
+  .plp-mes-nome { min-width: 0; }
+}

@@ -1,0 +1,157 @@
+# =============================================================================
+# IdeWorks: configuração do Worker na Cloudflare
+# =============================================================================
+# Antes do primeiro `npx wrangler deploy`, troque os valores marcados com
+# "TROQUE". Passo a passo em docs/tutoriais/05-publicar-na-cloudflare.md.
+# Nada aqui é segredo: as senhas e chaves privadas entram por
+# `npx wrangler secret put NOME` e pelo Hyperdrive, nunca neste arquivo.
+# =============================================================================
+
+name = "ideworks"
+main = "worker/index.ts"
+compatibility_date = "2026-08-19"
+# postgres.js precisa das APIs de rede e de fluxo do Node.
+compatibility_flags = ["nodejs_compat"]
+
+# O endereço `*.workers.dev` fica SEMPRE ligado.
+#   Declarar uma rota faz o wrangler desligar o `workers.dev` sem avisar; se a
+#   rota falhar no meio de um deploy, o sistema fica fora do ar. Com esta linha
+#   explícita, uma rota que falhe custa a rota, e não o sistema.
+workers_dev = true
+
+# DOMÍNIO PRÓPRIO (opcional)
+#   Para usar um domínio seu (ex.: works.suaempresa.com.br), a zona do domínio
+#   precisa estar NA MESMA conta da Cloudflare do Worker. Tire o "#" das quatro
+#   linhas abaixo, troque o domínio e preencha IDEWORKS_PUBLIC_ORIGIN em [vars].
+# [[routes]]
+# pattern = "works.suaempresa.com.br"
+# zone_name = "suaempresa.com.br"
+# custom_domain = true
+
+# O SITE É SERVIDO PELO PRÓPRIO WORKER
+#   Uma implantação só, mesma origem, sem CORS. Tudo sob /api é API; o resto
+#   cai aqui. `single-page-application` faz qualquer caminho devolver o
+#   index.html, para o roteamento do front funcionar em F5 e em link direto.
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+#
+#   `run_worker_first`: sem ele o OAuth de agentes de IA não funciona no
+#   navegador. Com `single-page-application` sozinho, a Cloudflare entrega o
+#   index.html para toda NAVEGAÇÃO antes de o Worker rodar, e
+#   `/oauth/authorize` vira "Página não encontrada". A lista abaixo manda tudo
+#   para o Worker, menos os pacotes com hash de `/assets/*`; o que não é do
+#   Worker ele repassa para `env.ASSETS.fetch` (o site).
+run_worker_first = [
+  "/*",
+  "!/assets/*",
+]
+
+# REGISTROS DO WORKER
+#   Sem este bloco, um erro 500 não deixa pilha para ler. `head_sampling_rate = 1`
+#   guarda todas as requisições; para uma equipe pequena isso cabe no plano.
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# ONDE O WORKER RODA: perto do banco, e não perto de quem chama.
+#   Cada tela faz várias consultas em sequência; rodar longe do banco multiplica
+#   a latência. TROQUE pela região do SEU projeto do Supabase (Project Settings
+#   → General → Region). Projeto em São Paulo = "aws:sa-east-1".
+[placement]
+region = "aws:sa-east-1"
+
+# HYPERDRIVE: a ponte entre o Worker e o Postgres do Supabase.
+#   A conexão TCP direta ao Postgres de dentro do Worker trava; o Hyperdrive
+#   resolve, e as políticas por variável de sessão continuam valendo.
+#   A senha do banco mora NO HYPERDRIVE, e não aqui. Ele aponta para o papel
+#   restrito `ideworks_app`, que só alcança o schema `ideworks`.
+#   TROQUE o id pelo que `npx wrangler hyperdrive create ...` devolver.
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "00000000000000000000000000000000"
+
+# KV DO OAUTH DE AGENTES DE IA
+#   O registro do agente, o pedido pendente e o token precisam sobreviver de uma
+#   requisição para a seguinte, e a Cloudflare roda várias cópias do Worker ao
+#   mesmo tempo. Sem este binding, conectar um agente dá `Invalid client_id`.
+#   O nome do binding é lido pelo código: `OAUTH_KV`, exatamente assim.
+#   TROQUE o id pelo que `npx wrangler kv namespace create OAUTH_KV` devolver.
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "00000000000000000000000000000000"
+
+[vars]
+# O projeto do Supabase. As duas são públicas por natureza (a chave anon vai no
+# navegador de qualquer jeito). TROQUE pelas do seu projeto:
+# Project Settings → API Keys.
+IDEWORKS_PUBLIC_SUPABASE_URL = "https://SEU-PROJETO.supabase.co"
+IDEWORKS_PUBLIC_SUPABASE_ANON_KEY = "COLE-AQUI-A-CHAVE-ANON"
+
+# O domínio próprio, sem barra no fim (ex.: "https://works.suaempresa.com.br").
+#   Preenchido, toda PÁGINA pedida pelo `*.workers.dev` é redirecionada para ele
+#   (API, MCP e OAuth continuam respondendo nos dois). Vazio = sem redirecionar.
+IDEWORKS_PUBLIC_ORIGIN = ""
+
+# TRAVA DE CONTA DE TESTE
+#   "true" (ou a linha ausente) = só deixa convidar contas de teste em
+#   @ideworks.invalid e as da lista abaixo. "false" = convida qualquer e-mail.
+#   O código lê `!== 'false'`: só o texto exato "false" desliga.
+#   Este projeto NUNCA apaga conta: convite mal dado se corrige tirando papel e
+#   alcance da pessoa.
+IDEWORKS_TEST_ACCOUNTS_ONLY = "false"
+
+# A LISTA DE CONVIDADOS: quem entra mesmo com a trava ligada.
+#   Endereços exatos, separados por vírgula, sem curinga.
+IDEWORKS_ALLOWED_ACCOUNTS = ""
+
+# SERVIDORES DE IMAGEM CONFIÁVEIS
+#   A prévia de um link colado numa tarefa nunca aponta um <img> para servidor
+#   desconhecido (seria pixel de rastreio). Os servidores listados aqui (ex.: o
+#   seu Nextcloud) ganham miniatura automática. Hospedeiro exato, separados por
+#   vírgula, sem curinga. Vazio = ninguém.
+IDEWORKS_TRUSTED_IMAGE_HOSTS = ""
+
+# AGENTES DE IA (MCP, OAuth e API HTTP)
+#   Ligar não dá acesso a ninguém: cada agente precisa de uma concessão que a
+#   pessoa autoriza, e a tela /conexoes revoga a qualquer momento.
+#   "false" (exato) desliga a integração inteira; a segunda chave corta só as
+#   escritas, como freio de emergência.
+IDEWORKS_INTEGRATIONS_ENABLED = "true"
+IDEWORKS_INTEGRATION_WRITES_ENABLED = "true"
+
+# CHAT DA EQUIPE: "desligado" | "piloto" (só super admin) | "ligado".
+#   Ausente ou outro texto = desligado. Mensagens ficam guardadas por 30 dias.
+IDEWORKS_CHAT = "ligado"
+
+# CONSULTAS COM VALOR NO TEXTO
+#   "ligado": o servidor manda ids e datas já validados no texto da consulta, e a
+#   tela faz de 3 a 10 vezes menos idas ao banco. Se algo estranhar, troque para
+#   "desligado" e publique: tudo volta ao parâmetro de sempre. Ausente = ligado.
+IDEWORKS_SQL_TEXTO_DIRETO = "ligado"
+
+# EMPRESAS OMITIDAS DAS TELAS
+#   Nomes de empresas (tabela `client_categories`), separados por vírgula. O que
+#   for delas some das telas e dos agentes; nada é apagado, e a coleta da Meta
+#   continua. Vazio = nenhuma omitida.
+IDEWORKS_EMPRESAS_OMITIDAS = ""
+
+# CENTRAL DO CHAT AO VIVO (Durable Object)
+#   No plano gratuito da Cloudflare só existem Durable Objects com SQLite. A
+#   central não guarda mensagem; ela só avisa quem está com o chat aberto.
+[[durable_objects.bindings]]
+name = "CHAT_CENTRAL"
+class_name = "ChatCentral"
+
+[[migrations]]
+tag = "v1_chat_central"
+new_sqlite_classes = ["ChatCentral"]
+
+# GATILHO PERIÓDICO: coleta da Meta, limpezas e avisos.
+#   A cada quinze minutos. Cada execução visita um lote de contas da Meta (ver
+#   `CONTAS_POR_EXECUCAO` em src/server/meta-coleta.ts), começando pela vista há
+#   mais tempo. Sem o token da Meta configurado, a coleta registra o motivo no
+#   log e sai.
+[triggers]
+crons = ["*/15 * * * *"]
